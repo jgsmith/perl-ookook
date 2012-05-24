@@ -1,0 +1,22 @@
+[%- META title = 'Project List' -%]
+
+<table>
+<tr><th>Title</th><th>Last Freeze</th><th>Description</th></tr>
+[% FOREACH project IN projects -%]
+  <tr>
+    <td>[% project.name %]</td>
+    <td>
+      [%- IF project.last_frozen_on -%]
+        [%- project.last_frozen_on -%]
+      [%- ELSE -%]
+        New
+      [%- END -%]
+    </td>
+    <td>[% project.current_edition.description %]</td>
+  </tr>
+[% END -%]
+</table>
+
+<p>
+  <a href="[% c.uri_for(c.controller.action_for('create')) %]">Create</a>
+</p>

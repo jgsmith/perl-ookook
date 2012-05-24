@@ -1,0 +1,45 @@
+---
+abstract: 'Catalyst based application'
+author:
+  - 'James Smith,,,'
+build_requires:
+  ExtUtils::MakeMaker: 6.36
+  Test::More: 0.88
+configure_requires:
+  ExtUtils::MakeMaker: 6.36
+distribution_type: module
+dynamic_config: 1
+generated_by: 'Module::Install version 1.06'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: OokOok
+no_index:
+  directory:
+    - inc
+    - t
+requires:
+  Catalyst::Action::REST: 0
+  Catalyst::Action::RenderView: 0
+  Catalyst::Controller::HTML::FormFu: 0
+  Catalyst::Model::DBIC::Schema: 0
+  Catalyst::Plugin::ConfigLoader: 0
+  Catalyst::Plugin::Session: 0
+  Catalyst::Plugin::Session::State::Cookie: 0
+  Catalyst::Plugin::StackTrace: 0
+  Catalyst::Plugin::Static::Simple: 0
+  Catalyst::Plugin::StatusMessage: 0
+  Catalyst::Runtime: 5.90012
+  Config::General: 0
+  Data::UUID: 0
+  HTML::FormFu: 0
+  HTML::FormFu::Model::DBIC: 0
+  JSON: 0
+  Moose: 0
+  Set::Scalar: 0
+  Workflow: 0
+  namespace::autoclean: 0
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.01
