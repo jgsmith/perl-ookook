@@ -2,14 +2,13 @@
 
 use DBIx::Class::Fixtures;
 use Test::More no_plan;
-use lib 't/lib';
 
 BEGIN { 
   use_ok "OokOok::Model::DB";
-  use_ok "OokOok::Test::Schema";
+  use_ok "OokOok::Schema";
 }
 
-my $schema = OokOok::Test::Schema -> init;
+my $schema = OokOok::Schema -> connect('dbi:SQLite:dbname=:memory:');
 
 ok $schema, "Schema object loads";
 
@@ -23,7 +22,6 @@ my $page_rs = $schema -> resultset("Page");
 my $page_part_rs = $schema -> resultset("PagePart");
 
 my $project = $project_rs ->  create({
-  name => "Project One",
   user_id => 1
 });
 

@@ -1,6 +1,7 @@
 package OokOok::Controller::Project;
 use Moose;
 use namespace::autoclean;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -23,30 +24,6 @@ __PACKAGE__ -> config(
   default => 'text/html',
 );
 
-=head2 base
-
-=cut
-
-sub base :Chained('/') :PathPart('project') :CaptureArgs(1) {
-  my($self, $c, $project_id) = @_;
-
-  $c -> stash(resultset => $c->model('DB::Project'));
-
-  my $project;
-  if($project_id =~ /^[-A-Za-z0-9_]{20}$/) {
-    $project = $c -> stash -> {resultset} -> find_by_uuid($project_id);
-  }
-  elsif($project_id =~ /^[0-9]+$/) {
-    $project = $c -> stash -> {resultset} -> find_by_id($project_id);
-  }
-  if(!$project) {
-    $self -> status_not_found($c,
-      message => "Project not found"
-    );
-    $self -> detach();
-  }
-}
-
 # We want to produce a list of possible projects
 sub index :Chained('/') :PathPart('project') :Args(0) :ActionClass('REST') {
   my($self, $c) = @_;
@@ -58,18 +35,21 @@ sub _list_projects {
   my($self, $c) = @_;
   my @projects;
 
-  for my $project ($c->stash->{resultset}->search({},{ order_by => 'name' })->all) {
+  #
+  # TODO: make the sort happen in the database -- we actually want to
+  # sort by last action, but most recently created working edition
+  # works for now.
+  #
+  for my $project (sort { $b -> current_edition -> id <=> $a -> current_edition -> id } $c->stash->{resultset}->all) {
+    my $ce = $project->current_edition;
     my $p = {
-      name => $project->name,
-      last_frozen_on => $project->last_frozen_on,
+      name => $ce->name,
+      last_frozen_on => (map { defined($_) ? "".$_ : "" } $project -> last_frozen_on),
       uuid => $project->uuid,
       id => $project->id,
+      description => $ce -> description,
     };
 
-    my $ce = $project->current_edition;
-    $p->{current_edition} = {
-      description => $ce->description,
-    };
     push @projects, $p;
   }
 
@@ -90,17 +70,17 @@ sub index_GET {
 }
 
 # Create project.
-sub index_PUT {
+sub index_POST {
   my($self, $c) = @_;
 
-  my $project;
+  my($project, $ce);
   eval {
-    $project = $c->stash->{resultset} -> new_result({
-      name => $c->req->data->{name}
-    });
+    $project = $c->stash->{resultset} -> new_result({ });
     $project -> insert;
-    $project -> current_edition -> update({
-      description => $c->req->data->{description}
+    $ce = $project -> current_edition;
+    $ce -> update({
+      name => $c->req->data->{name},
+      description => $c->req->data->{description},
     });
   };
 
@@ -116,8 +96,9 @@ sub index_PUT {
       location => $c -> uri_for('/project') . '/' . $project -> uuid,
       entity => {
         project => {
-          name => $project -> name,
-          last_frozen_on => undef,
+          name => $ce -> name,
+          description => $ce -> description,
+          last_frozen_on => (map { defined($_) ? "".$_ : "" } $project -> last_frozen_on),
           uuid => $project->uuid,
           id => $project->id,
         },
@@ -132,6 +113,32 @@ sub index_PUT {
 
 =cut
 
+=head2 base
+
+=cut
+
+sub base :Chained('/') :PathPart('project') :CaptureArgs(1) {
+  my($self, $c, $project_id) = @_;
+
+  $c -> stash(resultset => $c->model('DB::Project'));
+
+  my $project;
+  if($project_id =~ /^[-A-Za-z0-9_]{20}$/) {
+    $project = $c -> stash -> {resultset} -> find({ uuid => $project_id});
+  }
+  elsif($project_id =~ /^[0-9]+$/) {
+    $project = $c -> stash -> {resultset} -> find_by_id($project_id);
+  }
+  if(!$project) {
+    $self -> status_not_found($c,
+      message => "Project not found"
+    );
+    $self -> detach();
+  }
+  print STDERR "Project: ", $project -> uuid, "\n";
+  $c -> stash -> {project} = $project;
+}
+
 # Handles operations on a particular project
 sub project :Chained('base') :PathPart('') :Args(0) :ActionClass('REST') { }
 
@@ -141,6 +148,34 @@ sub project :Chained('base') :PathPart('') :Args(0) :ActionClass('REST') { }
 # the client.
 sub project_GET {
   my ( $self, $c ) = @_;
+
+  my $p = $c->stash->{project};
+  my $ce = $p -> current_edition;
+  my $data = {
+    name => $ce->name,
+    uuid => $p -> uuid,
+    url => $c->uri_for("/project") . '/' . $p -> uuid,
+    description => $ce -> description,
+    editions => [
+      map { +{
+        frozen_on => (map { defined($_) ? "".$_ : "" } $_ -> frozen_on),
+        created_on => (map { defined($_) ? "".$_ : "" } $_ -> created_on),
+        name => $_ -> name,
+        description => $_ -> description,
+      } } $p -> editions -> search({}, { order_by => 'id' }) -> all
+    ],
+  };
+
+  $self -> status_ok(
+    $c,
+    entity => {
+      project => $data
+    }
+  );
+}
+
+sub project_PUT {
+  my( $self, $c ) = @_;
 
 }
 

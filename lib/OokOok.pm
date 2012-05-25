@@ -60,6 +60,9 @@ __PACKAGE__->config(
         __PACKAGE__->path_to( qw/root src/ ),
       ],
     },
+    'Plugin::ConfigLoader' => {
+      file => __PACKAGE__ -> path_to( 'conf' ),
+    },
 );
 
 # Start the application

@@ -1,21 +1,31 @@
+PRAGMA foreign_keys = ON;
+
 --
 -- Users
 --
 
+CREATE TABLE user (
+  id      INTEGER PRIMARY KEY
+);
+
+CREATE TABLE user_identity (
+  id      INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL
+); 
+
 --
 -- Projects
 --
-PRAGMA foreign_keys = ON;
 CREATE TABLE project (
   id      INTEGER PRIMARY KEY,
   uuid    char(20) NOT NULL,
-  name    VARCHAR(255) NOT NULL,
   user_id INTEGER
 );
 
 CREATE TABLE edition (
   id      INTEGER PRIMARY KEY,
   project_id INTEGER NOT NULL,
+  name    VARCHAR(255) NOT NULL DEFAULT '',
   description TEXT,
   sitemap TEXT NOT NULL DEFAULT '{}', -- json-encoded sitemap
   created_on DATETIME NOT NULL,

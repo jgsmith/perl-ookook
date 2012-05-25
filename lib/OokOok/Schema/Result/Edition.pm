@@ -49,6 +49,13 @@ __PACKAGE__->table("edition");
   data_type: 'integer'
   is_nullable: 0
 
+=head2 name
+
+  data_type: 'varchar'
+  default_value: (empty string)
+  is_nullable: 0
+  size: 255
+
 =head2 description
 
   data_type: 'text'
@@ -77,6 +84,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "project_id",
   { data_type => "integer", is_nullable => 0 },
+  "name",
+  { data_type => "varchar", default_value => "", is_nullable => 0, size => 255 },
   "description",
   { data_type => "text", is_nullable => 1 },
   "sitemap",
@@ -100,8 +109,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-23 10:32:52
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:aAaPTwkzepZtnm+wfNlgjQ
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-25 09:58:33
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:eW0wmLnXZHV5nMAQD+Fm6Q
 
 use JSON;
 use DateTime;

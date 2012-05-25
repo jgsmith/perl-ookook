@@ -72,7 +72,7 @@
       $("#new_project_form").modal('hide');
       $.ajax({
         url: '[% c.uri_for('/project') %]',
-        type: 'PUT',
+        type: 'POST',
         data: JSON.stringify({
           name: project_name,
           description: project_desc
