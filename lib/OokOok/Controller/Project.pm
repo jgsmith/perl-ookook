@@ -46,7 +46,6 @@ sub _list_projects {
       name => $ce->name,
       last_frozen_on => (map { defined($_) ? "".$_ : "" } $project -> last_frozen_on),
       uuid => $project->uuid,
-      id => $project->id,
       description => $ce -> description,
     };
 
@@ -100,7 +99,6 @@ sub index_POST {
           description => $ce -> description,
           last_frozen_on => (map { defined($_) ? "".$_ : "" } $project -> last_frozen_on),
           uuid => $project->uuid,
-          id => $project->id,
         },
         projects => $self -> _list_projects($c)
       }
@@ -125,9 +123,6 @@ sub base :Chained('/') :PathPart('project') :CaptureArgs(1) {
   my $project;
   if($project_id =~ /^[-A-Za-z0-9_]{20}$/) {
     $project = $c -> stash -> {resultset} -> find({ uuid => $project_id});
-  }
-  elsif($project_id =~ /^[0-9]+$/) {
-    $project = $c -> stash -> {resultset} -> find_by_id($project_id);
   }
   if(!$project) {
     $self -> status_not_found($c,

@@ -116,7 +116,6 @@ $json = POST_ok("/project", {
 is $json->{project}->{name}, "Test Project", "Name returned";
 is $json->{project}->{description}, "Test project description", "Description returned";
 ok $json->{project}->{uuid}, "Project has a uuid";
-ok $json->{project}->{id}, "Project has an id";
 
 my $uuid = $json->{project}->{uuid};
 
