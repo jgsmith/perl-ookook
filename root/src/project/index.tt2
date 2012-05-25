@@ -6,7 +6,7 @@
   Your Projects 
   <span id="project_count"></span>
   <a class="label label-inverse" href="#new_project_form" data-toggle="modal">New project</a>
-<h3>
+</h3>
 <dl id="projects_list"></dl>
 </div>
 <div id="new_project_form" class="modal fade">
@@ -43,7 +43,7 @@
         $("#projects_list").append(el);
         el = $("<dd></dd>");
         a = $("<p></p>");
-        a.text(project.current_edition.description);
+        a.text(project.description);
         el.append(a);
         $("#projects_list").append(el);
       });
