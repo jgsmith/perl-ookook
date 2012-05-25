@@ -34,6 +34,22 @@ sub GET_ok {
   return $json;
 }
 
+sub GET_not_ok {
+  my($url, $desc) = @_;
+
+  my($res, $json);
+  my $headers = HTTP::Headers -> new;
+
+  $headers -> header('Accept' => 'application/json');
+  $headers -> header('Content-Type' => 'application/json');
+
+  $res = request(
+    HTTP::Request->new( GET => $url, $headers )
+  );
+
+  ok( $res->code >= 400, "GET failed successfully: $desc" );
+}
+
 sub PUT_ok {
   my($url, $content, $desc) = @_;
 
@@ -113,6 +129,7 @@ $json = POST_ok("/project", {
     description => "Test project description",
   }, "create project");
 
+ok $json->{project}, "JSON has project key";
 is $json->{project}->{name}, "Test Project", "Name returned";
 is $json->{project}->{description}, "Test project description", "Description returned";
 ok $json->{project}->{uuid}, "Project has a uuid";
@@ -145,6 +162,11 @@ is $json->{projects}->[0]->{uuid}, $uuid, "Right project";
 DELETE_ok("/project/$uuid", "delete project");
 
 #
+# We shouldn't be able to get the project now
+#
+GET_not_ok("/project/$uuid", "get deleted project");
+
+#
 # Now we should have no projects again
 #
 
@@ -152,5 +174,61 @@ $json = GET_ok("/project", "JSON listing of projects");
 
 ok $json->{projects}, "Projects key exists in returned JSON";
 is scalar(@{$json->{projects}}), 0, "No projects";
+
+#
+# Add another project
+#
+
+$json = POST_ok("/project", {
+  name => "Test Project 2",
+  description => "Another test project",
+}, "create another project");
+
+ok $json->{project}, "JSON has project key";
+is $json->{project}->{name}, "Test Project 2", "Right name";
+is $json->{project}->{description}, "Another test project", "Right description";
+
+$uuid = $json -> {project} -> {uuid};
+
+#
+# Get the project
+#
+
+$json = GET_ok("/project/$uuid", "Get the project");
+
+ok $json->{project}, "JSON has project key";
+is $json->{project}->{uuid}, $uuid, "Right uuid";
+
+ok $json->{project}->{editions}, "JSON has a project.editions key";
+is scalar(@{$json->{project}->{editions}}), 1, "Only one edition";
+
+ok !$json->{project}->{editions}->[0]->{frozen_on}, "Edition isn't frozen";
+
+#
+# Update project description
+#
+
+$json = PUT_ok("/project/$uuid", {
+  description => "Second description",
+}, "Update project description");
+
+ok $json->{project}, "JSON has project key";
+is $json->{project}->{uuid}, $uuid, "Right uuid";
+is $json->{project}->{description}, "Second description", "Right description";
+
+#
+# Make sure project still has no frozen editions
+#
+
+$json = GET_ok("/project/$uuid", "Get the project");
+
+ok $json->{project}, "JSON has project key";
+is $json->{project}->{uuid}, $uuid, "Right uuid";
+is $json->{project}->{description}, "Second description", "Right description";
+
+ok $json->{project}->{editions}, "JSON has a project.editions key";
+is scalar(@{$json->{project}->{editions}}), 1, "Only one edition";
+
+ok !$json->{project}->{editions}->[0]->{frozen_on}, "Edition isn't frozen";
 
 done_testing();

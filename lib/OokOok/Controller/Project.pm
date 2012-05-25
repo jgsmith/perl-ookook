@@ -130,7 +130,6 @@ sub base :Chained('/') :PathPart('project') :CaptureArgs(1) {
     );
     $self -> detach();
   }
-  print STDERR "Project: ", $project -> uuid, "\n";
   $c -> stash -> {project} = $project;
 }
 
@@ -172,6 +171,49 @@ sub project_GET {
 sub project_PUT {
   my( $self, $c ) = @_;
 
+  my($project, $ce);
+  $project = $c -> stash -> {project};
+  eval {
+    $ce = $project -> current_edition;
+    my $updates = {
+      name => $c -> req -> data -> {name},
+      description => $c -> req -> data -> {description},
+    };
+    delete $updates->{name} unless defined $updates->{name};
+    delete $updates->{description} unless defined $updates->{description};
+
+    $ce -> update($updates) if scalar(keys %$updates);
+  };
+  
+  if($@) {
+    $self -> status_bad_request(
+      $c,
+      message => "Unable to update project: $@",
+    );
+  }
+  else {
+    my $data = {
+      name => $ce->name,
+      uuid => $project -> uuid,
+      url => $c->uri_for("/project") . '/' . $project -> uuid,
+      description => $ce -> description,
+      editions => [
+        map { +{
+          frozen_on => (map { defined($_) ? "".$_ : "" } $_ -> frozen_on),
+          created_on => (map { defined($_) ? "".$_ : "" } $_ -> created_on),
+          name => $_ -> name,
+          description => $_ -> description,
+        } } $project -> editions -> search({}, { order_by => 'id' }) -> all
+      ],
+    };
+    $self -> status_accepted(
+      $c,
+      location => $c -> uri_for('/project') . '/' . $project -> uuid,
+      entity => {
+        project => $data
+      }
+    );
+  }
 }
 
 sub project_DELETE {
