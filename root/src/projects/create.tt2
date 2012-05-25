@@ -1,6 +1,0 @@
-[% META title = 'Create/Update Project' %]
-
-[% form %]
-
-<p><a href="[% c.uri_for(c.controller.action_for('list')) %]">Return to
-project list</a></p>

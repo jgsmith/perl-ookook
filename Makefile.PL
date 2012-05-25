@@ -10,15 +10,23 @@ name 'OokOok';
 all_from 'lib/OokOok.pm';
 
 requires 'Catalyst::Runtime' => '5.90012';
+
+requires 'Catalyst::Action::RenderView';
+requires 'Catalyst::Action::REST';
+
+requires 'Catalyst::Controller::HTML::FormFu';
+
+requires 'Catalyst::Model::DBIC::Schema';
+
 requires 'Catalyst::Plugin::ConfigLoader';
 requires 'Catalyst::Plugin::Static::Simple';
 requires 'Catalyst::Plugin::StackTrace';
 requires 'Catalyst::Plugin::StatusMessage';
 requires 'Catalyst::Plugin::Session';
 requires 'Catalyst::Plugin::Session::State::Cookie';
-requires 'Catalyst::Action::RenderView';
-requires 'Catalyst::Action::REST';
-requires 'Catalyst::Model::DBIC::Schema';
+
+requires 'CatalystX::RoleApplicator';
+
 requires 'Moose';
 requires 'namespace::autoclean';
 requires 'Set::Scalar';
@@ -26,8 +34,9 @@ requires 'Data::UUID';
 requires 'Workflow';
 requires 'JSON';
 requires 'HTML::FormFu';
-requires 'Catalyst::Controller::HTML::FormFu';
+
 requires 'HTML::FormFu::Model::DBIC';
+
 requires 'Config::General'; # This should reflect the config file format you've chosen
                  # See Catalyst::Plugin::ConfigLoader for supported formats
 test_requires 'Test::More' => '0.88';

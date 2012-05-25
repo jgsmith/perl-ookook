@@ -11,6 +11,17 @@ __PACKAGE__->config(
     WRAPPER => 'wrapper.tt2',
 );
 
+#
+# This is for the RESTful pieces of the app
+#
+before process => sub {
+  my($self, $c, $stash_key) = @_;
+
+  if($stash_key) {
+    $c -> stash -> {data} = $c -> stash -> {$stash_key};
+  }
+};
+
 =head1 NAME
 
 OokOok::View::HTML - TT View for OokOok

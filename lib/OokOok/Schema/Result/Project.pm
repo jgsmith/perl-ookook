@@ -121,6 +121,15 @@ after 'insert' => sub {
   return $self;
 };
 
+# If we have published anything, then we can't be deleted
+before 'delete' => sub {
+  my $self = shift;
+
+  if(grep { $_ -> is_frozen } $self -> editions) {
+    die "Unable to delete a project with published editions";
+  }
+};
+
 =head2 edition_for_date
 
 Given a date, find the project instance that is appropriate. If no

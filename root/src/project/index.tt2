@@ -1,0 +1,93 @@
+[%- META title = 'Project List' -%]
+<div id="messages">
+</div>
+<div>
+<h3>
+  Your Projects 
+  <span id="project_count"></span>
+  <a class="label label-inverse" href="#new_project_form" data-toggle="modal">New project</a>
+<h3>
+<dl id="projects_list"></dl>
+</div>
+<div id="new_project_form" class="modal fade">
+  <div class="modal-header">
+    <button class="close" data-dismiss="modal">&times;</button>
+    <h3>New Project</h3>
+  </div>
+  <div class="modal-body">
+  <form class="well">
+    <label>Project name (required)</label>
+    <input id="new_project_name" type="text" class="span3" placeholder="Project name...">
+    <label>Project description (optional)</label>
+    <textarea id="new_project_description" rows="4"></textarea>
+  </form>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" id="cancel_project_btn">Close</a>
+    <a href="#" class="btn btn-primary" id="create_project_btn">Create Project</a>
+  </div>
+</div>
+<script type="text/javascript">
+  $(function() {
+    function display_projects(data) {
+      // data.projects is a list of projects
+      $("#projects_list").empty();
+      $("#project_count").html("(" + data.projects.length + ")");
+      $.each(data.projects, function(i, project) {
+        var el = $("<dt></dt>"),
+            a  = $("<a></a>");
+        
+        a.attr('href', '[% c.uri_for('/project') %]/' + project.uuid);
+        a.text(project.name);
+        el.append(a);
+        $("#projects_list").append(el);
+        el = $("<dd></dd>");
+        a = $("<p></p>");
+        a.text(project.current_edition.description);
+        el.append(a);
+        $("#projects_list").append(el);
+      });
+    }
+    $.ajax({
+      url: '[% c.uri_for('/project') %]',
+      type: 'GET',
+      data: {},
+      dataType: 'json',
+      success: function(data, textStatus, jqXHR) {
+        display_projects(data);
+      }
+    });
+
+    $("#new_project_form").modal('hide');
+    $("#new_project_form").on('show', function() {
+      $("#new_project_name").val("");
+      $("#new_project_description").val("");
+    });
+    $("#cancel_project_btn").click(function() {
+      $("#new_project_form").modal('hide');
+    });
+    $("#create_project_btn").click(function() {
+      var project_name = $("#new_project_name").val(),
+          project_desc = $("#new_project_description").val();
+      $("#new_project_form").modal('hide');
+      $.ajax({
+        url: '[% c.uri_for('/project') %]',
+        type: 'PUT',
+        data: JSON.stringify({
+          name: project_name,
+          description: project_desc
+        }),
+        processData: false,
+        contentType: 'application/json',
+        dataType: 'json',
+        success: function(data, textStatus, jqXHR) {
+          $("#messages").append("<div class='alert alert-success'><a class='close' data-dismiss='alert' href='#'>&times;</a><h4 class='alert-heading'>Success!</h4> Project created.</div>");
+          display_projects(data);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          $("#messages").append("<div class='alert alert-error'><a class='close' data-dismiss='alert' href='#'>&times;</a><h4 class='alert-heading'>Uh oh!</h4> Unable to create project.</div>");
+        }
+      });
+    });
+  });
+</script>

@@ -1,9 +1,14 @@
+[% IF no_wrapper %]
+[% content %]
+[% ELSE %]
 <!DOCTYPE html>
 <html lang="en>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>[% title %]</title>
-    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <title>[% template.title %]</title>
+    <script src="[% c.uri_for('/static/js/jquery.js') %]"></script>
+    <script src="[% c.uri_for('/static/js/bootstrap.min.js') %]"></script>
+    <link href="[% c.uri_for('/static/css/bootstrap.css') %]" rel="stylesheet">
     <style type="text/css">
       body {
         padding-top: 60px;
@@ -34,13 +39,13 @@
     <div class="container">
       [% IF status_msg %]
         <div class="alert alert-success">
-          <a class="close" data-dismiss="alert" href="#">×</a>
+          <a class="close" data-dismiss="alert" href="#">&times;</a>
           [% status_msg %]
         </div>
       [% END %]
       [% IF error_msg %]
         <div class="alert alert-error">
-          <a class="close" data-dismiss="alert" href="#">×</a>
+          <a class="close" data-dismiss="alert" href="#">&times;</a>
           [% error_msg %]
         </div>
       [% END %]
@@ -49,7 +54,6 @@
         <p>&copy; 2012</p>
       </footer>
     </div>
-    <script src="/static/js/jquery.js"></script>
-    <script src="/static/js/bootstrap.min.js"></script>
   </body>
 </html>
+[% END %]
