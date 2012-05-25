@@ -231,4 +231,123 @@ is scalar(@{$json->{project}->{editions}}), 1, "Only one edition";
 
 ok !$json->{project}->{editions}->[0]->{frozen_on}, "Edition isn't frozen";
 
+#
+# See if we can get the sitemap
+#
+
+$json = GET_ok("/project/$uuid/sitemap", "Get the project sitemap");
+
+ok $json->{sitemap}, "JSON has sitemap key";
+
+#
+# Now add something to the sitemap
+#
+
+my $sitemap = {
+  '' => {
+    'visual' => 'home-page',
+    'children' => {
+      'about' => {
+        visual => 'about-page',
+      }
+    }
+  }
+};
+
+$json = PUT_ok("/project/$uuid/sitemap", $sitemap, "Update sitemap");
+        
+ok $json->{sitemap}, "JSON has sitemap key";
+is_deeply $json->{sitemap}, $sitemap, "Sitemap updated correctly";
+
+$json = GET_ok("/project/$uuid/sitemap", "Get sitemap");
+ok $json->{sitemap}, "JSON has sitemap key";
+is_deeply $json->{sitemap}, $sitemap, "Sitemap updated correctly";
+
+#
+# Make sure project still has no frozen editions
+#
+
+$json = GET_ok("/project/$uuid", "Get the project");
+
+ok $json->{project}, "JSON has project key";
+is $json->{project}->{uuid}, $uuid, "Right uuid";
+is $json->{project}->{description}, "Second description", "Right description";
+
+ok $json->{project}->{editions}, "JSON has a project.editions key";
+is scalar(@{$json->{project}->{editions}}), 1, "Only one edition";
+
+ok !$json->{project}->{editions}->[0]->{frozen_on}, "Edition isn't frozen";
+
+#
+# Remove a page from the sitemap
+#
+
+$json = PUT_ok("/project/$uuid/sitemap", {
+  '' => {
+    'children' => {
+      'about' => {
+        visual => undef
+      }
+    }
+  }
+}, "Remove about page from sitemap");
+
+ok $json->{sitemap}, "JSON has sitemap key";
+is_deeply $json->{sitemap}, {
+  '' => {
+    'visual' => 'home-page'
+  }
+}, "About page removed from sitemap";
+
+#
+# Add a page to the sitemap
+#
+
+$json = PUT_ok("/project/$uuid/sitemap", {
+  '' => {
+    children => {
+      'foo' => {
+        visual => 'bar'
+      }
+    }
+  }
+}, "Add a page to the sitemap");
+
+ok $json->{sitemap}, "JSON has sitemap key";
+is_deeply $json->{sitemap}, {
+  '' => {
+    'visual' => 'home-page',
+    'children' => {
+      'foo' => {
+        'visual' => 'bar'
+      }
+    }
+  }
+}, "Page added to sitemap";
+
+#
+# Modify a page in the sitemap
+#
+$json = PUT_ok("/project/$uuid/sitemap", {
+  '' => {
+    children => {
+      'foo' => {
+        'visual' => 'baz'
+      }
+    }
+  }
+}, "Modify a page in the sitemap");
+
+ok $json->{sitemap}, "JSON has sitemap key";
+is_deeply $json->{sitemap}, {
+  '' => {
+    'visual' => 'home-page',
+    'children' => {
+      'foo' => {
+        'visual' => 'baz'
+      }
+    }
+  }
+}, "Page modified in sitemap";
+
 done_testing();

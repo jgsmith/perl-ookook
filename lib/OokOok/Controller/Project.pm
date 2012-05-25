@@ -106,6 +106,23 @@ sub index_POST {
   }
 }
 
+sub index_OPTIONS {
+  my($self, $c) = @_;
+
+  my %headers = (
+    Allow => [qw/GET OPTIONS POST/],
+    Accept => [qw{application/json}],
+  );
+
+  # we allow GET and POST
+  $c -> response -> status(200);
+  $c -> response -> headers -> header(%headers);
+  $c -> response -> body('');
+  $c -> response -> content_length(0);
+  $c -> response -> content_type("text/plain");
+  $c -> detach();
+}
+
 
 =head2 project
 
@@ -128,7 +145,7 @@ sub base :Chained('/') :PathPart('project') :CaptureArgs(1) {
     $self -> status_not_found($c,
       message => "Project not found"
     );
-    $self -> detach();
+    $c -> detach();
   }
   $c -> stash -> {project} = $project;
 }
@@ -168,6 +185,9 @@ sub project_GET {
   );
 }
 
+#
+# PUT must be idempotent -- so no new working edition
+#
 sub project_PUT {
   my( $self, $c ) = @_;
 
@@ -206,9 +226,8 @@ sub project_PUT {
         } } $project -> editions -> search({}, { order_by => 'id' }) -> all
       ],
     };
-    $self -> status_accepted(
+    $self -> status_ok(
       $c,
-      location => $c -> uri_for('/project') . '/' . $project -> uuid,
       entity => {
         project => $data
       }
@@ -231,6 +250,116 @@ sub project_DELETE {
   }
 }
     
+sub project_OPTIONS {
+  my($self, $c) = @_;
+
+  my %headers = (
+    Allow => [qw/GET OPTIONS PUT DELETE/],
+    Accept => [qw{application/json}],
+  );
+
+  # we allow GET and POST
+  $c -> response -> status(200);
+  $c -> response -> headers -> header(%headers);
+  $c -> response -> body('');
+  $c -> response -> content_length(0);
+  $c -> response -> content_type("text/plain");
+  $c -> detach();
+}
+
+sub sitemap :Chained('base') :PathPart('sitemap') :Args(0) :ActionClass('REST') { }
+
+sub sitemap_GET {
+  my($self, $c) = @_;
+
+  
+  $self -> status_ok(
+    $c,
+    entity => {
+      sitemap => $c -> stash -> {project} -> current_edition -> sitemap
+    }
+  );
+}
+
+sub _walk_sitemaps {
+  my($self, $sitemap, $changes) = @_;
+
+  my($k, $v, $kk, $vv);
+
+  while(($k, $v) = each(%$changes)) {
+    if(!exists $sitemap->{$k}) {
+      $sitemap->{$k} = { };
+    }
+    while(($kk, $vv) = each(%$v)) {
+      if($kk eq 'children') {
+        if(!exists $sitemap -> {$k} -> {children}) {
+          $sitemap->{$k} -> {children} = {};
+        }
+        $self -> _walk_sitemaps($sitemap -> {$k} -> {children}, $vv);
+        if(0 == scalar(keys %{$sitemap->{$k}->{children}})) {
+          delete $sitemap->{$k}->{children};
+        }
+      }
+      elsif(defined $vv) {
+        $sitemap -> {$k} -> {$kk} = $vv;
+      }
+      elsif(exists $sitemap->{$k}->{$kk}) {
+        delete $sitemap->{$k}->{$kk};
+      }
+    }
+    if(!scalar(keys(%{$sitemap->{$k}}))) {
+      delete $sitemap->{$k};
+    }
+  }
+}
+
+sub sitemap_PUT {
+  my($self, $c) = @_;
+
+  # we walk through the pieces we're given and add, remove, or
+  # modify them as needed.
+  #
+  # { 'slug' => { children => { ... }, foo => undef }
+  #   => remove foo representation of 'slug'
+  #
+  #
+
+  my $sitemap = $c -> stash -> {project} -> current_edition -> sitemap;
+
+  my $changes = $c -> req -> data;
+
+  $self -> _walk_sitemaps($sitemap, $changes);
+
+  $c -> stash -> {project} -> current_edition -> update({
+    sitemap => $sitemap
+  });
+
+  $self -> status_ok(
+    $c,
+    entity => {
+      sitemap => $c -> stash -> {project} -> current_edition -> sitemap
+    }
+  );
+}
+
+sub sitemap_OPTIONS {
+  my($self, $c) = @_;
+
+  my %headers = (
+    Allow => [qw/GET OPTIONS PUT/],
+    Accept => [qw{application/json}],
+  );
+
+  # we allow GET and POST
+  $c -> response -> status(200);
+  $c -> response -> headers -> header(%headers);
+  $c -> response -> body('');
+  $c -> response -> content_length(0);
+  $c -> response -> content_type("text/plain");
+  $c -> detach();
+}
+
+
 
 =head1 AUTHOR
 

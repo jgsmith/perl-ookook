@@ -127,8 +127,8 @@ __PACKAGE__->has_many("layouts" => "OokOok::Schema::Result::Layout", "edition_id
 });
 
 __PACKAGE__->inflate_column('sitemap', {
-  inflate => sub { decode_json shift },
-  deflate => sub { encode_json shift },
+  inflate => sub { JSON::decode_json shift },
+  deflate => sub { JSON::encode_json shift },
 });
 
 sub is_frozen { defined $_[0] -> frozen_on; }
@@ -150,6 +150,13 @@ sub freeze {
 
 before delete => sub {
   if($_[0] -> is_frozen) {
+    die "Unable to delete a frozen project instance";
+  }
+};
+
+before update => sub {
+  if($_[0] -> is_frozen) {
+    $_[0] -> discard_changes();
     die "Unable to delete a frozen project instance";
   }
 };
