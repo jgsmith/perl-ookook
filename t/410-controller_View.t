@@ -135,29 +135,29 @@ $json = GET_ok("/project/$uuid/page", "Get list of pages");
 ok $json->{pages}, "JSON has pages property";
 is scalar(@{$json->{pages}}), 0, "No pages in project yet";
 
-$json = POST_ok("/project/$uuid/page", {
-  title => "Page Title",
-  description => "Description of page",
-}, "create page");
+my %pages;
 
-ok $json->{page}, "JSON has page property";
-my $page_uuid = $json->{page}->{uuid};
-ok $page_uuid, "JSON has page uuid";
-is $json->{page}->{title}, "Page Title", "Right value for title";
-is $json->{page}->{description}, "Description of page", "Right value for description";
+for my $nom (qw/Foo Bar Baz/) {
+
+  $json = POST_ok("/project/$uuid/page", {
+    title => "$nom Title",
+    description => "Description of " . lc($nom) . " page",
+  }, "create $nom page");
+
+  ok $json->{page}, "JSON has page property";
+  my $page_uuid = $json->{page}->{uuid};
+  ok $page_uuid, "JSON has page uuid";
+  is $json->{page}->{title}, "$nom Title", "Right value for title";
+  is $json->{page}->{description}, "Description of ".lc($nom)." page", "Right value for description";
+
+  $pages{$nom} = $page_uuid;
+
+}
 
 $json = GET_ok("/project/$uuid/page", "Get list of pages");
 
 ok $json->{pages}, "JSON has pages property";
-is scalar(@{$json->{pages}}), 1, "One page in project";
-
-$json = GET_ok("/project/$uuid/page/$page_uuid", "Get page info");
-
-ok $json->{page}, "JSON has page property";
-is $json->{page}->{uuid}, $page_uuid, "Right uuid";
-is $json->{page}->{title}, "Page Title", "Right value for title";
-is $json->{page}->{description}, "Description of page", "Right value for description";
-
+is scalar(@{$json->{pages}}), 3, "Three pages in project";
 
 #
 # Then create a sitemap with the pages
@@ -166,9 +166,25 @@ is $json->{page}->{description}, "Description of page", "Right value for descrip
 PUT_ok("/project/$uuid/sitemap", {
   '' => {
     children => {
-    }
-  }
+      'about' => {
+        'visual' => $pages{"Bar"}
+      },
+      'projects' => {
+        'children' => {
+          'ookook' => {
+            'visual' => $pages{"Baz"}
+          },
+        },
+      },
+    },
+    'visual' => $pages{"Foo"}
+  },
 }, "Create sitemap");
 
 ok( !request('/v')->is_success, 'Request should not succeed' );
+
+ok( request("/v/dev/$uuid/") -> is_success, 'Request should succeed' );
+
+ok( !request("/v/dev/$uuid/boo") -> is_success, "/boo isn't in project" );
+ok( request("/v/dev/$uuid/about") -> is_success, "/about is in project" );
 done_testing();

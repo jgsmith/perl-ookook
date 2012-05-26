@@ -43,10 +43,15 @@ Theme components:
 sub default :Chained('/') :PathPart('v') {
   my ( $self, $c ) = @_;
 
-  my @path = @{$c -> arguments};
+  my @path = @{$c -> request -> arguments};
   my $date = DateTime -> now;
-  
-  if($path[0] eq 'dev') {
+
+  if(!@path) {
+    $c->response->body( 'Page not found' );
+    $c->response->status(404);
+    $c->detach();
+  }
+  elsif($path[0] eq 'dev') {
     # development version
     shift @path;
     my $uuid = shift @path;
@@ -57,7 +62,9 @@ sub default :Chained('/') :PathPart('v') {
       $c->response->status(404);
       $c->detach();
     }
+    $c -> stash(project => $project);
     $c -> stash(edition => $project -> current_edition);
+    $date = undef;
   }
   elsif($path[0] =~ /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/) {
     shift @path;
@@ -77,6 +84,7 @@ sub default :Chained('/') :PathPart('v') {
       $c->response->status(404);
       $c->detach();
     }
+    $c -> stash(project => $project);
     $c -> stash(edition => $project -> edition_for_date($date));
   }
   else {
@@ -88,8 +96,12 @@ sub default :Chained('/') :PathPart('v') {
       $c->response->status(404);
       $c->detach();
     }
+    $c -> stash(project => $project);
     $c -> stash(edition => $project -> edition_for_date($date));
   }
+
+  # put the top-level page on the stack
+  unshift @path, '';
 
   $c -> stash(date => $date);
 
@@ -99,7 +111,34 @@ sub default :Chained('/') :PathPart('v') {
 
   my $sitemap = $c -> stash -> {edition} -> sitemap;
 
-  
+  my $page_uuid;
+  while(@path && !$page_uuid && $sitemap) {
+    my $slug = shift @path;
+    if($sitemap->{$slug}) {
+      if(!@path) {
+        $page_uuid = $sitemap->{$slug}->{visual};
+      }
+      else {
+        $sitemap = $sitemap->{$slug}->{children};
+      }
+    }
+  }
+
+  if(!$page_uuid) {
+    $c -> response->body( 'Page not found' );
+    $c -> response -> status(404);
+    $c -> detach;
+  }
+
+  my $page = $c -> stash -> {project} -> page_for_date($page_uuid, $c -> stash -> {date});
+
+  if(!$page) {
+    $c -> response->body( 'Page not found' );
+    $c -> response -> status(404);
+    $c -> detach;
+  }
+
+  $c -> stash -> {page} = $page;
 }
 
 =head1 AUTHOR
