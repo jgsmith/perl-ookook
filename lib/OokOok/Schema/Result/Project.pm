@@ -224,6 +224,9 @@ sub _apply_date_constraint {
   if($join ne "") { $join = $join . "." };
 
   if($date) {
+    if(ref $date) {
+      $date = $self -> result_source -> schema -> storage -> datetime_parser -> format_datetime($date);
+    }
     $q = $q -> search(
       { $join."frozen_on" => { '<=' => $date } },
     );

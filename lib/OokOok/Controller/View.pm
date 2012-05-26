@@ -100,6 +100,13 @@ sub default :Chained('/') :PathPart('v') {
     $c -> stash(edition => $project -> edition_for_date($date));
   }
 
+  if(!$c->stash->{edition}) {
+    # 404 - not found
+    $c->response->body( 'Page not found' );
+    $c->response->status(404);
+    $c->detach();
+  }
+
   # put the top-level page on the stack
   unshift @path, '';
 

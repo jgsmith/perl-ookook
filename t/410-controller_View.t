@@ -124,7 +124,7 @@ $json = POST_ok("/project", {
   description => "Test project description",
 }, "create project");
 
-my $uuid = $json -> {project} -> {uuid};
+$uuid = $json -> {project} -> {uuid};
 
 #
 # Now we need to add a few pages to the project
@@ -187,4 +187,32 @@ ok( request("/v/dev/$uuid/") -> is_success, 'Request should succeed' );
 
 ok( !request("/v/dev/$uuid/boo") -> is_success, "/boo isn't in project" );
 ok( request("/v/dev/$uuid/about") -> is_success, "/about is in project" );
+ok( !request("/v/dev/$uuid/projects") -> is_success, "/projects isn't in project" );
+ok( request("/v/dev/$uuid/projects/ookook") -> is_success, "/projects/ookook is in project" );
+
+my $before_date = DateTime->now;
+$before_date = $before_date->ymd('').$before_date->hms('');
+
+ok( !request("/v/$before_date/$uuid/")->is_success, "No frozen edition yet");
+
+ok( !request("/v/$uuid/") -> is_success, "No available edition yet");
+
+sleep(2);
+
+POST_ok("/project/$uuid/edition", {}, "Create a frozen edition");
+
+sleep(2);
+
+my $after_date = DateTime->now;
+$after_date = $after_date->ymd('').$after_date->hms('');
+
+ok( !request("/v/$before_date/$uuid/")->is_success, "Date preceeds freeze");
+ok( request("/v/$after_date/$uuid/")->is_success, "Date is after freeze");
+
+#
+# Now see if dev site is still available
+#
+
+ok( request("/v/dev/$uuid/about") -> is_success, "About page is still there");
+
 done_testing();
