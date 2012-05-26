@@ -157,7 +157,7 @@ before delete => sub {
 before update => sub {
   if($_[0] -> is_frozen) {
     $_[0] -> discard_changes();
-    die "Unable to delete a frozen project instance";
+    die "Unable to modify a frozen project instance";
   }
 };
 
