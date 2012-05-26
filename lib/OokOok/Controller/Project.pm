@@ -148,6 +148,7 @@ sub base :Chained('/') :PathPart('project') :CaptureArgs(1) {
     $c -> detach();
   }
   $c -> stash -> {project} = $project;
+  $c -> stash -> {edition} = $project -> current_edition;
 }
 
 # Handles operations on a particular project
@@ -161,7 +162,7 @@ sub project_GET {
   my ( $self, $c ) = @_;
 
   my $p = $c->stash->{project};
-  my $ce = $p -> current_edition;
+  my $ce = $c->stash->{edition};
   my $data = {
     name => $ce->name,
     uuid => $p -> uuid,
@@ -191,10 +192,8 @@ sub project_GET {
 sub project_PUT {
   my( $self, $c ) = @_;
 
-  my($project, $ce);
-  $project = $c -> stash -> {project};
+  my($project, $ce) = @{$c -> stash}{qw/project edition/};
   eval {
-    $ce = $project -> current_edition;
     my $updates = {
       name => $c -> req -> data -> {name},
       description => $c -> req -> data -> {description},
@@ -276,7 +275,7 @@ sub sitemap_GET {
   $self -> status_ok(
     $c,
     entity => {
-      sitemap => $c -> stash -> {project} -> current_edition -> sitemap
+      sitemap => $c -> stash -> {edition} -> sitemap
     }
   );
 }
@@ -324,20 +323,20 @@ sub sitemap_PUT {
   #
   #
 
-  my $sitemap = $c -> stash -> {project} -> current_edition -> sitemap;
+  my $sitemap = $c -> stash -> {edition} -> sitemap;
 
   my $changes = $c -> req -> data;
 
   $self -> _walk_sitemaps($sitemap, $changes);
 
-  $c -> stash -> {project} -> current_edition -> update({
+  $c -> stash -> {edition} -> update({
     sitemap => $sitemap
   });
 
   $self -> status_ok(
     $c,
     entity => {
-      sitemap => $c -> stash -> {project} -> current_edition -> sitemap
+      sitemap => $c -> stash -> {edition} -> sitemap
     }
   );
 }
@@ -360,6 +359,154 @@ sub sitemap_OPTIONS {
 }
 
 
+sub pages :Chained('base') :PathPart('page') :Args(0) :ActionClass('REST') { }
+
+#
+# TODO: Find more efficient SQL for finding the most recent version of
+# each page based on the uuid (without having to load uuid first).
+#
+sub pages_GET {
+  my($self, $c) = @_;
+
+  my %pages;
+  my $q = $c -> model("DB::Page");
+  
+  $q = $q -> search(
+    { 
+      "edition.project_id" => $c -> stash -> {project} -> id
+    },
+    { 
+      join => [qw/edition/]
+    } 
+  );
+
+  my $uuid;
+   
+  while(my $p = $q -> next) {
+    $uuid = $p -> uuid;
+    if($pages{$uuid}) {
+      # we assume that a higher id is a more recent edition
+      if($p -> edition -> id > $pages{$uuid}->edition->id) {
+        $pages{$uuid} = $p;
+      }
+    } 
+    else {
+      $pages{$uuid} = $p;
+    } 
+  } 
+  
+  $self -> status_ok(
+    $c,
+    entity => {
+      pages => [
+        map { +{
+          uuid => $_ -> uuid,
+          title => $_ -> title,
+          parts => [ map { $_ -> name } $_ -> page_parts ],
+        } } values %pages
+      ]
+    }
+  );
+}
+
+# Creates a page in the current edition
+# No content, but meta info, such as title and layout info
+sub pages_POST {
+  my($self, $c) = @_;
+
+  my $page;
+  eval {
+    my %columns;
+    my $data = $c -> req -> data;
+    for my $col (qw/title description/) {
+      $columns{$col} = $data -> {$col} if defined $data -> {$col};
+    }
+
+    $page = $c -> stash -> {edition} -> create_related('pages', \%columns);
+  };
+
+  if($@) {
+    $self -> status_bad_request(
+      $c,
+      message => "Unable to create page: $@",
+    );
+  } 
+  else {
+    my $puuid = $page -> uuid;
+    my $uuid = $c -> stash -> {project} -> uuid;
+    $self -> status_created(
+      $c,
+      location => $c -> uri_for("/project/$uuid/page/$puuid"),
+      entity => {
+        page => {
+          uuid => $puuid,
+          title => $page -> title,
+          description => $page -> description,
+        }
+      }
+    );
+  }
+}
+
+sub pages_OPTIONS {
+  my($self, $c) = @_;
+
+  my %headers = (
+    Allow => [qw/GET OPTIONS PUT/],
+    Accept => [qw{application/json}],
+  );
+
+  # we allow GET and POST
+  $c -> response -> status(200);
+  $c -> response -> headers -> header(%headers);
+  $c -> response -> body('');
+  $c -> response -> content_length(0);
+  $c -> response -> content_type("text/plain");
+  $c -> detach();
+}
+
+sub page :Chained('base') :PathPart('page') :Args(1) :ActionClass('REST') { 
+  my($self, $c, $page_uuid) = @_;
+
+}
+
+sub page_GET {
+}
+
+sub page_PUT {
+}
+
+sub page_DELETE {
+}
+
+sub page_OPTIONS {
+  my($self, $c) = @_;
+
+  my %headers = (
+    Allow => [qw/GET OPTIONS PUT DELETE/],
+    Accept => [qw{application/json}],
+  );
+
+  # we allow GET and POST
+  $c -> response -> status(200);
+  $c -> response -> headers -> header(%headers);
+  $c -> response -> body('');
+  $c -> response -> content_length(0);
+  $c -> response -> content_type("text/plain");
+  $c -> detach();
+}
+
+sub page_parts_base :Chained('base') :PathPart('page') :CaptureArgs(1) { 
+  my($self, $c, $page_uuid) = @_;
+
+  my $page = $c -> stash -> {project} -> page_by_date($page_uuid);
+}
+
+sub page_parts :Chained('page_parts_base') :PathPart('page_part') :Args(0) :ActionClass('REST') {
+}
+
+sub page_part :Chained('page_parts_base') :PathPart('page_part') :Args(1) :ActionClass('REST') {
+}
 
 =head1 AUTHOR
 
