@@ -19,6 +19,7 @@ CREATE TABLE user_identity (
 CREATE TABLE project (
   id      INTEGER PRIMARY KEY,
   uuid    char(20) NOT NULL,
+  created_on DATETIME NOT NULL,
   user_id INTEGER
 );
 

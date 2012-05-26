@@ -27,6 +27,8 @@ sub GET_ok {
     HTTP::Request->new( GET => $url, $headers )
   ), "GET: $desc");
 
+  ok( $res -> code < 300, "Status ok: $desc" );
+
   #diag( $res -> content );
 
   eval { $json = decode_json($res -> content) };
@@ -67,6 +69,8 @@ sub PUT_ok {
     HTTP::Request->new( PUT => $url, $headers, $content )
   ), "PUT: $desc");
 
+  ok( $res -> code < 300, "Status ok: $desc" );
+
   eval { $json = decode_json($res -> content) };
   ok !$@, "Decode: $desc";
   return $json;
@@ -90,6 +94,8 @@ sub POST_ok {
     HTTP::Request->new( POST => $url, $headers, $content )
   ), "POST: $desc");
 
+  ok( $res -> code < 300, "Status ok: $desc" );
+
   eval { $json = decode_json($res -> content) };
   ok !$@, "Decode: $desc";
   return $json;
@@ -108,6 +114,9 @@ sub DELETE_ok {
   ok( $res = request(
     HTTP::Request->new( DELETE => $url, $headers, "{}" )
   ), "DELETE: $desc");
+
+  ok( $res -> code < 300, "Status ok: $desc" );
+
 }
 
 #
@@ -349,5 +358,82 @@ is_deeply $json->{sitemap}, {
     }
   }
 }, "Page modified in sitemap";
+
+#
+# Now we need to add a few pages to the project
+#
+
+$json = GET_ok("/project/$uuid/page", "Get list of pages");
+
+ok $json->{pages}, "JSON has pages property";
+is scalar(@{$json->{pages}}), 0, "No pages in project yet";
+
+$json = POST_ok("/project/$uuid/page", {
+  title => "Page Title",
+  description => "Description of page",
+}, "create page");
+
+ok $json->{page}, "JSON has page property";
+my $page_uuid = $json->{page}->{uuid};
+ok $page_uuid, "JSON has page uuid";
+is $json->{page}->{title}, "Page Title", "Right value for title";
+is $json->{page}->{description}, "Description of page", "Right value for description";
+
+$json = GET_ok("/project/$uuid/page", "Get list of pages");
+
+ok $json->{pages}, "JSON has pages property";
+is scalar(@{$json->{pages}}), 1, "One page in project";
+
+$json = GET_ok("/project/$uuid/page/$page_uuid", "Get page info");
+
+ok $json->{page}, "JSON has page property";
+is $json->{page}->{uuid}, $page_uuid, "Right uuid";
+is $json->{page}->{title}, "Page Title", "Right value for title";
+is $json->{page}->{description}, "Description of page", "Right value for description";
+
+#
+# Now we freeze the edition
+#
+
+sleep(1);
+
+$json = POST_ok("/project/$uuid/edition", {}, "create new working edition");
+
+ok $json->{edition}, "JSON has edition property";
+ok $json->{edition}->{created_on}, "JSON has created on date";
+
+$json = GET_ok("/project/$uuid/sitemap", "Get sitemap");
+ok $json->{sitemap}, "JSON has sitemap key";
+is_deeply $json->{sitemap}, {
+  '' => {
+    'visual' => 'home-page',
+    'children' => {
+      'foo' => {
+        'visual' => 'baz'
+      }
+    }
+  }
+}, "New edition saves sitemap";
+
+$json = POST_ok("/project/$uuid/page", {
+  title => "Second page title",
+  description => "Description of another page",
+}, "Create a new page");
+
+my $page2_uuid = $json -> {page} -> {uuid};
+
+isnt $page2_uuid, $page_uuid, "Two pages are two uuids";
+
+$json = GET_ok("/project/$uuid/page", "Get list of pages");
+
+is scalar(@{$json->{pages}}), 2, "Two pages in project";
+
+$json = DELETE_ok("/project/$uuid/edition", "Clear working edition");
+
+$json = GET_ok("/project/$uuid/page", "Get list of pages");
+
+is scalar(@{$json->{pages}}), 1, "One page in project after clearing working edition";
+
+
 
 done_testing();

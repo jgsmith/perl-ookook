@@ -148,9 +148,29 @@ sub freeze {
   });
 }
 
+before insert => sub { $_[0] -> created_on(DateTime->now); };
+
 before delete => sub {
   if($_[0] -> is_frozen) {
     die "Unable to delete a frozen project instance";
+  }
+};
+
+after delete => sub {
+  my($self) = @_;
+
+  # get most recent frozen edition and clone it
+  # or, if there isn't one, create an empty one
+  my $prev = $self -> project -> current_edition;
+
+  if($prev) {
+    $prev -> copy({
+      created_on => DateTime -> now,
+      frozen_on => undef
+    });
+  }
+  else {
+    $self -> project -> editions -> create_related({ });
   }
 };
 

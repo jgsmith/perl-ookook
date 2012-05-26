@@ -151,6 +151,14 @@ $json = GET_ok("/project/$uuid/page", "Get list of pages");
 ok $json->{pages}, "JSON has pages property";
 is scalar(@{$json->{pages}}), 1, "One page in project";
 
+$json = GET_ok("/project/$uuid/page/$page_uuid", "Get page info");
+
+ok $json->{page}, "JSON has page property";
+is $json->{page}->{uuid}, $page_uuid, "Right uuid";
+is $json->{page}->{title}, "Page Title", "Right value for title";
+is $json->{page}->{description}, "Description of page", "Right value for description";
+
+
 #
 # Then create a sitemap with the pages
 #

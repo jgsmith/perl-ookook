@@ -11,7 +11,8 @@ OokOok::Controller::Project - Catalyst Controller
 
 =head1 DESCRIPTION
 
-Catalyst Controller.
+Provides the REST API for project management used by the project management
+web pages. These should not be considered a general purpose API.
 
 =head1 METHODS
 
@@ -23,6 +24,16 @@ __PACKAGE__ -> config(
   },
   default => 'text/html',
 );
+
+sub status_service_unavailable :Private {
+  my($self, $c, %p) = @_;
+  $c -> response -> status(503);
+  $c->log->debug( "Status Service Unavailable: $p{message}" ) if $c -> debug;
+  $c -> stash -> { $self -> {'stash_key'} } = {
+    error => $p{message}
+  };
+  return 1;
+}
 
 # We want to produce a list of possible projects
 sub index :Chained('/') :PathPart('project') :Args(0) :ActionClass('REST') {
@@ -106,21 +117,24 @@ sub index_POST {
   }
 }
 
-sub index_OPTIONS {
-  my($self, $c) = @_;
+sub do_OPTIONS :Private {
+  my($self, $c, %headers) = @_;
 
-  my %headers = (
-    Allow => [qw/GET OPTIONS POST/],
-    Accept => [qw{application/json}],
-  );
-
-  # we allow GET and POST
   $c -> response -> status(200);
   $c -> response -> headers -> header(%headers);
   $c -> response -> body('');
   $c -> response -> content_length(0);
   $c -> response -> content_type("text/plain");
   $c -> detach();
+}
+
+sub index_OPTIONS {
+  my($self, $c) = @_;
+
+  $self -> do_OPTIONS( $c,
+    Allow => [qw/GET OPTIONS POST/],
+    Accept => [qw{application/json}],
+  );
 }
 
 
@@ -241,30 +255,87 @@ sub project_DELETE {
     $c -> stash -> {project} -> delete;
   };
 
-  if(!$@) {
-    $self -> status_ok($c, entity => { message => 'success' });
+  if($@) {
+    $self -> status_forbidden($c, entity => { message => 'unable to delete project' });
   }
   else {
-    $self -> status_forbidden($c, entity => { message => 'unable to delete project' });
+    $self -> status_ok($c, entity => { message => 'success' });
   }
 }
     
 sub project_OPTIONS {
   my($self, $c) = @_;
 
-  my %headers = (
+  $self -> do_OPTIONS($c,
     Allow => [qw/GET OPTIONS PUT DELETE/],
     Accept => [qw{application/json}],
   );
-
-  # we allow GET and POST
-  $c -> response -> status(200);
-  $c -> response -> headers -> header(%headers);
-  $c -> response -> body('');
-  $c -> response -> content_length(0);
-  $c -> response -> content_type("text/plain");
-  $c -> detach();
 }
+
+sub edition :Chained('base') :PathPart('edition') :Args(0) :ActionClass('REST') { }
+
+sub edition_GET {
+  my($self, $c) = @_;
+
+  my $edition = $c -> stash -> {edition};
+
+  $self -> status_ok(
+    $c,
+    entity => {
+      edition => {
+        created_on => "".$edition->created_on,
+        description => $edition->description,
+        name => $edition->name
+      }
+    }
+  );
+}
+
+# We will want protections here so people don't get tricked into freezing
+# a working edition
+sub edition_POST {
+  my($self, $c) = @_;
+
+  my $edition = $c -> stash -> {edition};
+
+  if($edition -> created_on < DateTime->now) {
+    $edition -> freeze;
+    my $edition = $c -> stash -> {project} -> current_edition;
+    $self -> status_ok(
+      $c,
+      entity => {
+        edition => {
+          created_on => "".$edition->created_on,
+          description => $edition->description,
+          name => $edition->name
+        }
+      }
+    );
+  }
+  else {
+    $self -> status_service_unavailable($c, 
+      message => "Previous working edition too recent"
+    );
+  }
+}
+
+# DELETE will effectively clear out the current working edition
+# the current edition is deleted and a new one is created
+sub edition_DELETE {
+  my($self, $c) = @_;
+
+  eval {
+    $c -> stash -> {edition} -> delete;
+  };
+
+  if($@) {
+    $self -> status_forbidden($c, entity => { message => 'unable to clear edition' });
+  }
+  else {
+    $self -> status_ok($c, entity => { message => 'success' });
+  }
+}
+
 
 sub sitemap :Chained('base') :PathPart('sitemap') :Args(0) :ActionClass('REST') { }
 
@@ -344,18 +415,10 @@ sub sitemap_PUT {
 sub sitemap_OPTIONS {
   my($self, $c) = @_;
 
-  my %headers = (
+  $self -> do_OPTIONS($c,
     Allow => [qw/GET OPTIONS PUT/],
     Accept => [qw{application/json}],
   );
-
-  # we allow GET and POST
-  $c -> response -> status(200);
-  $c -> response -> headers -> header(%headers);
-  $c -> response -> body('');
-  $c -> response -> content_length(0);
-  $c -> response -> content_type("text/plain");
-  $c -> detach();
 }
 
 
@@ -451,49 +514,100 @@ sub pages_POST {
 sub pages_OPTIONS {
   my($self, $c) = @_;
 
-  my %headers = (
+  $self -> do_OPTIONS($c,
     Allow => [qw/GET OPTIONS PUT/],
     Accept => [qw{application/json}],
   );
-
-  # we allow GET and POST
-  $c -> response -> status(200);
-  $c -> response -> headers -> header(%headers);
-  $c -> response -> body('');
-  $c -> response -> content_length(0);
-  $c -> response -> content_type("text/plain");
-  $c -> detach();
 }
 
 sub page :Chained('base') :PathPart('page') :Args(1) :ActionClass('REST') { 
   my($self, $c, $page_uuid) = @_;
 
+  # pulls out most recent version of page object, including working edition
+  # version if there is one
+  my $page = $c -> stash -> {project} -> page_for_date($page_uuid);
+
+  if($page) {
+    $c -> stash -> {page} = $page;
+  }
+  else {
+    $self -> status_not_found($c,
+      message => "Page not found"
+    );
+    $c -> detach();
+  }
 }
 
 sub page_GET {
+  my($self, $c) = @_;
+
+  my $page = $c -> stash -> {page};
+
+  $self -> status_ok(
+    $c,
+    entity => {
+      page => {
+        uuid => $page -> uuid,
+        title => $page -> title,
+        description => $page -> description,
+      }
+    }
+  );
 }
 
 sub page_PUT {
+  my($self, $c) = @_;
+
+  my $page = $c -> stash -> {page};
+
+  # we can update title or description - nothing else at the moment
+  my %columns;
+  for my $c (qw/title description/) {
+    $columns{c} = $c -> req -> data -> {$c} if defined $c -> req -> data -> {$c};
+  }
+  if(%columns) {
+    eval {
+      $page = $page -> update(\%columns);
+    };
+    if($@) {
+      $self -> status_forbidden($c, entity => { message => 'unable to update page' });
+      $self -> detach;
+    }
+  }
+  $self -> status_ok(
+    $c,
+    entity => {
+      page => {
+        uuid => $page -> uuid,
+        title => $page -> title,
+        description => $page -> description,
+      }
+    }
+  );
 }
 
 sub page_DELETE {
+  my($self, $c) = @_;
+
+  eval {
+    $c -> stash -> {page} -> delete;
+  };
+
+  if($@) {
+    $self -> status_forbidden($c, entity => { message => 'unable to revert page' });
+  }
+  else {
+    $self -> status_ok($c, entity => { message => 'success' });
+  }
 }
 
 sub page_OPTIONS {
   my($self, $c) = @_;
 
-  my %headers = (
+  $self -> do_OPTIONS($c,
     Allow => [qw/GET OPTIONS PUT DELETE/],
     Accept => [qw{application/json}],
   );
-
-  # we allow GET and POST
-  $c -> response -> status(200);
-  $c -> response -> headers -> header(%headers);
-  $c -> response -> body('');
-  $c -> response -> content_length(0);
-  $c -> response -> content_type("text/plain");
-  $c -> detach();
 }
 
 sub page_parts_base :Chained('base') :PathPart('page') :CaptureArgs(1) { 

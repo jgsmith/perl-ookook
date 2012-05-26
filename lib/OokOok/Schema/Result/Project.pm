@@ -50,6 +50,11 @@ __PACKAGE__->table("project");
   is_nullable: 0
   size: 20
 
+=head2 created_on
+
+  data_type: 'datetime'
+  is_nullable: 0
+
 =head2 user_id
 
   data_type: 'integer'
@@ -62,6 +67,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "uuid",
   { data_type => "char", is_nullable => 0, size => 20 },
+  "created_on",
+  { data_type => "datetime", is_nullable => 0 },
   "user_id",
   { data_type => "integer", is_nullable => 1 },
 );
@@ -79,8 +86,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-25 09:54:12
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Dr6PgvQktea5B2hMKG3fHg
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-26 10:54:33
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:RmBRz2y4VluCdbvE1TGxjQ
 
 use DateTime;
 use Data::UUID;
@@ -100,6 +107,7 @@ __PACKAGE__->has_many(
     my $uuid = substr($ug -> create_b64(),0,20);
     $uuid =~ tr{+/}{-_};
     $self -> uuid($uuid);
+    $self -> created_on(DateTime->now);
   };
 }
 
@@ -107,9 +115,7 @@ after 'insert' => sub {
   my $self = shift;
 
   # add our first, unfrozen instance
-  $self -> create_related('editions', {
-    created_on => DateTime -> now
-  });
+  $self -> create_related('editions', {});
   return $self;
 };
 
