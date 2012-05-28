@@ -1,6 +1,4 @@
-[%- META title = "Display Project",
-         use_jstree = 1 
-  -%]
+[%- META title = "Display Project" -%]
 <div id="messages"></div>
 <div>
   <h3>
@@ -12,6 +10,7 @@
     <li><a href="#apps" data-toggle="tab">Applications</a></li>
     <li><a href="#comps" data-toggle="tab">Components</a></li>
     <li><a href="#data" data-toggle="tab">Databases</a></li>
+    <li><a href="#editions" data-toggle="tab">Editions</a></li>
     <li><a href="#users" data-toggle="tab">Users</a></li>
   </ul>
   <div class="tab-content">
@@ -46,6 +45,13 @@
       <p>TBD</p>
       <p>You'll be able to manage databases such as triple-stores that
          can hold information.</p>
+    </div>
+    <div class="tab-pane" id="editions">
+      <div style="float: right;">
+        <button class="btn btn-primary btn-large" id="create_edition_btn">Create Edition</button>
+      </div>
+      <table id="editions-content" width="60%">
+      </table>
     </div>
     <div class="tab-pane" id="users">
       <p>TBD</p>
@@ -284,5 +290,40 @@ $(function() {
 [% END %]
 
   $('#projectTabs a:first').tab('show');
+
+  function updateEditions() {
+    ookook.ajax({
+      url: "[% c.uri_for("/project/" _ project.uuid ) %]",
+      type: "GET",
+      success: function(data) {
+        var table = $("#editions-content");
+        table.empty();
+        table.append('<tr><th width="75%">Cut Date</th><th width="25%">Modify</th></tr>');
+console.log(data);
+        $.each(data.project.editions, function(idx, edition) {
+          var tr, td;
+          tr = $("<tr></tr>");
+          td = $("<td></td>");
+          td.text(edition.frozen_on);
+          tr.append(td);
+          td = $("<td></td>");
+          tr.append(td);
+          table.append(tr);
+        });
+      }
+    });
+  }
+
+  updateEditions();
+
+  $('#create_edition_btn').click(function() {
+    ookook.ajax({
+      url: "[% c.uri_for("/project/" _ project.uuid _ "/edition") %]",
+      type: "POST",
+      data: {},
+      success: updateEditions
+    });
+  });
+        
 });
 </script>

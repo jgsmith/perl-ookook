@@ -161,16 +161,9 @@ sub duplicate_to_current_edition {
     confess "Current project instance already has the page";
   }
 
-  my $new = $self -> copy({
+  return $self -> copy({
     edition_id => $current_edition -> id
   });
-  # now duplicate all of the page parts
-  for my $part ($self -> page_parts) {
-    $part -> copy({
-      page_id => $new->id
-    });
-  }
-  return $new;
 }
 
 {

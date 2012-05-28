@@ -215,7 +215,7 @@ sub project_PUT {
     delete $updates->{name} unless defined $updates->{name};
     delete $updates->{description} unless defined $updates->{description};
 
-    $ce -> update($updates) if scalar(keys %$updates);
+    $ce = $ce -> update($updates) if scalar(keys %$updates);
   };
   
   if($@) {
@@ -400,9 +400,9 @@ sub sitemap_PUT {
 
   $self -> _walk_sitemaps($sitemap, $changes);
 
-  $c -> stash -> {edition} -> update({
+  $c -> stash(edition => $c -> stash -> {edition} -> update({
     sitemap => $sitemap
-  });
+  }));
 
   $self -> status_ok(
     $c,
@@ -582,14 +582,12 @@ sub page_PUT {
   if($c -> req -> data -> {page_parts}) {
     my $parts = $c -> req -> data -> {page_parts};
     my $q = $page -> page_parts;
-    my $pp;
-    while(defined($pp = $q -> next)) {
-      if(exists $parts->{$pp->name}) {
-        if(exists $parts->{$pp->name}{content}) {
-          $pp -> update({
-            content => $parts->{$pp->name}{content}
-          });
-        }
+    my($pp, $info);
+    while(($pp, $info) = each(%$parts)) {
+      if(exists $info->{content}) {
+        $page -> page_parts -> find({ name => $pp }) -> update({
+          content => $info->{content}
+        });
       }
     }
   }
