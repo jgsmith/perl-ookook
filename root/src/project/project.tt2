@@ -1,0 +1,272 @@
+[%- META title = "Display Project",
+         use_jstree = 1 
+  -%]
+<div id="messages"></div>
+<div>
+  <h3>
+    Project: [% edition.name %]
+  </h3>
+
+  <ul class="nav nav-tabs" id="projectTabs">
+    <li><a href="#sitemap" data-toggle="tab">Pages</a></li>
+    <li><a href="#apps" data-toggle="tab">Applications</a></li>
+    <li><a href="#comps" data-toggle="tab">Components</a></li>
+    <li><a href="#data" data-toggle="tab">Databases</a></li>
+    <li><a href="#users" data-toggle="tab">Users</a></li>
+  </ul>
+  <div class="tab-content">
+    <div class="tab-pane active" id="sitemap">
+    [% IF edition.sitemap.size == 0 %]
+<div style="text-align: center;">
+<p>You don't have any pages in your project's sitemap!</p>
+<p>
+<a class="btn btn-primary btn-large" style="margin:0 auto;" href="#home_page_form" data-toggle="modal">Create Home Page</a>
+</p>
+      [% IF project.pages.size > 0 %]
+        <p>Or select a page as the Home Page: ... </p>
+      [% END %]
+</div>
+    [% ELSE %]
+      <table id="sitemap-content" width="100%">
+        <tr><th width="50%">Slug</th><th width="30%">Page</th><th width="20%">Modify</th></tr>
+      </table>
+    [% END %]
+    </div>
+    <div class="tab-pane" id="apps">
+      <p>TBD</p>
+      <p>You'll be able to manage applications that can be embedded in your
+         pages.</p>
+    </div>
+    <div class="tab-pane" id="comps">
+      <p>TBD</p>
+      <p>You'll be able to manage components that you can use to build
+         applications.</p>
+    </div>
+    <div class="tab-pane" id="data">
+      <p>TBD</p>
+      <p>You'll be able to manage databases such as triple-stores that
+         can hold information.</p>
+    </div>
+    <div class="tab-pane" id="users">
+      <p>TBD</p>
+      <p>You'll be able to manage groups of users who can help you build
+         your project.</p>
+    </div>
+  </div>
+</div>
+[% IF edition.sitemap.size == 0 %]
+  <div id="home_page_form" class="modal fade">
+    <div class="modal-header">
+      <button class="close" data-dismiss="modal">&times;</button>
+      <h3>Create Home Page</h3>
+    </div>
+    <div class="modal-body">
+    <form class="well">
+      <label>Page title (optional)</label>
+      <input id="new_page_title" type="text" class="span3" placeholder="Page title...">
+      <label>Page description (optional)</label>
+      <textarea id="new_page_description" rows="4"></textarea>
+    </form>
+    </div>
+    <div class="modal-footer">
+      <a href="#" class="btn" id="cancel_page_btn">Close</a>
+      <a href="#" class="btn btn-primary" id="create_page_btn">Create Home Page</a>
+    </div>
+  </div>
+[% ELSE %]
+  <div id="new_page_form" class="modal fade">
+    <div class="modal-header">
+      <button class="close" data-dismiss="modal">&times;</button>
+      <h3>Create New Page</h3>
+    </div>
+    <div class="modal-body">
+    <form class="well">
+      <label>Page slug (required)</label>
+      <input id="new_page_slug" type="text" class="span3" placeholder="Page slug...">
+      <label>Page content</label>
+      <select id="new_page_uuid">
+      </select>
+      <label>Page title (optional)</label>
+      <input id="new_page_title" type="text" class="span3" placeholder="Page title...">
+      <label>Page description (optional)</label>
+      <textarea id="new_page_description" rows="4"></textarea>
+    </form>
+    </div>
+    <div class="modal-footer">
+      <a href="#" class="btn" id="cancel_new_page_btn">Close</a>
+      <a href="#" class="btn btn-primary" id="create_new_page_btn">Add New Page</a>
+    </div>
+  </div>
+[% END %]
+<script type="text/javascript">
+$(function() {
+  var tmp
+[% IF edition.sitemap.size == 0 %]
+[% ELSE %]
+  , sitemap
+  , pages
+  , nextCallback
+[% END %]
+  ;
+
+[% IF edition.sitemap.size == 0 %]
+  $("#home_page_form").modal('hide');
+  $("#home_page_form").on('show', function() {
+    $("#new_page_title").val("");
+    $("#new_page_description").val("");
+  });
+  $("#cancel_page_btn").click(function() {
+    $("#home_page_form").model('hide');
+  });
+  $("#create_page_btn").click(function() {
+    var title = $("#new_page_title").val(),
+        desc  = $("#new_page_description").val();
+
+    $("#home_page_form").modal('hide');
+    ookook.ajax({
+      url: '[% c.uri_for('/project/' _ project.uuid _ '/page') %]',
+      data: {
+        title: title,
+        description: desc
+      },
+      success: function(data) {
+        var page_uuid = data.page.uuid;
+        ookook.ajax({
+          url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
+          type: 'PUT',
+          data: {
+            '': { visual: page_uuid }
+          },
+          success: function(data) {
+            location.reload();
+          }
+        });
+      }
+    });
+  });
+[% ELSE %]
+  ookook.ajax({
+    url: "[% c.uri_for("/project/" _ project.uuid _ "/sitemap") %]", 
+    type: "GET",
+    success: function(data) {
+      sitemap = data.sitemap;
+      ookook.ajax({
+        url: "[% c.uri_for("/project/" _ project.uuid _ "/page") %]", 
+        type: "GET",
+        success: function(data) {
+          pages = {};
+          $.each(data.pages, function(idx, page) {
+            pages[page.uuid] = page;
+          });
+          $("#sitemap-content").tree({
+            sitemap: sitemap,
+            pages: pages,
+            operations: {
+              addChild: function(path, item, cb) {
+                // adds a page to a path or creates a new page for the path
+                nextCallback = function(data) {
+                  var newSitemap = {}, root;
+                  if(data.uuid != "" && data.uuid != null) {
+                    root = newSitemap;
+                    $.each(path, function(idx, p) {
+                      root[p] = { children: { } };
+                      root = root[p].children;
+                    });
+                    root[data.slug] = { visual: data.uuid };
+                    ookook.ajax({
+                      url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
+                      type: 'PUT',
+                      data: newSitemap,
+                      success: function(sitemapData) {
+                        cb(data.slug, root[data.slug]);
+                      }
+                    });
+                  }
+                  else {
+                    ookook.ajax({
+                      url: '[% c.uri_for('/project/' _ project.uuid _ '/page') %]',
+                      type: 'POST',
+                      data: {
+                        title: data.title,
+                        description: data.description
+                      },
+                      success: function(pageData) {
+                        var page_uuid = pageData.page.uuid;
+                        pages[page_uuid] = pageData.page;
+                        root = newSitemap;
+                        $.each(path, function(idx, p) {
+                          root[p] = { children: { } };
+                          root = root[p].children;
+                        });
+                        root[data.slug] = { visual: page_uuid };
+                        ookook.ajax({
+                          url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
+                          type: 'PUT',
+                          data: newSitemap,
+                          success: function(sitemapData) {
+                            cb(data.slug, root[data.slug]);
+                          }
+                        });
+                      }
+                    });
+                  }
+                };
+                $("#new_page_form").modal('show');
+              },
+              removeItem: function(path, item, cb) {
+                // removes the page from the sitemap path
+              },
+              editItem: function(path, item, cb) {
+                // change the page we're pointing to
+              }
+            }
+          });
+        }
+      });
+    }
+  });
+  $("#new_page_form").modal('hide');
+  $("#new_page_form").on('show', function() {
+    var page_options = [];
+    $("#new_page_title").val("");
+    $("#new_page_slug").val("");
+    $("#new_page_description").val("");
+    // need to provide a list of pages to select from
+    $("#new_page_uuid").empty();
+    $.each(pages, function(uuid, info) {
+      page_options.push(uuid);
+    });
+    page_options.sort(function(a,b) {
+      if(pages[a].title < pages[b].title) { return -1; }
+      else if(pages[a].title > pages[b].title) { return 1; }
+      else { return 0; }
+    });
+    $("#new_page_uuid").append("<option value=''>New blank page</option>");
+    $.each(page_options, function(idx, uuid) {
+      var el;
+      el = $("<option value='" + uuid + "'>" + pages[uuid].title + "</option>");
+      $("#new_page_uuid").append(el);
+    });
+  });
+  $("#cancel_new_page_btn").click(function() {
+    $("#new_page_form").model('hide');
+  });
+  $("#create_new_page_btn").click(function() {
+    var title = $("#new_page_title").val(),
+        slug = $("#new_page_slug").val(),
+        uuid = $("#new_page_uuid").val(),
+        desc  = $("#new_page_description").val();
+
+    $("#new_page_form").modal('hide');
+    nextCallback({
+      title: title,
+      slug: slug,
+      uuid: uuid,
+      description: desc
+    });
+  });
+[% END %]
+
+  $('#projectTabs a:first').tab('show');
+});
+</script>

@@ -1,4 +1,4 @@
-[% IF no_wrapper %]
+[% IF template.no_wrapper %]
 [% content %]
 [% ELSE %]
 <!DOCTYPE html>
@@ -8,6 +8,7 @@
     <title>[% template.title %]</title>
     <script src="[% c.uri_for('/static/js/jquery.js') %]"></script>
     <script src="[% c.uri_for('/static/js/bootstrap.min.js') %]"></script>
+    <script src="[% c.uri_for('/static/js/application.js') %]"></script>
     <link href="[% c.uri_for('/static/css/bootstrap.css') %]" rel="stylesheet">
     <style type="text/css">
       body {

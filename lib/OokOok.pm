@@ -28,6 +28,8 @@ use Catalyst qw/
     StatusMessage
 
     StackTrace
+
+    +OokOok::Plugin::Twitter
 /;
 use CatalystX::RoleApplicator;
 

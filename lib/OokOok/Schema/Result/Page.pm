@@ -198,6 +198,20 @@ before delete => sub {
   }
 };
 
+sub render {
+  my($self, $c) = @_;
+
+  $c -> response -> content_type('text/html; charset=utf-8');
+  my($title, $desc) = ($self -> title, $self -> description);
+  $c -> response -> body(<<EODOC);
+<html>
+  <head><title>$title</title></head>
+  <body><p>$desc</p></body>
+</html>
+EODOC
+  return 1;
+}
+
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
 1;

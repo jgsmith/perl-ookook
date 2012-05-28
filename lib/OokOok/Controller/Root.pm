@@ -44,6 +44,17 @@ sub default :Path {
     $c->response->status(404);
 }
 
+=head2 dashboard
+
+Show the user an overview of their account and activity.
+
+=cut
+
+sub dashboard :Path('dashboard') :Args(0) {
+    my($self, $c) = @_;
+
+}
+
 =head2 end
 
 Attempt to render a view, if needed.

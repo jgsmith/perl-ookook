@@ -342,7 +342,7 @@ sub sitemap :Chained('base') :PathPart('sitemap') :Args(0) :ActionClass('REST') 
 sub sitemap_GET {
   my($self, $c) = @_;
 
-  
+
   $self -> status_ok(
     $c,
     entity => {
@@ -550,6 +550,7 @@ sub page_GET {
         uuid => $page -> uuid,
         title => $page -> title,
         description => $page -> description,
+        parts => [ map { $_ -> name } $page -> page_parts ],
       }
     }
   );

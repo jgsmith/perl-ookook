@@ -38,6 +38,7 @@ requires:
   HTML::FormFu::Model::DBIC: 0
   JSON: 0
   Moose: 0
+  Net::Twitter: 0
   Set::Scalar: 0
   Workflow: 0
   namespace::autoclean: 0

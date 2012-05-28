@@ -35,6 +35,8 @@ requires 'Workflow';
 requires 'JSON';
 requires 'HTML::FormFu';
 
+requires 'Net::Twitter';
+
 requires 'HTML::FormFu::Model::DBIC';
 
 requires 'Config::General'; # This should reflect the config file format you've chosen
