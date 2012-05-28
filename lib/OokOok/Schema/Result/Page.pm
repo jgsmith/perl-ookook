@@ -203,10 +203,17 @@ sub render {
 
   $c -> response -> content_type('text/html; charset=utf-8');
   my($title, $desc) = ($self -> title, $self -> description);
+  my($pp, $content);
+  my $q = $self -> page_parts;
+  my @content;
+  while(defined($pp = $q -> next)) {
+    push @content, "<h2>".$pp->name."</h2>" . $pp -> content;
+  }
+  $content = join("<br/><hr/><br/>", @content);
   $c -> response -> body(<<EODOC);
 <html>
   <head><title>$title</title></head>
-  <body><p>$desc</p></body>
+  <body><p><em>Description:</em> $desc</p><br/><hr/><br/>$content</body>
 </html>
 EODOC
   return 1;

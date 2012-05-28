@@ -23,7 +23,7 @@ $.fn.tree = function(config) {
   ops.removeItem = ops.removeItem || function(path, item, cb) { cb(); };
 
   var renderLine = function(slug, item, path, parent) {
-    var el = $("<tr></tr>"), td, i, t, n, pageTitleTd;
+    var el = $("<tr class='hoverable'></tr>"), td, i, t, n, pageTitleTd;
     item.el = el;
     td = $("<td></td>");
     t = "";
@@ -51,68 +51,75 @@ $.fn.tree = function(config) {
       }
     }
     item.el.append(td);
-    td = $("<td></td>");
-    if(ops.editItem) {
-      t = $("<a href='#' class='edit'>Edit Page</a>");
-      t.click(function() {
-        ops.editItem(path, item, function() {
-          pageTitleTd.text(config.pages[item.visual].title);
-        });
+    td = $("<td><div class='btn-group'></div></td>");
+    t = $("<button class='btn'>Edit</button>");
+    t.click(function() {
+      ops.editItem(path, item, function() {
+        pageTitleTd.text(config.pages[item.visual].title);
       });
-      td.append(t);
-      td.append($("<span class='separator'>&nbsp;</span>"));
-    }
-    if(ops.addChild) {
-      t = $("<a href='#' class='add'>Add Child</a>");
-      // add click handler for adding a child
-      t.click(function() {
-        ops.addChild(item.path, item, function(newSlug, newItem) {
-          var newEl, oldEl;
-          newItem.path = path.concat([newSlug]);
-          if(!item.hasOwnProperty("children")) {
-            item.children = {};
-          }
-          if(item.children.hasOwnProperty(newSlug)) {
-            oldEl = item.children[newSlug].el;
-          }
-          item.children[newSlug] = newItem;
-          newEl = renderLine(newSlug, newItem, newItem.path, item);
-          if(oldEl) {
-            oldEl.replace(newEl);
-          }
-          else {
-            item.el.after(newEl);
-          }
-        });
-      });
-      td.append(t);
-      td.append($("<span class='separator'>&nbsp;</span>"));
-    }
+    });
+    td.find(".btn-group").append(t);
+    td.find(".btn-group").append($("<button class='btn dropdown-toggle' data-toggle='dropdown'><span class='caret'></span></button>"));
+    td.find(".btn-group").append("<ul class='dropdown-menu'></ul>");
 
-    if(ops.removeItem) {
-      t = $("<a href='#' class='delete'>Remove</a>");
-      t.click(function() {
-        ops.removeItem(path, item, function() {
-          var p, hasChildren = false;
-          if(item.hasOwnProperty('children') && item.children) {
-            for(p in item.children) {
-              if(item.children.hasOwnProperty(p)) {
-                hasChildren = true;
-                break;
-              }
-            }
-          }
-          if(hasChildren) {
-          }
-          else {
-            delete parent.children[slug];
-            item.el.remove();
-          }
-        });
+    t = $("<a href='#'>Edit</a>");
+    t.click(function() {
+      ops.editItem(path, item, function() {
+        pageTitleTd.text(config.pages[item.visual].title);
       });
-      td.append(t);
-      td.append($("<span class='separator'>&nbsp;</span>"));
-    }
+    });
+    td.find(".drowndown-menu").append(t);
+
+    t = $("<a href='#'>Add</a>");
+    // add click handler for adding a child
+    t.click(function() {
+      ops.addChild(item.path, item, function(newSlug, newItem) {
+        var newEl, oldEl;
+        newItem.path = path.concat([newSlug]);
+        if(!item.hasOwnProperty("children")) {
+          item.children = {};
+        }
+        if(item.children.hasOwnProperty(newSlug)) {
+          oldEl = item.children[newSlug].el;
+        }
+        item.children[newSlug] = newItem;
+        newEl = renderLine(newSlug, newItem, newItem.path, item);
+        if(oldEl) {
+          oldEl.replaceWith(newEl);
+        }
+        else {
+          item.el.after(newEl);
+        }
+      });
+    });
+    td.find(".dropdown-menu").append(t);
+
+    t = $("<a href='#'>Remove</a>");
+    t.click(item.remove = function() {
+      ops.removeItem(path, item, item.remove);
+    });
+    item.remove = function() {
+      var p, hasChildren = false;
+      if(item.hasOwnProperty('children') && item.children) {
+        for(p in item.children) {
+          if(item.children.hasOwnProperty(p)) {
+            hasChildren = true;
+            break;
+          }
+        }
+      }
+      if(hasChildren) {
+      }
+      else {
+        delete parent.children[slug];
+        item.el.fadeOut('slow', function() { item.el.remove() });
+        if(!(parent.visual != null)) {
+          parent.remove();
+        }
+      }
+    };
+    td.find(".dropdown-menu").append(t);
+
     item.el.append(td);
     
     return item.el;

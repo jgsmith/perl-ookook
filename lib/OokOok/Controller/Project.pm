@@ -520,7 +520,7 @@ sub pages_OPTIONS {
   );
 }
 
-sub page :Chained('base') :PathPart('page') :Args(1) :ActionClass('REST') { 
+sub page_base :Chained('base') :PathPart('page') :CaptureArgs(1) {
   my($self, $c, $page_uuid) = @_;
 
   # pulls out most recent version of page object, including working edition
@@ -536,6 +536,10 @@ sub page :Chained('base') :PathPart('page') :Args(1) :ActionClass('REST') {
     );
     $c -> detach();
   }
+}
+
+sub page :Chained('page_base') :PathPart('') :Args(0) :ActionClass('REST') { 
+
 }
 
 sub page_GET {
@@ -563,16 +567,30 @@ sub page_PUT {
 
   # we can update title or description - nothing else at the moment
   my %columns;
-  for my $c (qw/title description/) {
-    $columns{c} = $c -> req -> data -> {$c} if defined $c -> req -> data -> {$c};
+  for my $col (qw/title description/) {
+    $columns{$col} = $c -> req -> data -> {$col} if defined $c -> req -> data -> {$col};
   }
   if(%columns) {
     eval {
       $page = $page -> update(\%columns);
     };
     if($@) {
-      $self -> status_forbidden($c, entity => { message => 'unable to update page' });
+      $self -> status_forbidden($c, message => "unable to update page: $@" );
       $self -> detach;
+    }
+  }
+  if($c -> req -> data -> {page_parts}) {
+    my $parts = $c -> req -> data -> {page_parts};
+    my $q = $page -> page_parts;
+    my $pp;
+    while(defined($pp = $q -> next)) {
+      if(exists $parts->{$pp->name}) {
+        if(exists $parts->{$pp->name}{content}) {
+          $pp -> update({
+            content => $parts->{$pp->name}{content}
+          });
+        }
+      }
     }
   }
   $self -> status_ok(
@@ -611,16 +629,170 @@ sub page_OPTIONS {
   );
 }
 
-sub page_parts_base :Chained('base') :PathPart('page') :CaptureArgs(1) { 
-  my($self, $c, $page_uuid) = @_;
+#sub page_edit :Chained('page_base') :PathPart('edit') :Args(0) { }
 
-  my $page = $c -> stash -> {project} -> page_by_date($page_uuid);
+sub page_parts :Chained('page_base') :PathPart('page_part') :Args(0) :ActionClass('REST') {
+
 }
 
-sub page_parts :Chained('page_parts_base') :PathPart('page_part') :Args(0) :ActionClass('REST') {
+sub page_parts_GET {
+  my($self, $c) = @_;
+
+  my %parts;
+
+  my $q = $c -> stash -> {page} -> page_parts;
+
+  my $pp;
+  while(defined($pp = $q -> next)) {
+    $parts{$pp -> name} = {
+      content => $pp -> content
+    };
+  }
+
+  $self -> status_ok(
+    $c,
+    entity => {
+      page_parts => \%parts
+    }
+  );
 }
 
-sub page_part :Chained('page_parts_base') :PathPart('page_part') :Args(1) :ActionClass('REST') {
+sub page_part :Chained('page_base') :PathPart('page_part') :Args(1) :ActionClass('REST') {
+  my($self, $c, $part_name) = @_;
+
+  $c -> stash -> {page_part_name} = $part_name;
+  my $part = $c -> stash -> {page} -> page_parts -> find({name => $part_name});
+  $c -> stash -> {page_part} = $part;
+}
+
+sub page_part_OPTIONS {
+  my($self, $c) = @_;
+
+  my @allowed = (qw/OPTIONS/);
+
+  if($c -> stash -> {page_part}) {
+    push @allowed, qw/GET PUT DELETE/;
+  }
+  else {
+    push @allowed, qw/POST/;
+  }
+
+  $self -> do_OPTIONS($c,
+    Allow => [@allowed],
+    Accept => [qw{application/json}],
+  );
+}
+
+sub page_part_GET {
+  my($self, $c) = @_;
+
+  if(!$c -> stash -> {page_part}) {
+    $self -> status_not_found($c,
+      message => "Page part not found"
+    );
+  }
+  else {
+    $self -> status_ok(
+      $c,
+      entity => {
+        page_part => {
+          content => $c -> stash -> {page_part} -> content
+        }
+      }
+    );
+  }
+}
+
+sub page_part_POST {
+  my($self, $c) = @_;
+
+  if($c -> stash -> {page_part}) {
+    # error ... we should be creating a new one
+    $self -> status_bad_request(
+      $c,
+      message => "Requested page part already exists"
+    );
+  }
+  else {
+    eval {
+      my $part = $c -> stash -> {page} -> create_related('page_parts', {
+        name => $c -> stash -> {page_part_name},
+        content => $c -> req -> data -> {content},
+      });
+      $c -> stash -> {page_part} = $part;
+    };
+    if($@) {
+      $self -> status_bad_request(
+        $c,
+        message => "Unable to create page part: $@"
+      );
+    }
+    else {
+      $self -> status_ok($c,
+        entity => {
+          page_part => {
+            content => $c -> stash -> {page_part} -> content,
+          }
+        }
+      );
+    }
+  }
+}
+
+sub page_part_PUT {
+  my($self, $c) = @_;
+
+  if(!$c -> stash -> {page_part}) {
+    $self -> status_not_found($c,
+      message => "Page part not found"
+    );
+    $c -> detach();
+  }
+  else {
+    eval {
+      $self -> stash -> {page_part} -> update({
+        content => $c -> req -> data -> {content},
+      });
+    };
+    if($@) {
+      $self -> status_bad_request(
+        $c,
+        message => "Unable to update page part: $@"
+      );
+    }
+    else {
+      $self -> status_ok(
+        $c,
+        entity => {
+          page_part => {
+            content => $c -> stash -> {page_part} -> content
+          }
+        }
+      );
+    }
+  }
+}
+
+sub page_part_DELETE {
+  my($self, $c) = @_;
+
+  if(!$c -> stash -> {page_part}) {
+    $self -> status_not_found($c,
+      message => "Page part not found"
+    );
+    $c -> detach();
+  }
+  else {
+    eval {
+      $c -> stash -> {page_part} -> delete;
+    };
+    if($@) {
+      $self -> status_forbidden($c, entity => { message => 'unable to remove page part' });
+    }
+    else {
+      $self -> status_ok($c, entity => { message => 'success' });
+    }
+  }
 }
 
 =head1 AUTHOR

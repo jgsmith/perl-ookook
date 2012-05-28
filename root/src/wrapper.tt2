@@ -4,11 +4,15 @@
 <!DOCTYPE html>
 <html lang="en>
   <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>[% template.title %]</title>
     <script src="[% c.uri_for('/static/js/jquery.js') %]"></script>
     <script src="[% c.uri_for('/static/js/bootstrap.min.js') %]"></script>
     <script src="[% c.uri_for('/static/js/application.js') %]"></script>
+    [% IF template.use_wymeditor %]
+      <script src="[% c.uri_for('/static/js/wymeditor/jquery.wymeditor.js') %]"></script>
+    [% END %]
     <link href="[% c.uri_for('/static/css/bootstrap.css') %]" rel="stylesheet">
     <style type="text/css">
       body {

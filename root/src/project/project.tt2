@@ -28,7 +28,7 @@
 </div>
     [% ELSE %]
       <table id="sitemap-content" width="100%">
-        <tr><th width="50%">Slug</th><th width="30%">Page</th><th width="20%">Modify</th></tr>
+        <tr><th width="60%">Slug</th><th width="25%">Page</th><th width="15%">Modify</th></tr>
       </table>
     [% END %]
     </div>
@@ -105,7 +105,7 @@ $(function() {
 [% ELSE %]
   , sitemap
   , pages
-  , nextCallback
+  , modalCallback
 [% END %]
   ;
 
@@ -125,6 +125,7 @@ $(function() {
     $("#home_page_form").modal('hide');
     ookook.ajax({
       url: '[% c.uri_for('/project/' _ project.uuid _ '/page') %]',
+      type: 'POST',
       data: {
         title: title,
         description: desc
@@ -164,14 +165,14 @@ $(function() {
             operations: {
               addChild: function(path, item, cb) {
                 // adds a page to a path or creates a new page for the path
-                nextCallback = function(data) {
+                modalCallback = function(data) {
                   var newSitemap = {}, root;
+                  root = newSitemap;
+                  $.each(path, function(idx, p) {
+                    root[p] = { children: { } };
+                    root = root[p].children;
+                  });
                   if(data.uuid != "" && data.uuid != null) {
-                    root = newSitemap;
-                    $.each(path, function(idx, p) {
-                      root[p] = { children: { } };
-                      root = root[p].children;
-                    });
                     root[data.slug] = { visual: data.uuid };
                     ookook.ajax({
                       url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
@@ -193,11 +194,6 @@ $(function() {
                       success: function(pageData) {
                         var page_uuid = pageData.page.uuid;
                         pages[page_uuid] = pageData.page;
-                        root = newSitemap;
-                        $.each(path, function(idx, p) {
-                          root[p] = { children: { } };
-                          root = root[p].children;
-                        });
                         root[data.slug] = { visual: page_uuid };
                         ookook.ajax({
                           url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
@@ -215,9 +211,27 @@ $(function() {
               },
               removeItem: function(path, item, cb) {
                 // removes the page from the sitemap path
+                var newSitemap = {}, root;
+                root = newSitemap;
+                $.each(path, function(idx, p) {
+                  root[p] = { children: { } };
+                  root = root[p].children;
+                });
+                root[item.path[item.path.length-1]] = { visual: null };
+                ookook.ajax({
+                  url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
+                  type: 'PUT',
+                  data: newSitemap,
+                  success: cb
+                });
               },
               editItem: function(path, item, cb) {
                 // change the page we're pointing to
+                var url;
+                if(item.visual != null) {
+                  url = '[% c.uri_for('/project/' _ project.uuid _ '/page/') %]' + item.visual;
+                  document.location = url;
+                }
               }
             }
           });
@@ -249,7 +263,8 @@ $(function() {
     });
   });
   $("#cancel_new_page_btn").click(function() {
-    $("#new_page_form").model('hide');
+    $("#new_page_form").modal('hide');
+    modalCallback = function() {};
   });
   $("#create_new_page_btn").click(function() {
     var title = $("#new_page_title").val(),
@@ -258,12 +273,13 @@ $(function() {
         desc  = $("#new_page_description").val();
 
     $("#new_page_form").modal('hide');
-    nextCallback({
+    modalCallback({
       title: title,
       slug: slug,
       uuid: uuid,
       description: desc
     });
+    modalCallback = function() {};
   });
 [% END %]
 

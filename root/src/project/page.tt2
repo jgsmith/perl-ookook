@@ -1,0 +1,164 @@
+[%- META use_wymeditor = 1 %]
+<!--
+  This won't be the best edit interface, but it will have to do for now.
+  Each tab is a separate page part.
+  -->
+<h3><a href="[% c.uri_for("/project/" _ project.uuid) %]">Project: [% edition.name %]</a></h3>
+<div>
+<div class="form-horizontal">
+  <fieldset>
+    <legend>Metadata</legend>
+    <div class="control-group">
+      <label class="control-label" for="page-title">Title</label>
+      <div class="controls">
+        <input type="text" class="input-xlarge" id="page-title" value="[% page.title | html %]">
+      </div>
+    </div>
+  </fieldset>
+</div>
+</div>
+<div>
+  <fieldset>
+    <legend>Content</legend>
+<button id="new_part_tab" class="btn btn-primary" style="float: right;">New Part</button>
+<ul class="nav nav-tabs">
+  <!-- li><a id="new_part_tab" href="#new-part">New Part</a></li -->
+</ul>
+<div class="tab-content" style="clear: right;">
+</div>
+  </fieldset>
+</div>
+<div id="new_part_form" class="modal fade">
+  <div class="modal-header">
+    <button class="close" data-dismiss="modal">&times;</button>
+    <h3>New Page Part</h3>
+  </div>
+  <div class="modal-body">
+    <form class="well">
+      <label>Name</label>
+      <input id="new_page_part_name" type="text" class="span3" placeholder="Page part name...">
+    </form>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" id="cancel_page_part_btn">Close</a>
+    <a href="#" class="btn btn-primary" id="create_page_part_btn">Create Page Part</a>
+  </div>
+</div>  
+<div class="btn-group" style="margin: 1em;">
+  <button class="btn btn-large btn-primary" id="save_page_btn">Save</button>
+  <button class="btn btn-large" id="cancel_page_btn">Cancel</button>
+</div>
+<script type="text/javascript">
+$(function() {
+  var parts_url = "[% c.uri_for("/project/" _ project.uuid _ "/page/" _ page.uuid _ "/page_part" ) %]",
+   page_parts_list = [], editors = {};
+
+  function insert_page_part_editor(name, content) {
+    var tab, tab_content, editor;
+    tab = '<li><a id="part-' + name + '-tab" href="#part-' + name + '" data-toggle="tab">' + name + '</a></li>';
+    tab = $(tab);
+    $("ul.nav-tabs").append(tab);
+    editor = $("<textarea id='#part-" + name + "-content'></textarea>");
+    editor.val(content);
+    tab_content = $('<div class="tab-pane" id="part-' + name + '"></div>');
+    tab_content.append(editor);
+    $('.tab-content').prepend(tab_content);
+    editor.wymeditor();
+    editors[name] = editor;
+    editor = $.wymeditors($(editors[name]).data('wym_index'));
+    //setTimeout(function() { editor.xhtml(content) }, 0);
+    $(tab).find("a:last").tab('show');
+    page_parts_list.push(name);
+  }
+
+  ookook.ajax({
+    url: parts_url,
+    type: "GET",
+    success: function(data) {
+      // data.parts is a hash of part name => part content
+      var part_names = [];
+      $.each(data.page_parts, function(nom, info) {
+        part_names.push(nom);
+      });
+      if(part_names.length > 0) {
+        part_names.sort();
+        $.each(part_names, function(idx, nom) {
+          insert_page_part_editor(nom, data.page_parts[nom].content);
+        });
+        $("#part-" + part_names[0] + "-tab").tab('show');
+      }
+    }
+  });
+
+  $("#new_part_form").modal('hide');
+
+  $("#new_part_tab").click(function() {
+    $("#new_part_form").modal('show');
+  });
+
+  $("#new_part_tab").on('show', function() {
+    $("#new_page_part_name").val("");
+  });
+
+  $("#cancel_page_part_btn").click(function() {
+    $("#new_part_form").modal('hide');
+  });
+
+  $("#create_page_part_btn").click(function() {
+    var name = $("#new_page_part_name").val();
+
+    // TODO: need name validation
+
+    $("#new_part_form").modal('hide');
+
+    ookook.ajax({
+      url: parts_url + "/" + name,
+      type: 'POST',
+      data: {
+        content: ""
+      },
+      success: function() {
+        insert_page_part_editor(name, '');
+      },
+      error: function() {
+        alert("Unable to create new page part.");
+      }
+    });
+  });
+
+  $("#save_page_btn").click(function() {
+    // send everything to the server
+    var title, parts = {};
+
+    title = $("#page-title").val();
+    $.each(page_parts_list, function(idx, name) {
+      var editor;
+      editor = $.wymeditors($(editors[name]).data('wym_index'));
+      parts[name] = {
+        content: editor.xhtml()
+      };
+    });
+
+    console.log({ title: title, page_parts: parts });
+    ookook.ajax({
+      url: "[% c.uri_for("/project/" _ project.uuid _ "/page/" _ page.uuid) %]",
+      type: "PUT",
+      data: {
+        title: title,
+        page_parts: parts
+      },
+      success: function() {
+        alert("Saved!");
+      },
+      error: function() {
+        alert("Uh oh!");
+      }
+    });
+  });
+
+  $("#cancel_page_btn").click(function() {
+    // send back to the project dashboard
+    document.location = "[% c.uri_for("/project/" _ project.uuid ) %]";
+  });
+});
+</script>
