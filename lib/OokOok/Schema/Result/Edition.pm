@@ -67,6 +67,16 @@ __PACKAGE__->table("edition");
   default_value: '{}'
   is_nullable: 0
 
+=head2 theme_id
+
+  data_type: 'integer'
+  is_nullable: 1
+
+=head2 theme_date
+
+  data_type: 'datetime'
+  is_nullable: 1
+
 =head2 created_on
 
   data_type: 'datetime'
@@ -90,6 +100,10 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "sitemap",
   { data_type => "text", default_value => "{}", is_nullable => 0 },
+  "theme_id",
+  { data_type => "integer", is_nullable => 1 },
+  "theme_date",
+  { data_type => "datetime", is_nullable => 1 },
   "created_on",
   { data_type => "datetime", is_nullable => 0 },
   "frozen_on",
@@ -109,8 +123,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-25 09:58:33
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:eW0wmLnXZHV5nMAQD+Fm6Q
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-29 14:08:34
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:hiO65yq2rmIFceDBWPX+xQ
 
 use JSON;
 use DateTime;
@@ -125,6 +139,8 @@ __PACKAGE__->has_many("layouts" => "OokOok::Schema::Result::Layout", "edition_id
   cascade_copy => 0,
   cascade_delete => 1,
 });
+
+__PACKAGE__->belongs_to("theme" => "OokOok::Schema::Result::Theme", "theme_id");
 
 __PACKAGE__->inflate_column('sitemap', {
   inflate => sub { JSON::decode_json shift },
@@ -146,6 +162,18 @@ sub freeze {
   $self -> update({
     frozen_on => DateTime -> now
   });
+}
+
+#
+# We want to get the right theme given the date for which we
+# expect the theme.
+#
+sub theme_edition {
+  my($self) = @_;
+
+  if($self -> theme) {
+    $self -> theme -> edition_for_date($self -> theme_date);
+  }
 }
 
 before insert => sub { $_[0] -> created_on(DateTime->now); };

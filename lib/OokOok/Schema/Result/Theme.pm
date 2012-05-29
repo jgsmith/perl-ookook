@@ -50,12 +50,6 @@ __PACKAGE__->table("theme");
   is_nullable: 0
   size: 20
 
-=head2 name
-
-  data_type: 'varchar'
-  is_nullable: 0
-  size: 255
-
 =head2 user_id
 
   data_type: 'integer'
@@ -68,8 +62,6 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "uuid",
   { data_type => "char", is_nullable => 0, size => 20 },
-  "name",
-  { data_type => "varchar", is_nullable => 0, size => 255 },
   "user_id",
   { data_type => "integer", is_nullable => 1 },
 );
@@ -87,9 +79,15 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-23 13:39:26
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7zGQDAdSxjBWisxxuNJ7gg
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-29 14:06:21
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Q2+q6sC+TiLLzP2oOq0lVQ
 
+__PACKAGE__ -> has_many(
+  editions => 'OokOok::Schema::Result::ThemeEdition',
+  'theme_id'
+);
+
+with 'OokOok::Role::Schema::Result::Editions';
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

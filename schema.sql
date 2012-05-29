@@ -29,6 +29,8 @@ CREATE TABLE edition (
   name    VARCHAR(255) NOT NULL DEFAULT '',
   description TEXT,
   sitemap TEXT NOT NULL DEFAULT '{}', -- json-encoded sitemap
+  theme_id INTEGER,
+  theme_date DATETIME,
   created_on DATETIME NOT NULL,
   frozen_on DATETIME          -- convenience - should be the same as the next
                              -- project instance created_on time
@@ -114,13 +116,13 @@ CREATE TABLE page_part (
 CREATE TABLE theme (
   id      INTEGER PRIMARY KEY,
   uuid    char(20) NOT NULL,
-  name    VARCHAR(255) NOT NULL,
   user_id INTEGER
 );
 
 CREATE TABLE theme_edition (
   id      INTEGER PRIMARY KEY,
   theme_id INTEGER NOT NULL,
+  name    VARCHAR(255) NOT NULL,
   description TEXT,
   created_on DATETIME NOT NULL,
   frozen_on DATETIME
