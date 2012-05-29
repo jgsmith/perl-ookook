@@ -30,6 +30,7 @@ requires:
   Catalyst::Plugin::StackTrace: 0
   Catalyst::Plugin::Static::Simple: 0
   Catalyst::Plugin::StatusMessage: 0
+  Catalyst::Plugin::Unicode::Encoding: 0
   Catalyst::Runtime: 5.90012
   CatalystX::RoleApplicator: 0
   Config::General: 0

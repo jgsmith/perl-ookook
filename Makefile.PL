@@ -24,6 +24,7 @@ requires 'Catalyst::Plugin::StackTrace';
 requires 'Catalyst::Plugin::StatusMessage';
 requires 'Catalyst::Plugin::Session';
 requires 'Catalyst::Plugin::Session::State::Cookie';
+requires 'Catalyst::Plugin::Unicode::Encoding';
 
 requires 'CatalystX::RoleApplicator';
 
