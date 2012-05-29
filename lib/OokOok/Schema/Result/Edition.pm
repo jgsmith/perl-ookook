@@ -130,6 +130,7 @@ use JSON;
 use DateTime;
 
 __PACKAGE__->belongs_to("project" => "OokOok::Schema::Result::Project", "project_id");
+__PACKAGE__->belongs_to("owner" => "OokOok::Schema::Result::Project", "project_id");
 
 __PACKAGE__->has_many("pages" => "OokOok::Schema::Result::Page", "edition_id", {
   cascade_copy => 0,

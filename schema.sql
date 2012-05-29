@@ -137,7 +137,7 @@ CREATE TABLE theme_layout (
   configuration TEXT
 );
 
-CREATE TABLE theme_styles (
+CREATE TABLE theme_style (
   id      INTEGER PRIMARY KEY,
   theme_edition_id INTEGER NOT NULL,
   uuid    CHAR(20) NOT NULL,

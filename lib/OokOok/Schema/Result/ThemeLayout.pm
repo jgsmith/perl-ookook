@@ -104,6 +104,7 @@ __PACKAGE__->set_primary_key("id");
 # Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-23 13:39:26
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:6CmyIDPZQ9pI3nmo3wkYnQ
 
+with 'OokOok::Role::Schema::Result::HasVersions';
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

@@ -94,7 +94,7 @@ __PACKAGE__->has_many(
   'project_id'
 );
 
-with 'OokOok::Role::Schema::Result::Editions';
+with 'OokOok::Role::Schema::Result::HasEditions';
 
 =head2 edition_for_date
 
@@ -152,41 +152,10 @@ sub sitemap_for_date {
 
 sub current_sitemap { $_[0] -> sitemap_for_date; }
   
-sub layout_for_date {
-  my($self, $name, $date) = @_;
-
-  my $q = $self -> result_source -> schema -> resultset("Layout");
-
-  $q = $q -> search(
-    { 
-      "me.name" => $name,
-      "edition.project_id" => $self->id
-    }
-  );
-
-  return $self -> _apply_date_constraint($q, "edition", $date) -> first;
-}
-
 sub page_for_date {
   my($self, $uuid, $date) = @_;
 
-  my $q = $self -> result_source -> schema -> resultset("Page");
-
-  #
-  # we want to find the right page for the given date
-  # pages have uuids that are used to identify them in the sitemap
-  #
-  # The mapping of URL path to uuid is done elsewhere
-  #
-
-  $q = $q -> search(
-    { 
-      "me.uuid" => $uuid,
-      "edition.project_id" => $self->id
-    }
-  );
-
-  return $self -> _apply_date_constraint($q, "edition", $date) -> first;
+  return $self -> relation_for_date("Page", $uuid, $date);
 }
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

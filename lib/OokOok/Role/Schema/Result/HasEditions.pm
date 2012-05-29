@@ -1,4 +1,4 @@
-package OokOok::Role::Schema::Result::Editions;
+package OokOok::Role::Schema::Result::HasEditions;
 
 use Moose::Role;
 
@@ -38,6 +38,24 @@ sub edition_for_date {
 }
 
 sub current_edition { $_[0] -> edition_for_date; }
+
+sub relation_for_date {
+  my($self, $relation, $uuid, $date) = @_;
+
+  my $join_table = $self -> editions -> result_source -> from;
+  my $target_key = $self -> result_source -> from . "_id";
+
+  my $q = $self -> result_source -> schema -> resultset($relation);
+
+  $q = $q -> search(
+    {
+      "me.uuid" => $uuid,
+      $join_table.".".$target_key => $self -> id
+    }
+  );
+
+  return $self -> _apply_date_constraint($q, $join_table, $date) -> first;
+}
 
 sub _apply_date_constraint {
   my($self, $q, $join, $date) = @_;

@@ -30,11 +30,11 @@ extends 'DBIx::Class::Core';
 
 __PACKAGE__->load_components("InflateColumn::DateTime");
 
-=head1 TABLE: C<theme_styles>
+=head1 TABLE: C<theme_style>
 
 =cut
 
-__PACKAGE__->table("theme_styles");
+__PACKAGE__->table("theme_style");
 
 =head1 ACCESSORS
 
@@ -94,9 +94,10 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-23 13:39:26
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BkCXKpUivvmE79fCR7HZqw
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-29 14:50:11
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:4V0XKeMko64V8dtVHZLfdA
 
+with 'OokOok::Role::Schema::Result::HasVersions';
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

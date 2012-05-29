@@ -87,7 +87,19 @@ __PACKAGE__ -> has_many(
   'theme_id'
 );
 
-with 'OokOok::Role::Schema::Result::Editions';
+with 'OokOok::Role::Schema::Result::HasEditions';
+
+sub layout_for_date {
+  my($self, $uuid, $date) = @_;
+
+  return $self -> relation_for_date("ThemeLayout", $uuid, $date);
+}
+
+sub style_for_date {
+  my($self, $uuid, $date) = @_;
+
+  return $self -> relation_for_date("ThemeStyle", $uuid, $date);
+}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
