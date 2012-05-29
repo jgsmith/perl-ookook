@@ -581,13 +581,14 @@ sub page_PUT {
   }
   if($c -> req -> data -> {page_parts}) {
     my $parts = $c -> req -> data -> {page_parts};
-    my $q = $page -> page_parts;
-    my($pp, $info);
+    my($pp, $info, $page_part);
     while(($pp, $info) = each(%$parts)) {
       if(exists $info->{content}) {
-        $page -> page_parts -> find({ name => $pp }) -> update({
+        
+        $page_part = $page -> page_parts -> find({ name => $pp }) -> update({
           content => $info->{content}
         });
+        $page = $page_part -> page;
       }
     }
   }
