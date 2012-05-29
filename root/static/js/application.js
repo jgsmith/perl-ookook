@@ -68,7 +68,15 @@ $.fn.tree = function(config) {
         pageTitleTd.text(config.pages[item.visual].title);
       });
     });
-    td.find(".drowndown-menu").append(t);
+    td.find(".dropdown-menu").append(t);
+
+    if(item.visual != null) {
+      t = $("<a href='#'>Preview</a>");
+      t.click(function() {
+        ops.previewItem(item.path, item);
+      });
+      td.find(".dropdown-menu").append(t);
+    }
 
     t = $("<a href='#'>Add</a>");
     // add click handler for adding a child

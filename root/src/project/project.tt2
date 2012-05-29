@@ -27,7 +27,7 @@
 </div>
     [% ELSE %]
       <table id="sitemap-content" width="100%">
-        <tr><th width="60%">Slug</th><th width="25%">Page</th><th width="15%">Modify</th></tr>
+        <tr><th width="60%">Path</th><th width="25%">Page Title</th><th width="15%">Modify</th></tr>
       </table>
     [% END %]
     </div>
@@ -230,6 +230,10 @@ $(function() {
                   data: newSitemap,
                   success: cb
                 });
+              },
+              previewItem: function(path, item, cb) {
+                var uri = path.join("/");
+                window.open('[% c.uri_for("/v/dev/" _ project.uuid) %]' + uri, 'ookook-preview-' + item.visual);
               },
               editItem: function(path, item, cb) {
                 // change the page we're pointing to
