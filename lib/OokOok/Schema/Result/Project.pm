@@ -158,6 +158,18 @@ sub page_for_date {
   return $self -> relation_for_date("Page", $uuid, $date);
 }
 
+sub layout_for_date {
+  my($self, $uuid, $date) = @_;
+
+  return $self -> relation_for_date("Layout", $uuid, $date);
+}
+
+sub snippet_for_date {
+  my($self, $name, $date) = @_;
+
+  return $self -> relation_for_date("Snippet", $name, $date);
+}
+
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
 1;

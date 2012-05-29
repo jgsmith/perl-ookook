@@ -85,8 +85,8 @@ CREATE TABLE edition (
 CREATE TABLE layout (
   id    INTEGER PRIMARY KEY,
   edition_id INTEGER NOT NULL,
+  uuid  CHAR(20) NOT NULL,
   theme_layout_uuid CHAR(20) NOT NULL, 
-  name  VARCHAR(255) NOT NULL,
   type  VARCHAR(32) NOT NULL, -- visual, data, ...
   configuration TEXT NOT NULL DEFAULT '{}' -- json
 );
@@ -95,8 +95,8 @@ CREATE TABLE page (
   id    INTEGER PRIMARY KEY,
   edition_id INTEGER NOT NULL,
   uuid  char(20) NOT NULL,
+  layout CHAR(20),
   title  VARCHAR(255) NOT NULL,
-  layout VARCHAR(255),
   description TEXT
 );
 
@@ -107,6 +107,12 @@ CREATE TABLE page_part (
   content TEXT
 );
 
+CREATE TABLE snippet (
+  id    INTEGER PRIMARY KEY,
+  edition_id INTEGER NOT NULL,
+  uuid  varchar(255) NOT NULL, -- not really a uuid, but a unique name
+  content TEXT
+);
 
 
 ---

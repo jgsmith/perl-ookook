@@ -106,6 +106,13 @@ __PACKAGE__->set_primary_key("id");
 
 with 'OokOok::Role::Schema::Result::HasVersions';
 
+sub render {
+  my($self, $c, $config, $page) = @_;
+
+  # now we want to render $self -> layout and bring in page content
+  # as well as snippets along the way
+}
+
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
 1;

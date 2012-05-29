@@ -49,17 +49,17 @@ __PACKAGE__->table("layout");
   data_type: 'integer'
   is_nullable: 0
 
-=head2 theme_layout_uuid
+=head2 uuid
 
   data_type: 'char'
   is_nullable: 0
   size: 20
 
-=head2 name
+=head2 theme_layout_uuid
 
-  data_type: 'varchar'
+  data_type: 'char'
   is_nullable: 0
-  size: 255
+  size: 20
 
 =head2 type
 
@@ -80,10 +80,10 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "edition_id",
   { data_type => "integer", is_nullable => 0 },
+  "uuid",
+  { data_type => "char", is_nullable => 0, size => 20 },
   "theme_layout_uuid",
   { data_type => "char", is_nullable => 0, size => 20 },
-  "name",
-  { data_type => "varchar", is_nullable => 0, size => 255 },
   "type",
   { data_type => "varchar", is_nullable => 0, size => 32 },
   "configuration",
@@ -103,66 +103,42 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-23 13:39:26
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:JebMiomE0xPzrDbpgETEow
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-29 18:18:00
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:QBKct+CKk4KFuTwhViR/KA
 
 __PACKAGE__ -> belongs_to('edition' => 'OokOok::Schema::Result::Edition', "edition_id");
 
-override update => sub {
-  my($self, $columns) = @_;
+with 'OokOok::Role::Schema::Result::HasVersions';
 
-  $self -> set_inflated_columns($columns) if $columns;
+sub render {
+  my($self, $c, $page) = @_;
 
-  if($self->get_dirty_columns->{"edition_id"}) {
-    $self -> discard_changes();
-    die "Unable to update a layout's project instance";
-  }
-
-  if(!keys %{$self->get_dirty_columns}) {
-    $self -> discard_changes();
-    return $self;
-  }
-
-  if($self -> edition -> is_frozen) {
-    # duplicate to current instance if we don't have one already
-    # if we do have one, then we die with an error
-    my $current_edition = $self -> edition -> project -> current_edition;
-    my $new;
-    $new = $current_edition -> layouts(
-      { name => $self -> name }
-    ) -> first;
-    if($new) {
-      $self -> discard_changes();
-      die "Layout already exists in current project instance";
-    }
-    $new = $self -> copy({
-      edition_id => $current_edition->id
-    });
-    my %columns = $self -> get_dirty_columns;
-    $self -> discard_changes();
-    return $new -> update(\%columns);
+  my $edition = $c -> stash -> {edition} || $self -> edition;
+  my $super_layout = $edition -> theme_layout($self -> theme_layout_uuid);
+  if($super_layout) {
+    $super_layout -> render($c, $self -> configuration, $page);
   }
   else {
-    super;
+    $c -> response -> content_type('text/html; charset=utf-8');
+    my($title, $desc) = ($page -> title, $page -> description);
+    my($body) = $page -> page_parts -> find({ name => 'body' }) -> first;
+    if($body) {
+      $body = $body -> content;
+    }
+    else {
+      $body = "<p>No Content</p>";
+    }
+    $c -> response -> body(<<EODOC);
+<html>
+  <head><title>$title</title></head>
+  <body><p><em>Description:</em> $desc</p>
+        $body
+  </body>
+</html>
+EODOC
   }
-};
-
-before insert => sub {
-  my($self) = @_;
-
-  if($self -> edition -> is_frozen) {
-    die "Unable to modify a frozen project instance";
-  }
-};
-
-override delete => sub {
-  my($self) = @_;
-
-  if($self -> edition -> is_froze) {
-    die "Unable to modify a frozen project instance";
-  }
-  super;
-};
+  return 1;
+}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

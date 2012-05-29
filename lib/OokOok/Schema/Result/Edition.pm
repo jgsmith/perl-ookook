@@ -127,10 +127,8 @@ __PACKAGE__->set_primary_key("id");
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:hiO65yq2rmIFceDBWPX+xQ
 
 use JSON;
-use DateTime;
 
 __PACKAGE__->belongs_to("project" => "OokOok::Schema::Result::Project", "project_id");
-__PACKAGE__->belongs_to("owner" => "OokOok::Schema::Result::Project", "project_id");
 
 __PACKAGE__->has_many("pages" => "OokOok::Schema::Result::Page", "edition_id", {
   cascade_copy => 0,
@@ -148,22 +146,9 @@ __PACKAGE__->inflate_column('sitemap', {
   deflate => sub { JSON::encode_json shift },
 });
 
-sub is_frozen { defined $_[0] -> frozen_on; }
+with 'OokOok::Role::Schema::Result::Edition';
 
-sub freeze {
-  my($self) = @_;
-
-  return if $self -> is_frozen;
-
-  $self -> copy({
-    created_on => DateTime -> now,
-    frozen_on => undef
-  });
-
-  $self -> update({
-    frozen_on => DateTime -> now
-  });
-}
+sub owner { $_[0] -> project; }
 
 #
 # We want to get the right theme given the date for which we
@@ -173,42 +158,29 @@ sub theme_edition {
   my($self) = @_;
 
   if($self -> theme) {
-    $self -> theme -> edition_for_date($self -> theme_date);
+    return $self -> theme -> edition_for_date($self -> theme_date);
   }
 }
 
-before insert => sub { $_[0] -> created_on(DateTime->now); };
+sub theme_layout {
+  my($self, $uuid) = @_;
 
-before delete => sub {
-  if($_[0] -> is_frozen) {
-    die "Unable to delete a frozen project instance";
+  if($self -> theme) {
+    return $self -> theme -> layout_for_date($uuid, $self -> theme_date);
   }
-};
+}
 
-after delete => sub {
-  my($self) = @_;
+sub layout {
+  my($self, $uuid) = @_;
 
-  # get most recent frozen edition and clone it
-  # or, if there isn't one, create an empty one
-  my $prev = $self -> project -> current_edition;
+  return $self -> project -> layout_for_date($uuid, $self -> frozen_on);
+}
 
-  if($prev) {
-    $prev -> copy({
-      created_on => DateTime -> now,
-      frozen_on => undef
-    });
-  }
-  else {
-    $self -> project -> editions -> create_related({ });
-  }
-};
+sub snippet {
+  my($self, $name) = @_;
 
-before update => sub {
-  if($_[0] -> is_frozen) {
-    $_[0] -> discard_changes();
-    die "Unable to modify a frozen project instance";
-  }
-};
+  return $self -> project -> snippet_for_date($name, $self -> frozen_on);
+}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

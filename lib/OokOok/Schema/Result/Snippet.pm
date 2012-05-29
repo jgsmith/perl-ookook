@@ -1,12 +1,12 @@
 use utf8;
-package OokOok::Schema::Result::Page;
+package OokOok::Schema::Result::Snippet;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-OokOok::Schema::Result::Page
+OokOok::Schema::Result::Snippet
 
 =cut
 
@@ -30,11 +30,11 @@ extends 'DBIx::Class::Core';
 
 __PACKAGE__->load_components("InflateColumn::DateTime");
 
-=head1 TABLE: C<page>
+=head1 TABLE: C<snippet>
 
 =cut
 
-__PACKAGE__->table("page");
+__PACKAGE__->table("snippet");
 
 =head1 ACCESSORS
 
@@ -51,23 +51,11 @@ __PACKAGE__->table("page");
 
 =head2 uuid
 
-  data_type: 'char'
-  is_nullable: 0
-  size: 20
-
-=head2 layout
-
-  data_type: 'char'
-  is_nullable: 1
-  size: 20
-
-=head2 title
-
   data_type: 'varchar'
   is_nullable: 0
   size: 255
 
-=head2 description
+=head2 content
 
   data_type: 'text'
   is_nullable: 1
@@ -80,12 +68,8 @@ __PACKAGE__->add_columns(
   "edition_id",
   { data_type => "integer", is_nullable => 0 },
   "uuid",
-  { data_type => "char", is_nullable => 0, size => 20 },
-  "layout",
-  { data_type => "char", is_nullable => 1, size => 20 },
-  "title",
   { data_type => "varchar", is_nullable => 0, size => 255 },
-  "description",
+  "content",
   { data_type => "text", is_nullable => 1 },
 );
 
@@ -102,32 +86,12 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-29 18:18:00
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:nn3nDeoyVl11ZtFgc3Wlbw
-
-#use Data::UUID;
-use Carp;
-
-__PACKAGE__ -> belongs_to( "edition" => "OokOok::Schema::Result::Edition", "edition_id" );
-
-__PACKAGE__ -> has_many( "page_parts" => "OokOok::Schema::Result::PagePart", "page_id", {
-  cascade_copy => 1,
-  cascade_delete => 1,
-} );
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-29 19:07:51
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:zn8GBI7tnif58v/sF7QdlQ
 
 with 'OokOok::Role::Schema::Result::HasVersions';
 
-sub render {
-  my($self, $c) = @_;
-
-  my $edition = $c -> stash -> {edition} || $self -> edition;
-  my $layout = $edition -> layout($self -> layout);
-  if($layout) {
-    $layout -> render($c, $self);
-  }
-
-  return 1;
-}
+__PACKAGE__ -> belongs_to('edition', 'OokOok::Schema::Result::Edition', 'edition_id');
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
