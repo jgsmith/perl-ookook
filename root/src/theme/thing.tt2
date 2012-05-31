@@ -1,6 +1,7 @@
 [%- META title = "Display Theme" -%]
 <div id="messages"></div>
 <div>
+  <a style="float: right;" href="[% c.uri_for("/dashboard") %]">Dashboard</a>
   <h3>
     Theme: [% theme_edition.name %]
   </h3>
@@ -13,7 +14,10 @@
   </ul>
   <div class="tab-content">
     <div class="tab-pane active" id="layouts">
-      <table id="layouts-content" width="100%">
+      <div style="float: right;">
+        <button class="btn btn-primary btn-large" id="create_layout_btn">Create Layout</button>
+      </div>
+      <table id="layouts-content" width="100%" style="clear: right;">
         <tr><th width="70%">Name</th><th width="30%">Modify</th></tr>
       </table>
     </div>
@@ -42,6 +46,8 @@ $(function() {
   var tmp
   , modalCallback
   ;
+
+  $("#themeTabs a[href='#layouts']").tab('show');
 
   $("#new_layout_form").modal('hide');
   $("#new_layout_form").on('show', function() {

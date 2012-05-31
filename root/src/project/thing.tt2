@@ -1,6 +1,7 @@
 [%- META title = "Display Project" -%]
 <div id="messages"></div>
 <div>
+  <a style="float: right;" href="[% c.uri_for("/dashboard") %]">Dashboard</a>
   <h3>
     Project: [% edition.name %]
   </h3>
