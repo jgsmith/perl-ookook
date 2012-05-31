@@ -35,6 +35,7 @@ requires 'Data::UUID';
 requires 'Workflow';
 requires 'JSON';
 requires 'HTML::FormFu';
+requires 'XML::LibXML';
 
 requires 'Data::Verifier';
 
