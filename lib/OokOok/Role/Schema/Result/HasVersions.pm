@@ -2,6 +2,8 @@ package OokOok::Role::Schema::Result::HasVersions;
 
 use Moose::Role;
 
+use Data::UUID ();
+
 {
   my $ug = Data::UUID -> new;
   before insert => sub {

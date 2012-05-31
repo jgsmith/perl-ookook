@@ -138,6 +138,10 @@ __PACKAGE__->has_many("layouts" => "OokOok::Schema::Result::Layout", "edition_id
   cascade_copy => 0,
   cascade_delete => 1,
 });
+__PACKAGE__->has_many("snippets" => "OokOok::Schema::Result::Snippet", "edition_id", {
+  cascade_copy => 0,
+  cascade_delete => 1,
+});
 
 __PACKAGE__->belongs_to("theme" => "OokOok::Schema::Result::Theme", "theme_id");
 
@@ -181,6 +185,38 @@ sub snippet {
 
   return $self -> project -> snippet_for_date($name, $self -> frozen_on);
 }
+
+sub page {
+  my($self, $uuid) = @_;
+
+  return $self -> project -> page_for_date($uuid, $self -> frozen_on);
+}
+
+sub page_path {
+  my($self, @path) = @_;
+
+  my $sitemap = $self -> sitemap;
+
+  my @pages;
+  my $page_uuid;
+
+  while(@path && $sitemap) {
+    my $slug = shift @path;
+    if($sitemap->{$slug}) {
+      $page_uuid = $sitemap->{$slug}->{visual};
+      $sitemap = $sitemap->{$slug}->{children};
+      if($page_uuid) {
+        push @pages, $self -> page($page_uuid);
+      }
+      else {
+        push @pages, undef;
+      }
+    }
+  }
+
+  return @pages;
+}
+
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

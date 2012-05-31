@@ -2,7 +2,38 @@ package OokOok::Role::Schema::Result::HasEditions;
 
 use Moose::Role;
 
-use Data::UUID;
+=head1 NAME
+
+OokOok::Role::Schema::Result::HasEditions
+
+=head1 SYNOPSIS
+
+ package OokOok::Schema::Result::Thing;
+
+ use Moose;
+ extends 'DBIx::Class::Core';
+ with 'OokOok::Role::Schema::Result::HasEditions';
+
+=head1 DESCRIPTION
+
+This role provides support for objects that have editions in OokOok. 
+
+The class that uses this role must provide an C<editions> function that
+represents a 'has many' relationship with the edition objects.
+
+=cut
+
+requires 'editions';
+
+=head1 AUGMENTATIONS
+
+The following methods are overridden or otherwise altered in functionality.
+
+=head2 insert
+
+=cut
+
+use Data::UUID ();
 use DateTime;
 
 {
@@ -23,11 +54,23 @@ after insert => sub {
   $_[0];
 };
 
+=head2 delete
+
+=cut
+
 before delete => sub {
   if(grep { $_ -> is_frozen } $_[0] -> editions) {
     die "Unable to delete with published editions";
   }
 };
+
+=head1 METHODS
+
+The following methods are added to the class.
+
+=head2 edition_for_date
+
+=cut
 
 sub edition_for_date {
   my($self, $date) = @_;
@@ -37,7 +80,15 @@ sub edition_for_date {
   return $self -> _apply_date_constraint($q, "", $date) -> first;
 }
 
+=head2 current_edition
+
+=cut
+
 sub current_edition { $_[0] -> edition_for_date; }
+
+=head2 relation_for_date
+
+=cut
 
 sub relation_for_date {
   my($self, $relation, $uuid, $date) = @_;
@@ -88,3 +139,4 @@ sub _apply_date_constraint {
 1;
 
 __END__
+

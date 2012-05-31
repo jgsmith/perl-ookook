@@ -52,6 +52,7 @@ __PACKAGE__->table("theme_edition");
 =head2 name
 
   data_type: 'varchar'
+  default_value: (empty string)
   is_nullable: 0
   size: 255
 
@@ -78,7 +79,7 @@ __PACKAGE__->add_columns(
   "theme_id",
   { data_type => "integer", is_nullable => 0 },
   "name",
-  { data_type => "varchar", is_nullable => 0, size => 255 },
+  { data_type => "varchar", default_value => "", is_nullable => 0, size => 255 },
   "description",
   { data_type => "text", is_nullable => 1 },
   "created_on",
@@ -100,12 +101,14 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-29 14:06:21
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:VoIP1/y0+FNane3nRY313Q
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-31 10:14:03
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:dXvyxR135BeGnvRGdrQSNA
 
 with 'OokOok::Role::Schema::Result::Edition';
 
 __PACKAGE__ -> belongs_to("theme" => "OokOok::Schema::Result::Theme", "theme_id");
+
+__PACKAGE__ -> has_many("layouts" => "OokOok::Schema::Result::ThemeLayout", "theme_edition_id");
 
 sub owner { $_[0] -> theme; }
 

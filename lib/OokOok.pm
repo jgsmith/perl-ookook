@@ -84,7 +84,7 @@ OokOok - Catalyst based application
 
 =head1 DESCRIPTION
 
-[enter your description here]
+OokOok is a platform for creating web-based projects.
 
 =head1 SEE ALSO
 

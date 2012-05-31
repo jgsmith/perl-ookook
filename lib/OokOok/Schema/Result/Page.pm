@@ -105,7 +105,6 @@ __PACKAGE__->set_primary_key("id");
 # Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-29 18:18:00
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:nn3nDeoyVl11ZtFgc3Wlbw
 
-#use Data::UUID;
 use Carp;
 
 __PACKAGE__ -> belongs_to( "edition" => "OokOok::Schema::Result::Edition", "edition_id" );

@@ -122,13 +122,14 @@ CREATE TABLE snippet (
 CREATE TABLE theme (
   id      INTEGER PRIMARY KEY,
   uuid    char(20) NOT NULL,
+  created_on DATETIME NOT NULL,
   user_id INTEGER
 );
 
 CREATE TABLE theme_edition (
   id      INTEGER PRIMARY KEY,
   theme_id INTEGER NOT NULL,
-  name    VARCHAR(255) NOT NULL,
+  name    VARCHAR(255) NOT NULL DEFAULT '',
   description TEXT,
   created_on DATETIME NOT NULL,
   frozen_on DATETIME
@@ -139,8 +140,8 @@ CREATE TABLE theme_layout (
   theme_edition_id INTEGER NOT NULL,
   uuid   CHAR(20) NOT NULL,
   name    VARCHAR(255) NOT NULL,
-  layout TEXT,
-  configuration TEXT
+  layout TEXT NOT NULL DEFAULT '{}',
+  configuration TEXT NOT NULL DEFAULT '{}'
 );
 
 CREATE TABLE theme_style (

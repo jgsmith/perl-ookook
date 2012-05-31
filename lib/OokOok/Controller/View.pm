@@ -116,28 +116,16 @@ sub default :Chained('/') :PathPart('v') {
   # for the requested resource
   # We walk through the sitemap using the elements in @path
 
-  my $sitemap = $c -> stash -> {edition} -> sitemap;
+  $c -> stash -> {path} = [reverse $c -> stash -> {edition} -> page_path(@path)];
 
-  my $page_uuid;
-  while(@path && !$page_uuid && $sitemap) {
-    my $slug = shift @path;
-    if($sitemap->{$slug}) {
-      if(!@path) {
-        $page_uuid = $sitemap->{$slug}->{visual};
-      }
-      else {
-        $sitemap = $sitemap->{$slug}->{children};
-      }
-    }
-  }
-
-  if(!$page_uuid) {
+  # we expect as many entries in the stashed path as are in the @path
+  if(scalar(@{$c->stash->{path}}) != scalar(@path)) {
     $c -> response->body( 'Page not found' );
     $c -> response -> status(404);
     $c -> detach;
   }
 
-  my $page = $c -> stash -> {project} -> page_for_date($page_uuid, $c -> stash -> {date});
+  my $page = $c -> stash -> {path} -> [0];
 
   if(!$page) {
     $c -> response->body( 'Page not found' );
