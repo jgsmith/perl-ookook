@@ -36,6 +36,8 @@ requires 'Workflow';
 requires 'JSON';
 requires 'HTML::FormFu';
 
+requires 'Data::Verifier';
+
 requires 'Net::Twitter';
 
 requires 'HTML::FormFu::Model::DBIC';

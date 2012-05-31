@@ -38,6 +38,43 @@ is scalar($layout_rs->all), 0, "No layouts in the DB";
 my $layout = $instance -> create_related('layouts', {
   name => 'Simple',
   layout => {
+    width => 12,
+    content => [{
+      type => 'Box',
+      width => 12,
+      class => 'header',
+      content => [{
+        type => 'Snippet',
+        content => 'header',
+        width => 12,
+      }, {
+        type => 'Snippet',
+        content => 'navigation',
+        width => 12,
+      }],
+    }, {
+      type => 'Box',
+      width => 12,
+      class => 'main-content',
+      content => [{
+        type => 'PagePart',
+        content => 'sidebar',
+        width => 3,
+      }, {
+        type => 'PagePart',
+        content => 'body',
+        width => 9,
+      }]
+    }, {
+      type => 'Box',
+      width => 12,
+      class => 'footer',
+      content => [{
+        type => 'Snippet',
+        content => 'footer',
+        width => 12,
+      }]
+    }],
   },
   configuration => {
   },
@@ -72,6 +109,8 @@ $doc = $layout -> _render_box($c, $dom, {
 $dom -> setDocumentElement($doc);
 
 is $dom -> toStringHTML(), qq{<div class="span12"><div>Foo</div></div>\n}, "Got right HTML out for a content box";
+
+
 
 
 

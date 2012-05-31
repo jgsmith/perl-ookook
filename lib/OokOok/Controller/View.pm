@@ -135,7 +135,7 @@ sub default :Chained('/') :PathPart('v') {
 
   $c -> stash -> {page} = $page;
 
-  $page -> render($c);
+  $c -> stash -> {rendering} = $page -> render($c);
 }
 
 =head1 AUTHOR

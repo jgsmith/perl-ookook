@@ -35,6 +35,7 @@ requires:
   CatalystX::RoleApplicator: 0
   Config::General: 0
   Data::UUID: 0
+  Data::Verifier: 0
   HTML::FormFu: 0
   HTML::FormFu::Model::DBIC: 0
   JSON: 0

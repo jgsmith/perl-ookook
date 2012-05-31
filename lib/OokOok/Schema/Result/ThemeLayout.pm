@@ -168,12 +168,15 @@ sub _render_snippet {
 
   # we need to find the snippet and render it
   my $snippet = $c -> stash -> {page} -> edition -> snippet($content->{content});
+  my $ret;
   if($snippet) {
-    return $self -> _render_html5($snippet -> content);
+    $ret = $self -> _render_html5($snippet -> content);
   }
   else {
-    return $self -> _render_html5("");
+    $ret = $self -> _render_html5("");
   }
+  $ret -> setAttribute(class => "snippet-" . $content->{content});
+  $ret;
 }
 
 sub _render_page_part {
@@ -181,7 +184,7 @@ sub _render_page_part {
 
   # if page doesn't have it, we look up the path until we find a page that does
   my @page_path = [$c -> stash -> {path}];
-  my($part, $p);
+  my($part, $p, $ret);
   while(!$part && @page_path) {
     $p = pop @page_path while @page_path && !$p;
     if($p) {
@@ -190,11 +193,13 @@ sub _render_page_part {
   }
 
   if($part) {
-    return $self -> _render_html5($part -> content);
+    $ret = $self -> _render_html5($part -> content);
   }
   else {
-    return $self -> _render_html5("");
+    $ret = $self -> _render_html5("");
   }
+  $ret -> setAttribute(class => "part-" . $content->{content});
+  $ret;
 }
 
 sub _render_box {
@@ -244,9 +249,12 @@ sub render {
   my $dom = XML::LibXML::Document->new();
 
   my $doc = $self -> _render_box($c, $dom, $self -> layout);
+  $doc -> setAttribute(class => "layout-" . $self -> uuid);
 
   $dom -> setDocumentElement($doc);
 
+  # doesn't have the header stuff in it - we'll want to pass this to
+  # the view tt2 template and let it wrap everything in the html5 header stuff
   return $dom -> toStringHTML();
 }
 
