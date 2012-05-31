@@ -1,0 +1,124 @@
+[%- META title = "Display Theme" -%]
+<div id="messages"></div>
+<div>
+  <h3>
+    Theme: [% theme_edition.name %]
+  </h3>
+
+  <ul class="nav nav-tabs" id="themeTabs">
+    <li><a href="#layouts" data-toggle="tab">Layouts</a></li>
+    <li><a href="#styles" data-toggle="tab">Styles</a></li>
+    <li><a href="#editions" data-toggle="tab">Editions</a></li>
+    <li><a href="#users" data-toggle="tab">Users</a></li>
+  </ul>
+  <div class="tab-content">
+    <div class="tab-pane active" id="layouts">
+      <table id="layouts-content" width="100%">
+        <tr><th width="70%">Name</th><th width="30%">Modify</th></tr>
+      </table>
+    </div>
+    <div class="tab-pane" id="styles">
+      <p>TBD</p>
+      <p>You'll be able to manage the styles used in the theme.</p>
+    </div>
+    <div class="tab-pane" id="editions">
+      <div style="float: right;">
+        <button class="btn btn-primary btn-large" id="create_edition_btn">Create Edition</button>
+      </div>
+      <table id="editions-content" width="60%">
+      </table>
+    </div>
+    <div class="tab-pane" id="users">
+      <p>TBD</p>
+      <p>You'll be able to manage groups of users who can help you build
+         your theme.</p>
+    </div>
+  </div>
+</div>
+<div id="new_layout_form">
+</div>
+<script type="text/javascript">
+$(function() {
+  var tmp
+  , modalCallback
+  ;
+
+  $("#new_layout_form").modal('hide');
+  $("#new_layout_form").on('show', function() {
+    var layout_options = [];
+    $("#new_layout_title").val("");
+    $("#new_layout_slug").val("");
+    $("#new_layout_description").val("");
+    // need to provide a list of layouts to select from
+    $("#new_layout_uuid").empty();
+    $.each(layouts, function(uuid, info) {
+      layout_options.push(uuid);
+    });
+    layout_options.sort(function(a,b) {
+      if(layouts[a].title < layouts[b].title) { return -1; }
+      else if(layouts[a].title > layouts[b].title) { return 1; }
+      else { return 0; }
+    });
+    $("#new_layout_uuid").append("<option value=''>New blank layout</option>");
+    $.each(layout_options, function(idx, uuid) {
+      var el;
+      el = $("<option value='" + uuid + "'>" + layouts[uuid].title + "</option>");
+      $("#new_layout_uuid").append(el);
+    });
+  });
+  $("#cancel_new_layout_btn").click(function() {
+    $("#new_layout_form").modal('hide');
+    modalCallback = function() {};
+  });
+  $("#create_new_layout_btn").click(function() {
+    var title = $("#new_layout_title").val(),
+        slug = $("#new_layout_slug").val(),
+        uuid = $("#new_layout_uuid").val(),
+        desc  = $("#new_layout_description").val();
+
+    $("#new_layout_form").modal('hide');
+    modalCallback({
+      title: title,
+      slug: slug,
+      uuid: uuid,
+      description: desc
+    });
+    modalCallback = function() {};
+  });
+
+  function updateEditions() {
+    ookook.ajax({
+      url: "[% c.uri_for("/theme/" _ theme.uuid ) %]",
+      type: "GET",
+      success: function(data) {
+        var table = $("#editions-content");
+        table.empty();
+        table.append('<tr><th width="75%">Cut Date</th><th width="25%">Modify</th></tr>');
+console.log(data);
+        $.each(data.theme.editions, function(idx, edition) {
+          var tr, td;
+          tr = $("<tr></tr>");
+          td = $("<td></td>");
+          td.text(edition.frozen_on);
+          tr.append(td);
+          td = $("<td></td>");
+          tr.append(td);
+          table.append(tr);
+        });
+      }
+    });
+  }
+
+  updateEditions();
+
+  $('#create_edition_btn').click(function() {
+    ookook.ajax({
+      url: "[% c.uri_for("/theme/" _ theme.uuid _ "/edition") %]",
+      type: "POST",
+      data: {},
+      success: updateEditions
+    });
+  });
+        
+});
+</script>

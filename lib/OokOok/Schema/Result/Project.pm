@@ -118,25 +118,6 @@ sub edition_path {
   return $self -> _apply_date_constraint($q, "", $date) -> all;
 }
 
-=head2 last_frozen_on
-
-Returns the date of the most recently frozen edition.
-
-=cut
-
-sub last_frozen_on {
-  my($self) = @_;
-
-  my $last = $self -> editions -> search(
-    { 'frozen_on' => { '!=', undef } },
-    { order_by => { -desc => 'id' }, rows => 1 }
-  )->first;
-
-  if($last) {
-    return $last->frozen_on;
-  }
-}
-
 sub sitemap_for_date {
   my($self, $date) = @_;
 
