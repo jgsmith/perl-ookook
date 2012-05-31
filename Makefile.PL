@@ -29,6 +29,7 @@ requires 'Catalyst::Plugin::Unicode::Encoding';
 requires 'CatalystX::RoleApplicator';
 
 requires 'Moose';
+requires 'MooseX::MethodAttributes::Role';
 requires 'namespace::autoclean';
 requires 'Set::Scalar';
 requires 'Data::UUID';
