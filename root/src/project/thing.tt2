@@ -1,11 +1,13 @@
 [%- META title = "Display Project" -%]
+<ul class="breadcrumb">
+<li>
+  <a href="[% c.uri_for("/dashboard") %]">Dashboard</a>
+  <span class="divider">&raquo;</span>
+</li>
+<li>[% edition.name %]</li>
+</ul>
 <div id="messages"></div>
 <div>
-  <a style="float: right;" href="[% c.uri_for("/dashboard") %]">Dashboard</a>
-  <h3>
-    Project: [% edition.name %]
-  </h3>
-
   <ul class="nav nav-tabs" id="projectTabs">
     <li><a href="#sitemap" data-toggle="tab">Pages</a></li>
     <li><a href="#apps" data-toggle="tab">Applications</a></li>
@@ -62,32 +64,20 @@
   </div>
 </div>
 [% IF edition.sitemap.size == 0 %]
-  <div id="home_page_form" class="modal fade">
-    <div class="modal-header">
-      <button class="close" data-dismiss="modal">&times;</button>
-      <h3>Create Home Page</h3>
-    </div>
-    <div class="modal-body">
-    <form class="well">
+  [% WRAPPER modalForm
+     id = "home_page_form"
+     title = "Create Home Page"
+   %]
       <label>Page title (optional)</label>
       <input id="new_page_title" type="text" class="span3" placeholder="Page title...">
       <label>Page description (optional)</label>
       <textarea id="new_page_description" rows="4"></textarea>
-    </form>
-    </div>
-    <div class="modal-footer">
-      <a href="#" class="btn" id="cancel_page_btn">Close</a>
-      <a href="#" class="btn btn-primary" id="create_page_btn">Create Home Page</a>
-    </div>
-  </div>
+  [% END %]
 [% ELSE %]
-  <div id="new_page_form" class="modal fade">
-    <div class="modal-header">
-      <button class="close" data-dismiss="modal">&times;</button>
-      <h3>Create New Page</h3>
-    </div>
-    <div class="modal-body">
-    <form class="well">
+  [% WRAPPER modalForm
+     id = "new_page_form"
+     title = "Create New Page"
+   %]
       <label>Page slug (required)</label>
       <input id="new_page_slug" type="text" class="span3" placeholder="Page slug...">
       <label>Page content</label>
@@ -97,13 +87,7 @@
       <input id="new_page_title" type="text" class="span3" placeholder="Page title...">
       <label>Page description (optional)</label>
       <textarea id="new_page_description" rows="4"></textarea>
-    </form>
-    </div>
-    <div class="modal-footer">
-      <a href="#" class="btn" id="cancel_new_page_btn">Close</a>
-      <a href="#" class="btn btn-primary" id="create_new_page_btn">Add New Page</a>
-    </div>
-  </div>
+  [% END %]
 [% END %]
 <script type="text/javascript">
 $(function() {
@@ -122,10 +106,10 @@ $(function() {
     $("#new_page_title").val("");
     $("#new_page_description").val("");
   });
-  $("#cancel_page_btn").click(function() {
+  $("#home_page_form_cancel").click(function() {
     $("#home_page_form").model('hide');
   });
-  $("#create_page_btn").click(function() {
+  $("#home_page_form_action").click(function() {
     var title = $("#new_page_title").val(),
         desc  = $("#new_page_description").val();
 
@@ -273,11 +257,11 @@ $(function() {
       $("#new_page_uuid").append(el);
     });
   });
-  $("#cancel_new_page_btn").click(function() {
+  $("#new_page_form_cancel").click(function() {
     $("#new_page_form").modal('hide');
     modalCallback = function() {};
   });
-  $("#create_new_page_btn").click(function() {
+  $("#new_page_form_action").click(function() {
     var title = $("#new_page_title").val(),
         slug = $("#new_page_slug").val(),
         uuid = $("#new_page_uuid").val(),

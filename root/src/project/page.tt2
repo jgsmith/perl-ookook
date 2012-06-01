@@ -3,7 +3,20 @@
   This won't be the best edit interface, but it will have to do for now.
   Each tab is a separate page part.
   -->
-<h3><a href="[% c.uri_for("/project/" _ project.uuid) %]">Project: [% edition.name %]</a></h3>
+<ul class="breadcrumb">
+<li>
+  <a href="[% c.uri_for("/dashboard") %]">Dashboard</a>
+  <span class="divider">&raquo;</span>
+</li>
+<li>
+  <a href="[% c.uri_for("/project/" _ project.uuid ) %]">[% edition.name %]</a>
+  <span class="divider">&raquo;</span>
+</li>
+<li>
+  Edit [% page.title %]
+</li>
+</ul>
+<div id="messages"></div>
 <div>
 <div class="form-horizontal">
   <fieldset>
@@ -28,22 +41,13 @@
 </div>
   </fieldset>
 </div>
-<div id="new_part_form" class="modal fade">
-  <div class="modal-header">
-    <button class="close" data-dismiss="modal">&times;</button>
-    <h3>New Page Part</h3>
-  </div>
-  <div class="modal-body">
-    <form class="well">
+[% WRAPPER modalForm
+   id = "new_part_form"
+   title = "New Page Part"
+ %]
       <label>Name</label>
       <input id="new_page_part_name" type="text" class="span3" placeholder="Page part name...">
-    </form>
-  </div>
-  <div class="modal-footer">
-    <a href="#" class="btn" id="cancel_page_part_btn">Close</a>
-    <a href="#" class="btn btn-primary" id="create_page_part_btn">Create Page Part</a>
-  </div>
-</div>  
+[% END %]
 <div class="btn-group" style="margin: 1em;">
   <button class="btn btn-large btn-primary" id="save_page_btn">Save</button>
   <button class="btn btn-large" id="cancel_page_btn">Cancel</button>
@@ -100,11 +104,7 @@ $(function() {
     $("#new_page_part_name").val("");
   });
 
-  $("#cancel_page_part_btn").click(function() {
-    $("#new_part_form").modal('hide');
-  });
-
-  $("#create_page_part_btn").click(function() {
+  $("#new_part_form_action").click(function() {
     var name = $("#new_page_part_name").val();
 
     // TODO: need name validation

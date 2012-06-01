@@ -1,11 +1,13 @@
 [%- META title = "Display Theme" -%]
+<ul class="breadcrumb">
+<li>
+  <a href="[% c.uri_for("/dashboard") %]">Dashboard</a>
+  <span class="divider">&raquo;</span>
+</li>
+<li>[% theme_edition.name %]</li>
+</ul>
 <div id="messages"></div>
 <div>
-  <a style="float: right;" href="[% c.uri_for("/dashboard") %]">Dashboard</a>
-  <h3>
-    Theme: [% theme_edition.name %]
-  </h3>
-
   <ul class="nav nav-tabs" id="themeTabs">
     <li><a href="#layouts" data-toggle="tab">Layouts</a></li>
     <li><a href="#styles" data-toggle="tab">Styles</a></li>
@@ -39,8 +41,16 @@
     </div>
   </div>
 </div>
-<div id="new_layout_form">
-</div>
+[% WRAPPER modalForm
+   id = "new_layout_form"
+   title = "Create New Layout"
+ %]
+  [% PROCESS modalInput
+     id = "new_layout_name"
+     label = "Layout Name (required)"
+     placeholder = "New layout name..."
+  %]
+[% END %]
 <script type="text/javascript">
 $(function() {
   var tmp
@@ -49,32 +59,15 @@ $(function() {
 
   $("#themeTabs a[href='#layouts']").tab('show');
 
-  $("#new_layout_form").modal('hide');
+  $("#create_layout_btn").click(function() {
+    $("#new_layout_form").modal('show');
+  });
+
   $("#new_layout_form").on('show', function() {
     var layout_options = [];
     $("#new_layout_title").val("");
     $("#new_layout_slug").val("");
     $("#new_layout_description").val("");
-    // need to provide a list of layouts to select from
-    $("#new_layout_uuid").empty();
-    $.each(layouts, function(uuid, info) {
-      layout_options.push(uuid);
-    });
-    layout_options.sort(function(a,b) {
-      if(layouts[a].title < layouts[b].title) { return -1; }
-      else if(layouts[a].title > layouts[b].title) { return 1; }
-      else { return 0; }
-    });
-    $("#new_layout_uuid").append("<option value=''>New blank layout</option>");
-    $.each(layout_options, function(idx, uuid) {
-      var el;
-      el = $("<option value='" + uuid + "'>" + layouts[uuid].title + "</option>");
-      $("#new_layout_uuid").append(el);
-    });
-  });
-  $("#cancel_new_layout_btn").click(function() {
-    $("#new_layout_form").modal('hide');
-    modalCallback = function() {};
   });
   $("#create_new_layout_btn").click(function() {
     var title = $("#new_layout_title").val(),
