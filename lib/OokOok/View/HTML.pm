@@ -7,7 +7,6 @@ extends 'Catalyst::View::TT';
 __PACKAGE__->config(
     TEMPLATE_EXTENSION => '.tt2',
     render_die => 1,
-    TIMER => 1,
     PRE_PROCESS => 'config/main.tt2',
     WRAPPER => 'site/wrapper.tt2',
 );

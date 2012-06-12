@@ -6,6 +6,7 @@ use JSON;
 BEGIN { 
   extends 'Catalyst::Controller::REST'; 
   with 'OokOok::Role::Controller::Manager';
+  with 'OokOok::Role::Controller::HasEditions';
 }
 
 =head1 NAME
@@ -26,16 +27,16 @@ __PACKAGE__ -> config(
     'text/html' => [ 'View', 'HTML' ],
   },
   default => 'text/html',
-  model => 'DB::Theme',
+  current_model => 'DB::Theme',
 );
 
 #
 # manager_base establishes the root slug for the theme management
 # functions
 #
-sub manager_base :Chained('/') :PathPart('theme') :CaptureArgs(0) { }
+sub base :Chained('/') :PathPart('theme') :CaptureArgs(0) { }
 
-sub layouts :Chained('base') :PathPart('layout') :Args(0) :ActionClass('REST') { }
+sub layouts :Chained('thing_base') :PathPart('layout') :Args(0) :ActionClass('REST') { }
 
 sub layouts_GET {
   my($self, $c) = @_;

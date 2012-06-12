@@ -26,6 +26,7 @@ CREATE TABLE project (
 CREATE TABLE edition (
   id      INTEGER PRIMARY KEY,
   project_id INTEGER NOT NULL,
+  primary_language VARCHAR(32) NOT NULL DEFAULT 'en',
   name    VARCHAR(255) NOT NULL DEFAULT '',
   description TEXT,
   sitemap TEXT NOT NULL DEFAULT '{}', -- json-encoded sitemap
@@ -97,6 +98,7 @@ CREATE TABLE page (
   uuid  char(20) NOT NULL,
   layout CHAR(20),
   title  VARCHAR(255) NOT NULL,
+  primary_language VARCHAR(32), -- if different than project
   description TEXT
 );
 
@@ -159,4 +161,40 @@ CREATE TABLE theme_style (
 --- We need to be able to freeze the API and still maintain the
 --- implementation
 
+---
+--- Processes
+---
 
+CREATE TABLE library (
+  id INTEGER PRIMARY KEY,
+  uuid CHAR(20) NOT NULL,
+  created_on DATETIME NOT NULL,
+  user_id INTEGER
+);
+
+CREATE TABLE library_edition (
+  id  INTEGER PRIMARY KEY,
+  library_id INTEGER NOT NULL,
+  name VARCHAR(255) NOT NULL DEFAULT '',
+  description TEXT,
+  namespace VARCHAR(255),
+  created_on DATETIME NOT NULL,
+  frozen_on DATETIME
+);
+
+CREATE TABLE function (
+  id INTEGER PRIMARY KEY,
+  library_edition_id INTEGER NOT NULL,
+  uuid CHAR(20) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  definition TEXT NOT NULL
+);
+
+CREATE TABLE function_session (
+  id INTEGER PRIMARY KEY,
+  function_id INTEGER NOT NULL,
+  uuid CHAR(20) NOT NULL,
+  request TEXT NOT NULL, -- the request body as JSON
+  created_on DATETIME NOT NULL,
+  expires_on DATETIME NOT NULL
+);

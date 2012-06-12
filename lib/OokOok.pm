@@ -73,6 +73,46 @@ __PACKAGE__->config(
 # Start the application
 __PACKAGE__->setup();
 
+override prepare_path => sub {
+  my $c = shift;
+
+  super;
+
+  my @path_chunks = split m[/], $c->request->path, -1;
+
+  return unless @path_chunks;
+
+  my $first = shift @path_chunks;
+  if($first eq 'dev') {
+    $c -> stash -> {development} = 1;
+  }
+  elsif($first =~ m{^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$}) {
+    $c -> stash -> {date} = DateTime -> new({
+      year => $1,
+      month => $2,
+      day => $3,
+      hour => $4,
+      minute => $5,
+      second => $6
+    });
+  }
+  else {
+    unshift @path_chunks, $first;
+    $first = '';
+  }
+
+  # Create a request path from the remaining chunks:
+  my $path = join('/', @path_chunks) || '/';
+
+  # Stuff modified request path back into request:
+  $c->request->path($path);
+
+  # Update request base to include whatever
+  # was stripped from the request path:
+  my $base = $c->request->base;
+  $base->path($base->path . $first);
+};
+
 
 =head1 NAME
 

@@ -6,6 +6,8 @@ use JSON;
 BEGIN { 
   extends 'Catalyst::Controller::REST'; 
   with 'OokOok::Role::Controller::Manager';
+  with 'OokOok::Role::Controller::HasEditions';
+  with 'OokOok::Role::Controller::HasPages';
 }
 
 =head1 NAME
@@ -26,30 +28,89 @@ __PACKAGE__ -> config(
     'text/html' => [ 'View', 'HTML' ],
   },
   default => 'text/html',
-  model => 'DB::Project',
+  current_model => 'DB::Project',
 );
 
 #
-# manager_base establishes the root slug for the project management
+# base establishes the root slug for the project management
 # routes
 #
-sub manager_base :Chained('/') :PathPart('project') :CaptureArgs(0) { }
+
+sub base :Chained('/') :PathPart('project') :CaptureArgs(0) { }
+
+sub project_from_json {
+  my($self, $c, $json) = @_;
+
+  my $project = $c -> model("DB::Project") -> new_result({});
+  $project -> insert;
+  $project -> current_edition -> update({
+    name => $json -> {name},
+    description => $json -> {description},
+  });
+  #print STDERR "Made project: $project\n";
+  return $project;
+}
+
+sub project_to_json {
+  my($self, $c, $project, $deep) = @_;
+
+  my $ce = $project -> current_edition;
+  my $json = {
+    name => $ce -> name,
+    description => $ce -> description,
+    uuid => $project -> uuid,
+    url => "".$c -> uri_for("/project/" . $project -> uuid),
+    editions => [ map { $self -> edition_to_json($c, $_) } $project -> editions -> all ],
+  };
+  return $json;
+}
+
+sub update_project {
+  my($self, $c, $project, $json) = @_;
+
+  my $ce = $project -> current_edition;
+
+  eval {
+    my $updates = {
+      name => $json -> {name},
+      description => $json -> {description},
+    };
+
+    for (qw/name description/) {
+      delete $updates->{$_} unless defined $updates->{$_};
+    }
+
+    $ce = $ce -> update($updates) if scalar(keys %$updates);
+  };
+  return $project;
+}
+
+sub edition_to_json {
+  my($self, $c, $edition) = @_;
+
+  my $json = {
+    url => "".$c->uri_for("/project/" . $edition->project->uuid . "/edition"),
+    name => $edition -> name,
+    description => $edition -> description,
+    frozen_on => (map { $_ ? $_->strftime('%Y%m%d%H%M%S') : undef } $edition->frozen_on),
+    created_on => (map { $_ ? $_->strftime('%Y%m%d%H%M%S') : undef } $edition->created_on),
+  };
+  return $json;
+}
+
 
 ###
 ### Project-specific information/resources
 ###
 
-sub sitemap :Chained('base') :PathPart('sitemap') :Args(0) :ActionClass('REST') { }
+sub sitemap :Chained('thing_base') :PathPart('sitemap') :Args(0) :ActionClass('REST') { }
 
 sub sitemap_GET {
   my($self, $c) = @_;
 
 
-  $self -> status_ok(
-    $c,
-    entity => {
-      sitemap => $c -> stash -> {edition} -> sitemap
-    }
+  $self -> status_ok($c,
+    entity => $c -> stash -> {edition} -> sitemap,
   );
 }
 
@@ -106,11 +167,8 @@ sub sitemap_PUT {
     sitemap => $sitemap
   }));
 
-  $self -> status_ok(
-    $c,
-    entity => {
-      sitemap => $c -> stash -> {edition} -> sitemap
-    }
+  $self -> status_ok($c,
+    entity => $c -> stash -> {edition} -> sitemap,
   );
 }
 
@@ -123,20 +181,10 @@ sub sitemap_OPTIONS {
   );
 }
 
+sub constrain_pages {
+  my($self, $c, $q) = @_;
 
-sub pages :Chained('base') :PathPart('page') :Args(0) :ActionClass('REST') { }
-
-#
-# TODO: Find more efficient SQL for finding the most recent version of
-# each page based on the uuid (without having to load uuid first).
-#
-sub pages_GET {
-  my($self, $c) = @_;
-
-  my %pages;
-  my $q = $c -> model("DB::Page");
-  
-  $q = $q -> search(
+  return $q -> search(
     { 
       "edition.project_id" => $c -> stash -> {project} -> id
     },
@@ -144,85 +192,9 @@ sub pages_GET {
       join => [qw/edition/]
     } 
   );
-
-  my $uuid;
-   
-  while(my $p = $q -> next) {
-    $uuid = $p -> uuid;
-    if($pages{$uuid}) {
-      # we assume that a higher id is a more recent edition
-      if($p -> edition -> id > $pages{$uuid}->edition->id) {
-        $pages{$uuid} = $p;
-      }
-    } 
-    else {
-      $pages{$uuid} = $p;
-    } 
-  } 
-  
-  $self -> status_ok(
-    $c,
-    entity => {
-      pages => [
-        map { +{
-          uuid => $_ -> uuid,
-          title => $_ -> title,
-          parts => [ map { $_ -> name } $_ -> page_parts ],
-        } } values %pages
-      ]
-    }
-  );
 }
 
-# Creates a page in the current edition
-# No content, but meta info, such as title and layout info
-sub pages_POST {
-  my($self, $c) = @_;
-
-  my $page;
-  eval {
-    my %columns;
-    my $data = $c -> req -> data;
-    for my $col (qw/title description/) {
-      $columns{$col} = $data -> {$col} if defined $data -> {$col};
-    }
-
-    $page = $c -> stash -> {edition} -> create_related('pages', \%columns);
-  };
-
-  if($@) {
-    $self -> status_bad_request(
-      $c,
-      message => "Unable to create page: $@",
-    );
-  } 
-  else {
-    my $puuid = $page -> uuid;
-    my $uuid = $c -> stash -> {project} -> uuid;
-    $self -> status_created(
-      $c,
-      location => $c -> uri_for("/project/$uuid/page/$puuid"),
-      entity => {
-        page => {
-          uuid => $puuid,
-          title => $page -> title,
-          description => $page -> description,
-        }
-      }
-    );
-  }
-}
-
-sub pages_OPTIONS {
-  my($self, $c) = @_;
-
-  $self -> do_OPTIONS($c,
-    Allow => [qw/GET OPTIONS PUT/],
-    Accept => [qw{application/json}],
-  );
-}
-
-sub page_base :Chained('base') :PathPart('page') :CaptureArgs(1) {
+sub page_base :Chained('thing_base') :PathPart('page') :CaptureArgs(1) {
   my($self, $c, $page_uuid) = @_;
 
   # pulls out most recent version of page object, including working edition

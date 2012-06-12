@@ -84,11 +84,11 @@ ok $layout, "Layout was created";
 
 my $dom = XML::LibXML::Document->new();
 
-my $c = Fake::Context -> new();
+my $stash = {};
 
-$c -> stash -> {parser} = XML::LibXML->new();
+$stash -> {parser} = XML::LibXML->new;
 
-my $doc = $layout -> _render_box($c, $dom, {
+my $doc = $layout -> _render_box($stash, $dom, {
   width => 12
 });
 
@@ -98,7 +98,7 @@ $dom -> setDocumentElement($doc);
 
 is $dom -> toStringHTML(), qq{<div class="span12"></div>\n}, "Got right HTML out";
 
-$doc = $layout -> _render_box($c, $dom, {
+$doc = $layout -> _render_box($stash, $dom, {
   width => 12,
   content => [{
     type => 'Content',
@@ -109,23 +109,3 @@ $doc = $layout -> _render_box($c, $dom, {
 $dom -> setDocumentElement($doc);
 
 is $dom -> toStringHTML(), qq{<div class="span12"><div>Foo</div></div>\n}, "Got right HTML out for a content box";
-
-
-
-
-
-BEGIN {
-package Fake::Context;
-
-use Moose;
-
-has 'stash' => (
-  isa => 'HashRef',
-  is => 'ro',
-  default => sub { +{} }
-);
-}
-
-1;
-
-__END__

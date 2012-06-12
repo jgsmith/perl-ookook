@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Test::More tests => 11;
+use Test::More;
 
 BEGIN { use_ok( 'OokOok::Data::Store' ); }
 
@@ -33,3 +33,4 @@ ok(defined($item), "We get an item back for 'foo'");
 isa_ok($item->{"bar"}, "Set::Scalar", "The bar property is a set");
 is($item->{"bar"}->size, 2, "The bar property has two values");
 
+done_testing();

@@ -49,6 +49,13 @@ __PACKAGE__->table("edition");
   data_type: 'integer'
   is_nullable: 0
 
+=head2 primary_language
+
+  data_type: 'varchar'
+  default_value: 'en'
+  is_nullable: 0
+  size: 32
+
 =head2 name
 
   data_type: 'varchar'
@@ -94,6 +101,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "project_id",
   { data_type => "integer", is_nullable => 0 },
+  "primary_language",
+  { data_type => "varchar", default_value => "en", is_nullable => 0, size => 32 },
   "name",
   { data_type => "varchar", default_value => "", is_nullable => 0, size => 255 },
   "description",
@@ -123,8 +132,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-29 14:08:34
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:hiO65yq2rmIFceDBWPX+xQ
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-03 12:50:03
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:DU4ymAnNS+7FDFBIMyKKBg
 
 use JSON;
 

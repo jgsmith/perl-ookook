@@ -151,39 +151,39 @@ use feature "switch";
 use XML::LibXML;
 
 sub _render_html5 {
-  my($self, $c, $dom, $html5) = @_;
+  my($self, $stash, $dom, $html5) = @_;
 
-  $c -> stash -> {parser} -> parse_balanced_chunk("<div>" . $html5 . "</div>");
+  $stash -> {parser} -> parse_balanced_chunk("<div>" . $html5 . "</div>");
 }
 
 sub _render_content {
-  my($self, $c, $dom, $content) = @_;
+  my($self, $stash, $dom, $content) = @_;
   # we expect HTML5 content for now
 
-  $self -> _render_html5($c, $dom, $content->{content});
+  $self -> _render_html5($stash, $dom, $content->{content});
 }
 
 sub _render_snippet {
-  my($self, $c, $dom, $content) = @_;
+  my($self, $stash, $dom, $content) = @_;
 
   # we need to find the snippet and render it
-  my $snippet = $c -> stash -> {page} -> edition -> snippet($content->{content});
+  my $snippet = $stash -> {page} -> edition -> snippet($content->{content});
   my $ret;
   if($snippet) {
-    $ret = $self -> _render_html5($snippet -> content);
+    $ret = $self -> _render_html5($stash, $dom, $snippet -> content);
   }
   else {
-    $ret = $self -> _render_html5("");
+    $ret = $self -> _render_html5($stash, $dom, "");
   }
   $ret -> setAttribute(class => "snippet-" . $content->{content});
   $ret;
 }
 
 sub _render_page_part {
-  my($self, $c, $dom, $content) = @_;
+  my($self, $stash, $dom, $content) = @_;
 
   # if page doesn't have it, we look up the path until we find a page that does
-  my @page_path = [$c -> stash -> {path}];
+  my @page_path = [$stash -> {path}];
   my($part, $p, $ret);
   while(!$part && @page_path) {
     $p = pop @page_path while @page_path && !$p;
@@ -193,17 +193,17 @@ sub _render_page_part {
   }
 
   if($part) {
-    $ret = $self -> _render_html5($part -> content);
+    $ret = $self -> _render_html5($stash, $dom, $part -> content);
   }
   else {
-    $ret = $self -> _render_html5("");
+    $ret = $self -> _render_html5($stash, $dom, "");
   }
   $ret -> setAttribute(class => "part-" . $content->{content});
   $ret;
 }
 
 sub _render_box {
-  my($self, $c, $dom, $box) = @_;
+  my($self, $stash, $dom, $box) = @_;
 
   my $container = $dom -> createElement( "div" );
   my @classes;
@@ -220,16 +220,16 @@ sub _render_box {
   for my $b (@{$box -> {content} || []}) {
     given($b -> {type}) {
       when('Box') {
-        $container -> appendChild($self -> _render_box($c, $dom, $b));
+        $container -> appendChild($self -> _render_box($stash, $dom, $b));
       }
       when('Content') {
-        $container -> appendChild($self -> _render_content($c, $dom, $b));
+        $container -> appendChild($self -> _render_content($stash, $dom, $b));
       }
       when('Snippet') {
-        $container -> appendChild($self -> _render_snippet($c, $dom, $b));
+        $container -> appendChild($self -> _render_snippet($stash, $dom, $b));
       }
       when('PagePart') {
-        $container -> appendChild($self -> _render_page_part($c, $dom, $b));
+        $container -> appendChild($self -> _render_page_part($stash, $dom, $b));
       }
     }
   }
@@ -238,17 +238,17 @@ sub _render_box {
 }
 
 sub render {
-  my($self, $c, $config, $page) = @_;
+  my($self, $stash, $config, $page) = @_;
 
   # now we want to render $self -> layout and bring in page content
   # as well as snippets along the way
-  $c -> stash(page => $page);
-  $c -> stash(layout_config => $config);
-  $c -> stash(parser => XML::LibXML->new());
+  $stash -> {page} = $page;
+  $stash -> {layout_config} = $config;
+  $stash -> {parser} = XML::LibXML->new;
 
   my $dom = XML::LibXML::Document->new();
 
-  my $doc = $self -> _render_box($c, $dom, $self -> layout);
+  my $doc = $self -> _render_box($stash, $dom, $self -> layout);
   $doc -> setAttribute(class => "layout-" . $self -> uuid);
 
   $dom -> setDocumentElement($doc);

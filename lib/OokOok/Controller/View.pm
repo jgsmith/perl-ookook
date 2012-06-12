@@ -2,7 +2,14 @@ package OokOok::Controller::View;
 use Moose;
 use namespace::autoclean;
 
-BEGIN { extends 'Catalyst::Controller'; }
+BEGIN { 
+  extends 'Catalyst::Controller'; 
+  with 'OokOok::Role::Controller::Player';
+}
+
+__PACKAGE__ -> config(
+  current_model => 'DB::Project',
+);
 
 =head1 NAME
 
@@ -40,77 +47,19 @@ Theme components:
 
 =cut
 
-sub default :Chained('/') :PathPart('v') {
+sub base :Chained('/') :PathPart('v') :CaptureArgs(0) { }
+
+sub play :Chained('play_base') :PathPart('') {
   my ( $self, $c ) = @_;
 
   my @path = @{$c -> request -> arguments};
-  my $date = DateTime -> now;
 
-  if(!@path) {
-    $c->response->body( 'Page not found' );
-    $c->response->status(404);
-    $c->detach();
-  }
-  elsif($path[0] eq 'dev') {
-    # development version
-    shift @path;
-    my $uuid = shift @path;
-    my $project = $c -> model('DB::Project') -> find({ uuid => $uuid });
-    if(!$project) {
-      # 404 - not found
-      $c->response->body( 'Page not found' );
-      $c->response->status(404);
-      $c->detach();
-    }
-    $c -> stash(project => $project);
-    $c -> stash(edition => $project -> current_edition);
-    $date = undef;
-  }
-  elsif($path[0] =~ /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/) {
-    shift @path;
-    $date = DateTime -> new({
-      year => $1,
-      month => $2,
-      day => $3,
-      hour => $4,
-      minute => $5,
-      second => $6
-    });
-    my $uuid = shift @path;
-    my $project = $c -> model('DB::Project') -> find({ uuid => $uuid });
-    if(!$project) {
-      # 404 - not found
-      $c->response->body( 'Page not found' );
-      $c->response->status(404);
-      $c->detach();
-    }
-    $c -> stash(project => $project);
-    $c -> stash(edition => $project -> edition_for_date($date));
-  }
-  else {
-    my $uuid = shift @path;
-    my $project = $c -> model('DB::Project') -> find({ uuid => $uuid });
-    if(!$project) {
-      # 404 - not found
-      $c->response->body( 'Page not found' );
-      $c->response->status(404);
-      $c->detach();
-    }
-    $c -> stash(project => $project);
-    $c -> stash(edition => $project -> edition_for_date($date));
-  }
-
-  if(!$c->stash->{edition}) {
-    # 404 - not found
-    $c->response->body( 'Page not found' );
-    $c->response->status(404);
-    $c->detach();
-  }
-
-  # put the top-level page on the stack
+  #my @path = @{$c -> stash -> {path}};
   unshift @path, '';
 
-  $c -> stash(date => $date);
+  print STDERR "Path: <", join("><", @path), ">\n";
+
+  my $date = $c -> stash -> {date};
 
   # Now we know which edition of which project we want to look in
   # for the requested resource
@@ -136,7 +85,9 @@ sub default :Chained('/') :PathPart('v') {
   $c -> stash -> {page} = $page;
 
   $c -> stash -> {rendering} = $page -> render($c);
-}
+
+  $c -> stash -> {template} = 'view/play.tt2';
+};
 
 =head1 AUTHOR
 

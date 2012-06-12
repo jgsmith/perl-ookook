@@ -96,6 +96,10 @@ sub POST_ok {
 
   ok( $res -> code < 300, "Status ok: $desc" );
 
+  if($res -> code >= 400) {
+    diag $res -> content;
+  }
+
   eval { $json = decode_json($res -> content) };
   ok !$@, "Decode: $desc";
   return $json;
@@ -138,21 +142,20 @@ $json = POST_ok("/project", {
     description => "Test project description",
   }, "create project");
 
-ok $json->{project}, "JSON has project key";
-is $json->{project}->{name}, "Test Project", "Name returned";
-is $json->{project}->{description}, "Test project description", "Description returned";
-ok $json->{project}->{uuid}, "Project has a uuid";
+is $json->{name}, "Test Project", "Name returned";
+is $json->{description}, "Test project description", "Description returned";
+ok $json->{uuid}, "Project has a uuid";
 
-my $uuid = $json->{project}->{uuid};
+my $uuid = $json->{uuid};
 
 #
 # Get the newly created project
 #
 $json = GET_ok("/project/$uuid", "Get new project");
 
-is $json->{project}->{name}, "Test Project", "Right name returned";
-is $json->{project}->{description}, "Test project description", "Right description returned";
-is $json->{project}->{uuid}, $uuid, "Right uuid returned";
+is $json->{name}, "Test Project", "Right name returned";
+is $json->{description}, "Test project description", "Right description returned";
+is $json->{uuid}, $uuid, "Right uuid returned";
 
 #
 # See if list of projects has one member
@@ -193,11 +196,10 @@ $json = POST_ok("/project", {
   description => "Another test project",
 }, "create another project");
 
-ok $json->{project}, "JSON has project key";
-is $json->{project}->{name}, "Test Project 2", "Right name";
-is $json->{project}->{description}, "Another test project", "Right description";
+is $json->{name}, "Test Project 2", "Right name";
+is $json->{description}, "Another test project", "Right description";
 
-$uuid = $json -> {project} -> {uuid};
+$uuid = $json -> {uuid};
 
 #
 # Get the project
@@ -205,13 +207,12 @@ $uuid = $json -> {project} -> {uuid};
 
 $json = GET_ok("/project/$uuid", "Get the project");
 
-ok $json->{project}, "JSON has project key";
-is $json->{project}->{uuid}, $uuid, "Right uuid";
+is $json->{uuid}, $uuid, "Right uuid";
 
-ok $json->{project}->{editions}, "JSON has a project.editions key";
-is scalar(@{$json->{project}->{editions}}), 1, "Only one edition";
+ok $json->{editions}, "JSON has an editions key";
+is scalar(@{$json->{editions}}), 1, "Only one edition";
 
-ok !$json->{project}->{editions}->[0]->{frozen_on}, "Edition isn't frozen";
+ok !$json->{editions}->[0]->{frozen_on}, "Edition isn't frozen";
 
 #
 # Update project description
@@ -221,9 +222,8 @@ $json = PUT_ok("/project/$uuid", {
   description => "Second description",
 }, "Update project description");
 
-ok $json->{project}, "JSON has project key";
-is $json->{project}->{uuid}, $uuid, "Right uuid";
-is $json->{project}->{description}, "Second description", "Right description";
+is $json->{uuid}, $uuid, "Right uuid";
+is $json->{description}, "Second description", "Right description";
 
 #
 # Make sure project still has no frozen editions
@@ -231,14 +231,13 @@ is $json->{project}->{description}, "Second description", "Right description";
 
 $json = GET_ok("/project/$uuid", "Get the project");
 
-ok $json->{project}, "JSON has project key";
-is $json->{project}->{uuid}, $uuid, "Right uuid";
-is $json->{project}->{description}, "Second description", "Right description";
+is $json->{uuid}, $uuid, "Right uuid";
+is $json->{description}, "Second description", "Right description";
 
-ok $json->{project}->{editions}, "JSON has a project.editions key";
-is scalar(@{$json->{project}->{editions}}), 1, "Only one edition";
+ok $json->{editions}, "JSON has a project.editions key";
+is scalar(@{$json->{editions}}), 1, "Only one edition";
 
-ok !$json->{project}->{editions}->[0]->{frozen_on}, "Edition isn't frozen";
+ok !$json->{editions}->[0]->{frozen_on}, "Edition isn't frozen";
 
 #
 # See if we can get the sitemap
@@ -246,7 +245,7 @@ ok !$json->{project}->{editions}->[0]->{frozen_on}, "Edition isn't frozen";
 
 $json = GET_ok("/project/$uuid/sitemap", "Get the project sitemap");
 
-ok $json->{sitemap}, "JSON has sitemap key";
+ok $json, "JSON has sitemap key";
 
 #
 # Now add something to the sitemap
@@ -265,12 +264,10 @@ my $sitemap = {
 
 $json = PUT_ok("/project/$uuid/sitemap", $sitemap, "Update sitemap");
         
-ok $json->{sitemap}, "JSON has sitemap key";
-is_deeply $json->{sitemap}, $sitemap, "Sitemap updated correctly";
+is_deeply $json, $sitemap, "Sitemap updated correctly";
 
 $json = GET_ok("/project/$uuid/sitemap", "Get sitemap");
-ok $json->{sitemap}, "JSON has sitemap key";
-is_deeply $json->{sitemap}, $sitemap, "Sitemap updated correctly";
+is_deeply $json, $sitemap, "Sitemap updated correctly";
 
 #
 # Make sure project still has no frozen editions
@@ -278,14 +275,13 @@ is_deeply $json->{sitemap}, $sitemap, "Sitemap updated correctly";
 
 $json = GET_ok("/project/$uuid", "Get the project");
 
-ok $json->{project}, "JSON has project key";
-is $json->{project}->{uuid}, $uuid, "Right uuid";
-is $json->{project}->{description}, "Second description", "Right description";
+is $json->{uuid}, $uuid, "Right uuid";
+is $json->{description}, "Second description", "Right description";
 
-ok $json->{project}->{editions}, "JSON has a project.editions key";
-is scalar(@{$json->{project}->{editions}}), 1, "Only one edition";
+ok $json->{editions}, "JSON has a project.editions key";
+is scalar(@{$json->{editions}}), 1, "Only one edition";
 
-ok !$json->{project}->{editions}->[0]->{frozen_on}, "Edition isn't frozen";
+ok !$json->{editions}->[0]->{frozen_on}, "Edition isn't frozen";
 
 #
 # Remove a page from the sitemap
@@ -301,8 +297,7 @@ $json = PUT_ok("/project/$uuid/sitemap", {
   }
 }, "Remove about page from sitemap");
 
-ok $json->{sitemap}, "JSON has sitemap key";
-is_deeply $json->{sitemap}, {
+is_deeply $json, {
   '' => {
     'visual' => 'home-page'
   }
@@ -322,8 +317,7 @@ $json = PUT_ok("/project/$uuid/sitemap", {
   }
 }, "Add a page to the sitemap");
 
-ok $json->{sitemap}, "JSON has sitemap key";
-is_deeply $json->{sitemap}, {
+is_deeply $json, {
   '' => {
     'visual' => 'home-page',
     'children' => {
@@ -347,8 +341,7 @@ $json = PUT_ok("/project/$uuid/sitemap", {
   }
 }, "Modify a page in the sitemap");
 
-ok $json->{sitemap}, "JSON has sitemap key";
-is_deeply $json->{sitemap}, {
+is_deeply $json, {
   '' => {
     'visual' => 'home-page',
     'children' => {
@@ -373,23 +366,21 @@ $json = POST_ok("/project/$uuid/page", {
   description => "Description of page",
 }, "create page");
 
-ok $json->{page}, "JSON has page property";
-my $page_uuid = $json->{page}->{uuid};
+my $page_uuid = $json->{uuid};
 ok $page_uuid, "JSON has page uuid";
-is $json->{page}->{title}, "Page Title", "Right value for title";
-is $json->{page}->{description}, "Description of page", "Right value for description";
+is $json->{title}, "Page Title", "Right value for title";
+is $json->{description}, "Description of page", "Right value for description";
 
 $json = GET_ok("/project/$uuid/page", "Get list of pages");
 
 ok $json->{pages}, "JSON has pages property";
 is scalar(@{$json->{pages}}), 1, "One page in project";
 
-$json = GET_ok("/project/$uuid/page/$page_uuid", "Get page info");
+$json = GET_ok("/page/$page_uuid", "Get page info");
 
-ok $json->{page}, "JSON has page property";
-is $json->{page}->{uuid}, $page_uuid, "Right uuid";
-is $json->{page}->{title}, "Page Title", "Right value for title";
-is $json->{page}->{description}, "Description of page", "Right value for description";
+is $json->{uuid}, $page_uuid, "Right uuid";
+is $json->{title}, "Page Title", "Right value for title";
+is $json->{description}, "Description of page", "Right value for description";
 
 #
 # Now we freeze the edition
@@ -399,12 +390,10 @@ sleep(1);
 
 $json = POST_ok("/project/$uuid/edition", {}, "create new working edition");
 
-ok $json->{edition}, "JSON has edition property";
-ok $json->{edition}->{created_on}, "JSON has created on date";
+ok $json->{created_on}, "JSON has created on date";
 
 $json = GET_ok("/project/$uuid/sitemap", "Get sitemap");
-ok $json->{sitemap}, "JSON has sitemap key";
-is_deeply $json->{sitemap}, {
+is_deeply $json, {
   '' => {
     'visual' => 'home-page',
     'children' => {
@@ -420,7 +409,7 @@ $json = POST_ok("/project/$uuid/page", {
   description => "Description of another page",
 }, "Create a new page");
 
-my $page2_uuid = $json -> {page} -> {uuid};
+my $page2_uuid = $json -> {uuid};
 
 isnt $page2_uuid, $page_uuid, "Two pages are two uuids";
 

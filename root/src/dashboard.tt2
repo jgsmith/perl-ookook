@@ -61,23 +61,29 @@
 <script type="text/javascript">
   $(function() {
     $("#dashboardTabs a[href='#projects']").tab('show');
-    function display_projects(data) {
+    function display_projects() {
       // data.projects is a list of projects
+      var count = 0;
       $("#projects_list").empty();
-      $("#project_count").html("(" + data.projects.length + ")");
-      $.each(data.projects, function(i, project) {
-        var el = $("<dt></dt>"),
-            a  = $("<a></a>");
-        
-        a.attr('href', '[% c.uri_for('/project') %]/' + project.uuid);
-        a.text(project.name);
-        el.append(a);
-        $("#projects_list").append(el);
-        el = $("<dd></dd>");
-        a = $("<p></p>");
-        a.text(project.description);
-        el.append(a);
-        $("#projects_list").append(el);
+      ookook.model.projects(function(project) {
+        var el, a;
+        if(project) {
+          count += 1;
+          el = $("<dt></dt>");
+          a  = $("<a></a>");
+          a.attr('href', '[% c.uri_for('/project') %]/' + project.uuid);
+          a.text(project.name);
+          el.append(a);
+          $("#projects_list").append(el);
+          el = $("<dd></dd>");
+          a = $("<p></p>");
+          a.text(project.description);
+          el.append(a);
+          $("#projects_list").append(el);
+          
+        } else {
+          $("#project_count").html("(" + count + ")");
+        }
       });
     }
 
@@ -100,15 +106,7 @@
       });
     }
 
-    $.ajax({
-      url: '[% c.uri_for('/project') %]',
-      type: 'GET',
-      data: {},
-      dataType: 'json',
-      success: function(data, textStatus, jqXHR) {
-        display_projects(data);
-      }
-    });
+    display_projects();
 
     $.ajax({
       url: '[% c.uri_for('/theme') %]',
@@ -132,21 +130,15 @@
       var project_name = $("#new_project_name").val(),
           project_desc = $("#new_project_description").val();
       $("#new_project_form").modal('hide');
-      $.ajax({
-        url: '[% c.uri_for('/project') %]',
-        type: 'POST',
-        data: JSON.stringify({
-          name: project_name,
-          description: project_desc
-        }),
-        processData: false,
-        contentType: 'application/json',
-        dataType: 'json',
-        success: function(data, textStatus, jqXHR) {
+      ookook.model.project.create({
+        name: project_name,
+        description: project_desc
+      }, function(project) {
+        if(project) {
           $("#messages").append("<div class='alert alert-success'><a class='close' data-dismiss='alert' href='#'>&times;</a><h4 class='alert-heading'>Success!</h4> Project created.</div>");
-          display_projects(data);
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
+          display_projects();
+        }
+        else {
           $("#messages").append("<div class='alert alert-error'><a class='close' data-dismiss='alert' href='#'>&times;</a><h4 class='alert-heading'>Uh oh!</h4> Unable to create project.</div>");
         }
       });
@@ -164,16 +156,12 @@
       var theme_name = $("#new_theme_name").val(),
           theme_desc = $("#new_theme_description").val();
       $("#new_theme_form").modal('hide');
-      $.ajax({
+      ookook.util.post({
         url: '[% c.uri_for('/theme') %]',
-        type: 'POST',
-        data: JSON.stringify({
+        data: {
           name: theme_name,
           description: theme_desc
-        }),
-        processData: false,
-        contentType: 'application/json',
-        dataType: 'json',
+        },
         success: function(data, textStatus, jqXHR) {
           $("#messages").append("<div class='alert alert-success'><a class='close' data-dismiss='alert' href='#'>&times;</a><h4 class='alert-heading'>Success!</h4> Theme created.</div>");
           display_themes(data);

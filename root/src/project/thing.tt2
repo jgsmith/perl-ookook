@@ -24,7 +24,7 @@
 <p>
 <a class="btn btn-primary btn-large" style="margin:0 auto;" href="#home_page_form" data-toggle="modal">Create Home Page</a>
 </p>
-      [% IF project.pages.size > 0 %]
+      [% IF project.pages.size %]
         <p>Or select a page as the Home Page: ... </p>
       [% END %]
 </div>
@@ -114,7 +114,7 @@ $(function() {
         desc  = $("#new_page_description").val();
 
     $("#home_page_form").modal('hide');
-    ookook.ajax({
+    ookook.util.ajax({
       url: '[% c.uri_for('/project/' _ project.uuid _ '/page') %]',
       type: 'POST',
       data: {
@@ -122,8 +122,8 @@ $(function() {
         description: desc
       },
       success: function(data) {
-        var page_uuid = data.page.uuid;
-        ookook.ajax({
+        var page_uuid = data.uuid;
+        ookook.util.ajax({
           url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
           type: 'PUT',
           data: {
@@ -137,12 +137,12 @@ $(function() {
     });
   });
 [% ELSE %]
-  ookook.ajax({
+  ookook.util.ajax({
     url: "[% c.uri_for("/project/" _ project.uuid _ "/sitemap") %]", 
     type: "GET",
     success: function(data) {
-      sitemap = data.sitemap;
-      ookook.ajax({
+      sitemap = data;
+      ookook.util.ajax({
         url: "[% c.uri_for("/project/" _ project.uuid _ "/page") %]", 
         type: "GET",
         success: function(data) {
@@ -165,7 +165,7 @@ $(function() {
                   });
                   if(data.uuid != "" && data.uuid != null) {
                     root[data.slug] = { visual: data.uuid };
-                    ookook.ajax({
+                    ookook.util.ajax({
                       url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
                       type: 'PUT',
                       data: newSitemap,
@@ -175,7 +175,7 @@ $(function() {
                     });
                   }
                   else {
-                    ookook.ajax({
+                    ookook.util.ajax({
                       url: '[% c.uri_for('/project/' _ project.uuid _ '/page') %]',
                       type: 'POST',
                       data: {
@@ -186,7 +186,7 @@ $(function() {
                         var page_uuid = pageData.page.uuid;
                         pages[page_uuid] = pageData.page;
                         root[data.slug] = { visual: page_uuid };
-                        ookook.ajax({
+                        ookook.util.ajax({
                           url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
                           type: 'PUT',
                           data: newSitemap,
@@ -209,7 +209,7 @@ $(function() {
                   root = root[p].children;
                 });
                 root[item.path[item.path.length-1]] = { visual: null };
-                ookook.ajax({
+                ookook.util.ajax({
                   url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
                   type: 'PUT',
                   data: newSitemap,
@@ -218,7 +218,7 @@ $(function() {
               },
               previewItem: function(path, item, cb) {
                 var uri = path.join("/");
-                window.open('[% c.uri_for("/v/dev/" _ project.uuid) %]' + uri, 'ookook-preview-' + item.visual);
+                window.open('[% c.uri_for("/dev/v/" _ project.uuid) %]' + uri, 'ookook-preview-' + item.visual);
               },
               editItem: function(path, item, cb) {
                 // change the page we're pointing to
@@ -281,7 +281,7 @@ $(function() {
   $('#projectTabs a:first').tab('show');
 
   function updateEditions() {
-    ookook.ajax({
+    ookook.util.ajax({
       url: "[% c.uri_for("/project/" _ project.uuid ) %]",
       type: "GET",
       success: function(data) {
@@ -289,7 +289,7 @@ $(function() {
         table.empty();
         table.append('<tr><th width="75%">Cut Date</th><th width="25%">Modify</th></tr>');
 console.log(data);
-        $.each(data.project.editions, function(idx, edition) {
+        $.each(data.editions, function(idx, edition) {
           var tr, td;
           tr = $("<tr></tr>");
           td = $("<td></td>");
@@ -306,7 +306,7 @@ console.log(data);
   updateEditions();
 
   $('#create_edition_btn').click(function() {
-    ookook.ajax({
+    ookook.util.ajax({
       url: "[% c.uri_for("/project/" _ project.uuid _ "/edition") %]",
       type: "POST",
       data: {},

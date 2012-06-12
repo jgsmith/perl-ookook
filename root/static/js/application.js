@@ -136,7 +136,10 @@ $.fn.tree = function(config) {
   var walkTree = function(sitemap, path) {
     var slugs = [];
     path = path || [];
-    $.each(sitemap.children, function(slug) { slugs.push(slug); });
+    console.log(sitemap);
+    if(sitemap.hasOwnProperty('children') && sitemap.children != null) {
+      $.each(sitemap.children, function(slug) { slugs.push(slug); });
+    }
     slugs.sort();
     $.each(slugs, function(idx, slug) {
       var item = sitemap.children[slug];
@@ -156,20 +159,93 @@ $.fn.tree = function(config) {
   walkTree({children: config.sitemap}, 0);
 };
 
-var ookook = {};
-ookook.ajax = function(config) {
-  var ops;
-  ops = {
-    url: config.url,
-    type: config.type,
-    contentType: 'application/json',
-    processData: false,
-    dataType: 'json',
-    success: config.success,
-    error: config.error
-  };
-  if(config.data != null) {
-    ops.data = JSON.stringify(config.data);
+var ookook = {
+  util: {},
+  model: {},
+  config: {
+    url_base: '/'
   }
-  return $.ajax(ops);
 };
+(function(ookook) {
+  ookook.util.ajax = function(config) {
+    var ops;
+    ops = {
+      url: config.url,
+      type: config.type,
+      contentType: 'application/json',
+      processData: false,
+      dataType: 'json',
+      success: config.success,
+      error: config.error
+    };
+    if(config.data != null) {
+      ops.data = JSON.stringify(config.data);
+    }
+    return $.ajax(ops);
+  };
+
+  ookook.util.get = function(config) {
+    return ookook.util.ajax($.extend({ type: 'GET' }, config));
+  };
+  ookook.util.post = function(config) {
+    return ookook.util.ajax($.extend({ type: 'POST' }, config));
+  };
+  ookook.util.put = function(config) {
+    return ookook.util.ajax($.extend({ type: 'PUT' }, config));
+  };
+  ookook.util.delete = function(config) {
+    return ookook.util.ajax($.extend({ type: 'DELETE' }, config));
+  };
+
+  var makeProject = function(that) {
+    var uuid = that.uuid;
+    that.update = function(json, cb) {
+      ookook.util.put({
+        url: ookook.config.url_base + "project/" + uuid,
+        data: json,
+        success: function(data) { cb(makeProject(that)); },
+        error: function() { cb(); }
+      });
+    };
+
+    that.delete = function(cb) {
+      ookook.util.delete({
+        url: ookook.config.url_base + "project/" + uuid,
+        success: function() { cb(true); },
+        error: function() { cb(false); }
+      });
+    };
+
+    return that;
+  };
+
+  ookook.model.project = function(uuid, cb) {
+    ookook.util.get({
+      url: ookook.config.url_base + "project/" + uuid,
+      success: function(that) { cb(makeProject(that)); },
+      error: function() { cb(); }
+    });
+  };
+
+  ookook.model.project.create = function(json, cb) {
+    ookook.util.post({
+      url: ookook.config.url_base + "project",
+      data: json,
+      success: function(that) { cb(makeProject(that)); },
+      error: function() { cb(); }
+    });
+  };
+
+  ookook.model.projects = function(cb) {
+    ookook.util.get({
+      url: ookook.config.url_base + "project",
+      success: function(that) {
+        $.each(that.projects, function(idx, project) {
+          cb(project);
+        });
+        cb();
+      },
+      error: function() { cb(); }
+    });
+  };
+}(ookook));

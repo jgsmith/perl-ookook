@@ -74,6 +74,19 @@ before delete => sub {
   }
 };
 
+#override find => sub {
+#  my($self, $constraints) = @_;
+#
+#  if(ref($constraints) && $constraints -> {uuid}) {
+#    return $self -> search($constraints, {
+#      order_by => { -desc => 'id' },
+#      rows => 1
+#    }) -> first;
+#  }
+#  return super;
+#};
+
+
 1;
 
 __END__
