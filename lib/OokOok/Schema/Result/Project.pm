@@ -50,12 +50,7 @@ __PACKAGE__->table("project");
   is_nullable: 0
   size: 20
 
-=head2 created_on
-
-  data_type: 'datetime'
-  is_nullable: 0
-
-=head2 user_id
+=head2 collective_id
 
   data_type: 'integer'
   is_nullable: 1
@@ -67,9 +62,7 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "uuid",
   { data_type => "char", is_nullable => 0, size => 20 },
-  "created_on",
-  { data_type => "datetime", is_nullable => 0 },
-  "user_id",
+  "collective_id",
   { data_type => "integer", is_nullable => 1 },
 );
 
@@ -86,15 +79,53 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-26 10:54:33
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:RmBRz2y4VluCdbvE1TGxjQ
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-24 14:42:40
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lUgIXttzcBivzSmfbYxbpQ
 
 __PACKAGE__->has_many(
   editions => 'OokOok::Schema::Result::Edition',
   'project_id'
 );
 
+__PACKAGE__->has_many(
+  pages => 'OokOok::Schema::Result::Page',
+  'project_id'
+);
+
+__PACKAGE__->has_many(
+  snippets => 'OokOok::Schema::Result::Snippet',
+  'project_id'
+);
+
 with 'OokOok::Role::Schema::Result::HasEditions';
+
+after insert => sub {
+  my($self) = @_;
+
+  my $ce = $self -> current_edition;
+  my $home_page = $self -> create_related('pages', {});
+
+  $home_page -> current_version -> update({
+    title => 'Home',
+    description => 'Top-level page for the project site.',
+  });
+  $ce -> update({
+    sitemap => {
+      '' => {
+        visual => $home_page -> uuid
+      }
+    }
+  });
+  $self;
+};
+
+sub page_count { $_[0] -> pages -> count + 0 }
+
+sub page {
+  my($self, $uuid) = @_;
+
+  $self -> pages -> find({ uuid => $uuid });
+}
 
 =head2 edition_for_date
 
@@ -118,38 +149,38 @@ sub edition_path {
   return $self -> _apply_date_constraint($q, "", $date) -> all;
 }
 
-sub sitemap_for_date {
-  my($self, $date) = @_;
+#sub sitemap_for_date {
+#  my($self, $date) = @_;
+#
+#  my $instance = $self -> edition_for_date($date);
+#
+#  if($instance) {
+#    return $instance -> sitemap;
+#  }
+#  else {
+#    return +{};
+#  }
+#}
 
-  my $instance = $self -> edition_for_date($date);
-
-  if($instance) {
-    return $instance -> sitemap;
-  }
-  else {
-    return +{};
-  }
-}
-
-sub current_sitemap { $_[0] -> sitemap_for_date; }
+#sub current_sitemap { $_[0] -> sitemap_for_date; }
   
-sub page_for_date {
-  my($self, $uuid, $date) = @_;
-
-  return $self -> relation_for_date("Page", $uuid, $date);
-}
-
-sub layout_for_date {
-  my($self, $uuid, $date) = @_;
-
-  return $self -> relation_for_date("Layout", $uuid, $date);
-}
-
-sub snippet_for_date {
-  my($self, $name, $date) = @_;
-
-  return $self -> relation_for_date("Snippet", $name, $date);
-}
+#sub page_for_date {
+#  my($self, $uuid, $date) = @_;
+#
+#  return $self -> relation_for_date("Page", $uuid, $date);
+#}
+#
+#sub layout_for_date {
+#  my($self, $uuid, $date) = @_;
+#
+#  return $self -> relation_for_date("Layout", $uuid, $date);
+#}
+#
+#sub snippet_for_date {
+#  my($self, $name, $date) = @_;
+#
+#  return $self -> relation_for_date("Snippet", $name, $date);
+#}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

@@ -3,6 +3,8 @@ use Moose;
 use namespace::autoclean;
 use JSON;
 
+use OokOok::Collection::Theme;
+
 BEGIN { 
   extends 'Catalyst::Controller::REST'; 
   with 'OokOok::Role::Controller::Manager';
@@ -28,6 +30,7 @@ __PACKAGE__ -> config(
   },
   default => 'text/html',
   current_model => 'DB::Theme',
+  collection_resource_class => 'OokOok::Collection::Theme',
 );
 
 #
@@ -73,7 +76,7 @@ sub layouts_GET {
       theme_layouts => [
         map { +{
           uuid => $_ -> uuid,
-          title => $_ -> title,
+          name => $_ -> name,
         } } values %layouts
       ]
     }
@@ -87,7 +90,7 @@ sub layouts_POST {
   eval {
     my %columns;
     my $data = $c -> req -> data;
-    for my $col (qw/title layout/) {
+    for my $col (qw/name/) {
       $columns{$col} = $data -> {$col} if defined $data -> {$col};
     }
 
@@ -103,15 +106,16 @@ sub layouts_POST {
   else {
     my $tuuid = $layout -> uuid;
     my $uuid = $c -> stash -> {theme} -> uuid;
+    my $url = $c -> uri_for("/theme/" . $layout -> edition -> theme -> uuid . "/layout/" . $tuuid);
     $self -> status_created(
       $c,
-      location => $c -> uri_for("/theme/$uuid/layout/$tuuid"),
+      location => $url,
       entity => {
-        layout => {
-          uuid => $tuuid,
-          title => $layout -> title,
-          layout => $layout -> layout,
-        }
+        uuid => $tuuid,
+        name => $layout -> name,
+        layout => $layout -> layout,
+        configuration => $layout -> configuration,
+        url => $url,
       }
     );
   }
@@ -123,6 +127,37 @@ sub layouts_OPTIONS {
   $self -> do_OPTIONS($c,
     Allow => [qw/GET OPTIONS PUT/],
     Accept => [qw{application/json}],
+  );
+}
+
+sub layout_base :Chained('thing_base') :PathPart('layout') :CaptureArgs(1) {
+  my($self, $c, $uuid) = @_;
+
+  my $layout = $c -> stash -> {theme} -> layout_for_date($uuid);
+
+  if($layout) {
+    $c -> stash -> {layout} = $layout;
+  }
+  else {
+    $c -> detach(qw/Controller::Root default/);
+  }
+}
+
+sub layout :Chained('layout_base') :PathPart('') :Args(0) :ActionClass('REST') { }
+
+sub layout_GET {
+  my($self, $c) = @_;
+
+  my $layout = $c -> stash -> {layout};
+
+  $self -> status_ok($c,
+    entity => {
+      uuid => $layout -> uuid,
+      url => "".$c -> uri_for("/theme/" . $layout -> edition -> theme -> uuid . "/layout/" . $layout -> uuid),
+      name => $layout -> name,
+      layout => $layout -> layout,
+      configuration => $layout -> configuration,
+    }
   );
 }
 

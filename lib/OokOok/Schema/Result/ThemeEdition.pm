@@ -66,7 +66,7 @@ __PACKAGE__->table("theme_edition");
   data_type: 'datetime'
   is_nullable: 0
 
-=head2 frozen_on
+=head2 closed_on
 
   data_type: 'datetime'
   is_nullable: 1
@@ -84,7 +84,7 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "created_on",
   { data_type => "datetime", is_nullable => 0 },
-  "frozen_on",
+  "closed_on",
   { data_type => "datetime", is_nullable => 1 },
 );
 
@@ -101,16 +101,49 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-31 10:14:03
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:dXvyxR135BeGnvRGdrQSNA
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-23 12:03:24
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:wDPcCYyX/o/TOdHEY8jP4A
 
 with 'OokOok::Role::Schema::Result::Edition';
 
 __PACKAGE__ -> belongs_to("theme" => "OokOok::Schema::Result::Theme", "theme_id");
 
-__PACKAGE__ -> has_many("layouts" => "OokOok::Schema::Result::ThemeLayout", "theme_edition_id");
+__PACKAGE__ -> has_many("layout_versions" => "OokOok::Schema::Result::ThemeLayoutVersion", "theme_edition_id", {
+  cascade_copy => 0,
+  cascade_delete => 1,
+});
 
 sub owner { $_[0] -> theme; }
+
+sub GET {
+  my($self, $c) = @_;
+
+  my $json = {
+    url => "".$c->uri_for("/theme/" . $self->theme->uuid . "/edition"),
+    name => $self -> name,
+    description => $self -> description,
+    frozen_on => (map { $_ ? $_->strftime('%Y%m%d%H%M%S') : undef } $self->frozen_on),
+    created_on => (map { $_ ? $_->strftime('%Y%m%d%H%M%S') : undef } $self->created_on),
+  };
+  return $json;
+}
+
+
+# returns all layouts for this edition
+sub all_layouts {
+  my($self) = @_;
+
+  my @uuids = $self 
+    -> result_source -> schema -> resultset('ThemeLayout') -> search({
+      "theme_edition.theme_id" => $self -> theme -> id,
+      "theme_edition.id" => { "<=" => $self -> id },
+    }, {
+      join => [ "theme_edition" ],
+      select => [ "me.uuid" ],
+      distinct => 1,
+    }) -> all;
+  map { $self -> theme -> layout_for_date($_->uuid, $self -> frozen_on) } @uuids;
+}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

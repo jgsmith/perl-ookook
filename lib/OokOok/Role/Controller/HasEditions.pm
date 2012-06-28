@@ -4,18 +4,20 @@ use Moose::Role;
 use MooseX::MethodAttributes::Role;
 use namespace::autoclean;
 
-sub edition :Chained('thing_base') :PathPart('edition') :Args(0) :ActionClass('REST') { }
+sub edition :Chained('thing_base') :PathPart('edition') :Args(0) :ActionClass('REST') { 
+  my($self, $c) = @_;
+  my $thing_name = $c -> stash -> {names} -> {thing};
+  my $thing = $c -> stash -> {$thing_name};
+  $c -> stash -> {edition} = $thing -> edition;
+}
 
 sub edition_GET {
   my($self, $c) = @_;
 
-  my $thing_name = $c -> stash -> {names} -> {thing};
-  my $edition_name = $c -> stash -> {names} -> {edition};
-  my $edition = $c -> stash -> {$edition_name};
-  my $method = "${edition_name}_to_json";
+  my $edition = $c -> stash -> {edition};
 
   $self -> status_ok($c,
-    entity => $self -> $method($c, $edition, 1)
+    entity => $edition -> GET(1)
   );
 }
 
@@ -23,16 +25,14 @@ sub edition_POST {
   my($self, $c) = @_;
 
   my $thing_name = $c -> stash -> {names} -> {thing};
-  my $edition_name = $c -> stash -> {names} -> {edition};
-  my $edition = $c -> stash -> {$edition_name};
-  my $method = "${edition_name}_to_json";
+  my $edition = $c -> stash -> {edition};
 
-  if($edition -> created_on < DateTime->now) {
-    $edition -> freeze;
-    my $edition = $c -> stash -> {$thing_name} -> current_edition;
-    my $json = $self -> $method($c, $edition, 1);
+  if($edition -> source -> created_on < DateTime->now) {
+    $edition -> source -> close;
+    my $edition = $c -> stash -> {$thing_name} -> edition;
+    my $json = $edition -> GET(1);
     $self -> status_created($c,
-      location => $json -> {url},
+      location => $json -> {_links} -> {self},
       entity => $json,
     );
   }
@@ -46,14 +46,12 @@ sub edition_POST {
 sub edition_DELETE {
   my($self, $c) = @_;
 
-  my $thing_name = $c -> stash -> {names} -> {thing};
-  my $edition_name = $c -> stash -> {names} -> {edition};
   eval {
-    $c -> stash -> {$edition_name} -> delete;
+    $c -> stash -> {edition} -> DELETE;
   };
 
   if($@) {
-    $self -> status_forbidden($c, entity => { message => 'unable to clear edition' });
+    $self -> status_forbidden($c, message => "unable to clear edition: $@");
   }
   else {
     $self -> status_no_content($c);

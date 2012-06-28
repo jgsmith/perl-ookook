@@ -9,49 +9,28 @@ sub pages :Chained('thing_base') :PathPart('page') :Args(0) :ActionClass('REST')
 sub pages_GET {
   my($self, $c) = @_;
 
-  my $q = $c -> model("DB::Page");
+  my $resource = OokOok::Collection::Page -> new(c => $c);
 
-  if($self -> can("scope_pages")) {
-    $q = $self -> scope_pages($c, $q);
-  }
-
-  my(%pages, $uuid);
-
-  while(my $p = $q -> next) {
-    $uuid = $p -> uuid;
-    if($pages{$uuid}) {
-      # we assume a higher id is a more recent version
-      if($p -> id > $pages{$uuid} -> id) {
-        $pages{$uuid} = $p;
-      }
-    }
-    else {
-      $pages{$uuid} = $p;
-    }
-  }
-
-  my $controller = $c -> controller("Page");
   $self -> status_ok($c,
-    entity => {
-      pages => [ map { $controller -> page_to_json($c, $_) } values %pages ]
-    }
+    entity => $resource -> GET
   );
 }
 
 sub pages_POST {
   my($self, $c) = @_;
 
-  my $controller = $c -> controller("Page");
-  my $page = eval { $controller -> page_from_json($c, $c -> req -> data) };
+  my $resource = OokOok::Collection::Page -> new(c => $c);
+
+  my $page = eval { $resource -> POST($c -> req -> data) };
   if($@) {
     $self -> status_bad_request($c,
       message => "Unable to create page: $@"
     );
   }
   else {
-    my $json = $controller -> page_to_json($c, $page, 1);
+    my $json = $page -> GET(1);
     $self -> status_created($c,
-      location => $json->{url},
+      location => $json->{_links} -> {self},
       entity => $json,
     );
   }

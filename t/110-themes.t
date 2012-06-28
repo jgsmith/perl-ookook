@@ -35,52 +35,41 @@ ok $instance, "We have a current edition for the theme";
 # We shouldn't have any pages in the DB when we start.
 is scalar($layout_rs->all), 0, "No layouts in the DB";
 
-my $layout = $instance -> create_related('layouts', {
+my $layout = $theme -> create_related('layouts', {});
+ok $layout, "Layout was created";
+
+my $layout_version = $layout->current_version;
+
+$layout_version -> update({
   name => 'Simple',
-  layout => {
-    width => 12,
-    content => [{
-      type => 'Box',
-      width => 12,
-      class => 'header',
-      content => [{
-        type => 'Snippet',
-        content => 'header',
-        width => 12,
-      }, {
-        type => 'Snippet',
-        content => 'navigation',
-        width => 12,
-      }],
-    }, {
-      type => 'Box',
-      width => 12,
-      class => 'main-content',
-      content => [{
-        type => 'PagePart',
-        content => 'sidebar',
-        width => 3,
-      }, {
-        type => 'PagePart',
-        content => 'body',
-        width => 9,
-      }]
-    }, {
-      type => 'Box',
-      width => 12,
-      class => 'footer',
-      content => [{
-        type => 'Snippet',
-        content => 'footer',
-        width => 12,
-      }]
-    }],
-  },
-  configuration => {
-  },
+  layout => <<'EOXML',
+<row>
+  <div width="12">
+    <snippet name="header" />
+  </div>
+</row>
+<row>
+  <div width="12">
+    <snippet name="navigation" />
+  </div>
+</row>
+<row>
+  <div width="9">
+    <page-part name="sidebar" />
+  </div>
+  <div width="3">
+    <page-part name="sidebar" />
+  </div>
+</row>
+<row>
+  <div width="12">
+    <snippet name="footer" />
+  </div>
+</row>
+EOXML
+  configuration => '{}'
 });
 
-ok $layout, "Layout was created";
 
 my $dom = XML::LibXML::Document->new();
 
@@ -88,24 +77,32 @@ my $stash = {};
 
 $stash -> {parser} = XML::LibXML->new;
 
-my $doc = $layout -> _render_box($stash, $dom, {
-  width => 12
-});
+my $layoutXml = XML::LibXML -> load_xml(string => <<'EOXML');
+<layout>
+  <row>
+    <div width="12"></div>
+  </row>
+</layout>
+EOXML
+
+my $doc = $layout -> _render_box($stash, $dom, $layoutXml->documentElement);
 
 ok $doc, "We got something back from the rendering";
 
 $dom -> setDocumentElement($doc);
 
-is $dom -> toStringHTML(), qq{<div class="span12"></div>\n}, "Got right HTML out";
+diag $dom -> toStringHTML();
 
-$doc = $layout -> _render_box($stash, $dom, {
-  width => 12,
-  content => [{
-    type => 'Content',
-    content => 'Foo'
-  }]
-});
+is $dom -> toStringHTML(), qq{<div><div class="row"><div class="span12"></div></div></div>\n}, "Got right HTML out";
 
-$dom -> setDocumentElement($doc);
+#$doc = $layout -> _render_box($stash, $dom, {
+  #width => 12,
+  #content => [{
+    #type => 'Content',
+    #content => 'Foo'
+  #}]
+#});
 
-is $dom -> toStringHTML(), qq{<div class="span12"><div>Foo</div></div>\n}, "Got right HTML out for a content box";
+#$dom -> setDocumentElement($doc);
+
+#is $dom -> toStringHTML(), qq{<div class="span12"><div>Foo</div></div>\n}, "Got right HTML out for a content box";

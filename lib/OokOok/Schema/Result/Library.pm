@@ -50,12 +50,7 @@ __PACKAGE__->table("library");
   is_nullable: 0
   size: 20
 
-=head2 created_on
-
-  data_type: 'datetime'
-  is_nullable: 0
-
-=head2 user_id
+=head2 collective_id
 
   data_type: 'integer'
   is_nullable: 1
@@ -67,9 +62,7 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "uuid",
   { data_type => "char", is_nullable => 0, size => 20 },
-  "created_on",
-  { data_type => "datetime", is_nullable => 0 },
-  "user_id",
+  "collective_id",
   { data_type => "integer", is_nullable => 1 },
 );
 
@@ -86,8 +79,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-03 17:30:31
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:d51otpP56EmZZGodL4sfKA
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-24 14:42:40
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:DcOya95a+EI9hwixwBmIRQ
 
 __PACKAGE__->has_many(
   "editions" => 'OokOok::Schema::Result::LibraryEdition',
@@ -95,6 +88,24 @@ __PACKAGE__->has_many(
 );
 
 with 'OokOok::Role::Schema::Result::HasEditions';
+
+sub link {
+  my($self, $c) = @_;
+
+  return "".$c -> uri_for("/library/" . $self -> uuid);
+}
+
+sub GET {
+  my($self, $c, $deep) = @_;
+
+  my $json = {
+    _links => {
+      self => $self -> link($c),
+    },
+  };
+
+  return $json;
+}
 
 sub function_for_date {
   my($self, $uuid, $date) = @_;

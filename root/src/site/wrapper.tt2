@@ -9,11 +9,20 @@
     <title>[% template.title %]</title>
     <script src="[% c.uri_for('/static/js/jquery.js') %]"></script>
     <script src="[% c.uri_for('/static/js/bootstrap.min.js') %]"></script>
+    <script src="[% c.uri_for('/static/js/mithgrid.min.js') %]"></script>
     <script src="[% c.uri_for('/static/js/application.js') %]"></script>
+    [% IF template.is_dashboard %]
+      <script src="[% c.uri_for('/static/js/dashboard.js') %]"></script>
+    [% END %]
     [% IF template.use_wymeditor %]
       <script src="[% c.uri_for('/static/js/wymeditor/jquery.wymeditor.js') %]"></script>
     [% END %]
+    [% IF template.use_aceeditor %]
+      <script src="[% c.uri_for('/static/js/ace/ace.js') %]"></script>
+      <script src="[% c.uri_for('/static/js/ace/mode-xml.js') %]"></script>
+    [% END %]
     <link href="[% c.uri_for('/static/css/bootstrap.css') %]" rel="stylesheet">
+    <link href="[% c.uri_for('/static/css/application.css') %]" rel="stylesheet">
     <style type="text/css">
       body {
         padding-top: 60px;
@@ -33,9 +42,46 @@
           <a class="brand" href="#">OokOok</a>
           <div class="nav-collapse">
             <ul class="nav">
-              <!-- li class="active"><a href="#">Home</a></li>
-              <li><a href="#about">About</a></li>
-              <li><a href="#contact">Contact</a></li -->
+              <li class="[% active.dashboard %]"><a href="/dashboard">Home</a></li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                  Project
+                  <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                  [% FOR project IN projects %]
+                    <li><a href="[% c.uri_for("/project/" _ project.uuid) %]">[% project.current_edition.name %]</a></li>
+                  [% END %]
+                  <li class="divider"></li>
+                  <li><a href="/project/new">New Project</a></li>
+                </ul>
+              </li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                  Theme
+                  <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                  [% FOR theme IN themes %]
+                    <li><a href="[% c.uri_for("/theme/" _ theme.uuid) %]">[% theme.current_edition.name %]</a></li>
+                  [% END %]
+                  <li class="divider"></li>
+                  <li><a href="/theme/new">New Theme</a></li>
+                </ul>
+              </li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                  Library
+                  <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                  [% FOR library IN libraries %]
+                    <li><a href="[% c.uri_for("/library/" _ library.uuid) %]">[% library.current_edition.name %]</a></li>
+                  [% END %]
+                  <li class="divider"></li>
+                  <li><a href="/library/new">New Library</a></li>
+                </ul>
+              </li>
             </ul>
           </div>
         </div>

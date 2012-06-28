@@ -16,15 +16,61 @@
 </div>
 <script type="text/javascript">
 $(function() {
-  $("#[% id %]").modal('hide');
-  $("#[% id %]_cancel").click(function() {
-    $("#[% id %]").modal('hide');
+  ookook.Component.ModalForm.initInstance("#[% id %]", {
+    model: "[% model %]"
+    [% IF url %]
+    , url: "[% url %]"
+    [% END %]
+    [% IF createCallback %]
+    , createCallback: function(data) { [% createCallback %](data) }
+    [% END %]
   });
-  console.log($("#[% id %]"));
 });
 </script>
 [% END %]
 [% BLOCK modalInput %]
 <label>[% label %]</label>
-<input id="[% id %]" type="[% type || "text" %]" class="span3" placeholder="[% placeholder %]">
+  [% IF type == "textarea" %]
+    <textarea id="[% id %]" class="span6 modal-form-input" placeholder="[% placeholder %]"></textarea>
+  [% ELSE %]
+    <input id="[% id %]" type="[% type || "text" %]" class="span3 modal-form-input" placeholder="[% placeholder %]">
+  [% END %]
+[% END %]
+
+[% BLOCK modalButton %]
+<a class="btn btn-inverse" href="#[% target %]" data-toggle="modal">[% label %]</a>
+[% END %]
+
+[% BLOCK tabs %]
+<ul class="nav nav-tabs" id="[% id %]">
+  [% content %]
+</ul>
+[% END %]
+[% BLOCK tab %]
+  <li><a href="#[% target %]" data-toggle="tab">[% label %]</a></li>
+[% END %]
+[% BLOCK tabPanes %]
+  <div class="tab-content">
+    [% content %]
+  </div>
+[% END %]
+[% BLOCK tabPane %]
+  <div class="tab-pane [% classes %]" id="[% id %]">[% content %]</div>
+[% END %]
+
+[% BLOCK breadcrumbs %]
+<ul class="breadcrumb">
+  [% content %]
+</ul>
+[% END %]
+
+[% BLOCK breadcrumb %]
+  <li>
+    [%- IF link -%]
+    <a href="[% c.uri_for(link) %]">[% label %]</a>
+    <span class="divider">&raquo;</span>
+    [%- ELSE -%]
+    [% label %]
+    [%- END -%]
+  </li>
 [% END %]

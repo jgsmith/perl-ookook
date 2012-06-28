@@ -42,6 +42,7 @@ __PACKAGE__->apply_request_class_roles(qw[
 ]);
 
 our $VERSION = '0.01';
+$VERSION = eval $VERSION;
 
 # Configure the application.
 #
@@ -58,6 +59,7 @@ __PACKAGE__->config(
     disable_component_resolution_regex_fallback => 1,
     enable_catalyst_header => 1, # Send X-Catalyst header
     encoding => 'UTF-8',
+    search_extra => [ 'OokOok::Resource', 'OokOok::Collection' ],
 );
 __PACKAGE__->config(
     'View::HTML' => {

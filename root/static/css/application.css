@@ -1,0 +1,21 @@
+form .label {
+  background-color: #ffffff;
+}
+
+span.error_message {
+  float: right;
+  color: #111111;
+  font-weight: bold;
+  margin: 1em;
+}
+
+div.error {
+  font-weight: bold;
+  border: 1px solid #ff8888;
+  background-color: #ffeeee;
+}
+
+div.editor {
+  position: relative;
+  height: 350px;
+}

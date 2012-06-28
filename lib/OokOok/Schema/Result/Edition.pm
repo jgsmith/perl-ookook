@@ -89,7 +89,7 @@ __PACKAGE__->table("edition");
   data_type: 'datetime'
   is_nullable: 0
 
-=head2 frozen_on
+=head2 closed_on
 
   data_type: 'datetime'
   is_nullable: 1
@@ -115,7 +115,7 @@ __PACKAGE__->add_columns(
   { data_type => "datetime", is_nullable => 1 },
   "created_on",
   { data_type => "datetime", is_nullable => 0 },
-  "frozen_on",
+  "closed_on",
   { data_type => "datetime", is_nullable => 1 },
 );
 
@@ -132,22 +132,18 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-03 12:50:03
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:DU4ymAnNS+7FDFBIMyKKBg
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-24 15:31:17
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:LSO3IXfA1hpCJpesiBBOYw
 
 use JSON;
 
 __PACKAGE__->belongs_to("project" => "OokOok::Schema::Result::Project", "project_id");
 
-__PACKAGE__->has_many("pages" => "OokOok::Schema::Result::Page", "edition_id", {
+__PACKAGE__->has_many("page_versions" => "OokOok::Schema::Result::PageVersion", "edition_id", {
   cascade_copy => 0,
   cascade_delete => 1,
 });
-__PACKAGE__->has_many("layouts" => "OokOok::Schema::Result::Layout", "edition_id", {
-  cascade_copy => 0,
-  cascade_delete => 1,
-});
-__PACKAGE__->has_many("snippets" => "OokOok::Schema::Result::Snippet", "edition_id", {
+__PACKAGE__->has_many("snippet_versions" => "OokOok::Schema::Result::SnippetVersion", "edition_id", {
   cascade_copy => 0,
   cascade_delete => 1,
 });
@@ -162,6 +158,15 @@ __PACKAGE__->inflate_column('sitemap', {
 with 'OokOok::Role::Schema::Result::Edition';
 
 sub owner { $_[0] -> project; }
+
+after delete => sub {
+  my($self) = @_;
+
+  # now we want to delete any pages or snippets that don't have versions
+  map { $_ -> delete } 
+      grep { $_ -> versions -> count == 0 }
+           $self -> project -> pages, $self -> project -> snippets;
+};
 
 #
 # We want to get the right theme given the date for which we
@@ -186,19 +191,20 @@ sub theme_layout {
 sub layout {
   my($self, $uuid) = @_;
 
+  return $self -> theme_layout($uuid);
   return $self -> project -> layout_for_date($uuid, $self -> frozen_on);
 }
 
 sub snippet {
-  my($self, $name) = @_;
+  my($self, $uuid) = @_;
 
-  return $self -> project -> snippet_for_date($name, $self -> frozen_on);
+  return $self -> project -> snippet($uuid) -> version_for_date($self -> closed_on);
 }
 
 sub page {
   my($self, $uuid) = @_;
 
-  return $self -> project -> page_for_date($uuid, $self -> frozen_on);
+  return $self -> project -> page($uuid) -> version_for_date($self -> closed_on);
 }
 
 sub page_path {

@@ -72,7 +72,7 @@ __PACKAGE__->table("library_edition");
   data_type: 'datetime'
   is_nullable: 0
 
-=head2 frozen_on
+=head2 closed_on
 
   data_type: 'datetime'
   is_nullable: 1
@@ -92,7 +92,7 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 255 },
   "created_on",
   { data_type => "datetime", is_nullable => 0 },
-  "frozen_on",
+  "closed_on",
   { data_type => "datetime", is_nullable => 1 },
 );
 
@@ -109,8 +109,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-03 17:30:31
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:3i0d9IGxUzXAZf16wtr4iA
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-24 15:31:17
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gsx+Q7zCPSNM6oXmwMPHtw
 
 with 'OokOok::Role::Schema::Result::Edition';
 
@@ -118,15 +118,7 @@ __PACKAGE__ -> belongs_to("library" => "OokOok::Schema::Result::Library", "libra
 
 sub owner { $_[0] -> library; }
 
-__PACKAGE__ -> has_many("functions" => "OokOok::Schema::Result::Function", "library_edition_id");
-
-sub function {
-  my($self, $name) = @_;
-
-  return $self -> library -> function_for_date($name, $self -> frozen_on);
-}
-
-
+__PACKAGE__ -> has_many("function_versions" => "OokOok::Schema::Result::FunctionVersion", "library_edition_id");
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

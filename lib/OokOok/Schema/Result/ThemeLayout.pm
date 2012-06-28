@@ -44,7 +44,7 @@ __PACKAGE__->table("theme_layout");
   is_auto_increment: 1
   is_nullable: 0
 
-=head2 theme_edition_id
+=head2 theme_id
 
   data_type: 'integer'
   is_nullable: 0
@@ -55,39 +55,15 @@ __PACKAGE__->table("theme_layout");
   is_nullable: 0
   size: 20
 
-=head2 name
-
-  data_type: 'varchar'
-  is_nullable: 0
-  size: 255
-
-=head2 layout
-
-  data_type: 'text'
-  default_value: '{}'
-  is_nullable: 0
-
-=head2 configuration
-
-  data_type: 'text'
-  default_value: '{}'
-  is_nullable: 0
-
 =cut
 
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "theme_edition_id",
+  "theme_id",
   { data_type => "integer", is_nullable => 0 },
   "uuid",
   { data_type => "char", is_nullable => 0, size => 20 },
-  "name",
-  { data_type => "varchar", is_nullable => 0, size => 255 },
-  "layout",
-  { data_type => "text", default_value => "{}", is_nullable => 0 },
-  "configuration",
-  { data_type => "text", default_value => "{}", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -103,25 +79,16 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-31 10:35:06
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:3BfRaU4GoRnjp5J3r2ffpw
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-23 12:03:24
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:aQbDAPCJJWccxy++/dc+BA
 
 with 'OokOok::Role::Schema::Result::HasVersions';
 
-use JSON ();
+__PACKAGE__ -> belongs_to( theme => 'OokOok::Schema::Result::Theme', 'theme_id' );
 
-__PACKAGE__ -> belongs_to( "edition" => "OokOok::Schema::Result::ThemeEdition", "theme_edition_id" );
+sub owner { $_[0] -> theme }
 
-__PACKAGE__->inflate_column('layout', {
-  inflate => sub { JSON::decode_json shift },
-  deflate => sub { JSON::encode_json shift },
-});
-
-__PACKAGE__->inflate_column('configuration', {
-  inflate => sub { JSON::decode_json shift },
-  deflate => sub { JSON::encode_json shift },
-});
-
+__PACKAGE__ -> has_many( versions => 'OokOok::Schema::Result::ThemeLayoutVersion', 'theme_layout_id');
 
 =head1 Example Layout
 
@@ -153,21 +120,22 @@ use XML::LibXML;
 sub _render_html5 {
   my($self, $stash, $dom, $html5) = @_;
 
-  $stash -> {parser} -> parse_balanced_chunk("<div>" . $html5 . "</div>");
+  $stash -> {parser} -> parse_balanced_chunk("<div>" . $html5 . "</div>") -> firstChild;
 }
 
 sub _render_content {
   my($self, $stash, $dom, $content) = @_;
   # we expect HTML5 content for now
 
-  $self -> _render_html5($stash, $dom, $content->{content});
+  $self -> _render_html5($stash, $dom, $content);
 }
 
 sub _render_snippet {
   my($self, $stash, $dom, $content) = @_;
 
   # we need to find the snippet and render it
-  my $snippet = $stash -> {page} -> edition -> snippet($content->{content});
+  my $nom = $content -> getAttribute( 'name' );
+  my $snippet = $stash -> {page} -> edition -> snippet($nom);
   my $ret;
   if($snippet) {
     $ret = $self -> _render_html5($stash, $dom, $snippet -> content);
@@ -175,7 +143,7 @@ sub _render_snippet {
   else {
     $ret = $self -> _render_html5($stash, $dom, "");
   }
-  $ret -> setAttribute(class => "snippet-" . $content->{content});
+  $ret -> setAttribute(class => "snippet snippet-" . $nom);
   $ret;
 }
 
@@ -183,12 +151,15 @@ sub _render_page_part {
   my($self, $stash, $dom, $content) = @_;
 
   # if page doesn't have it, we look up the path until we find a page that does
-  my @page_path = [$stash -> {path}];
+  my @page_path = @{$stash -> {path} || []};
   my($part, $p, $ret);
+  my $nom = $content -> getAttribute( 'name' );
+  
   while(!$part && @page_path) {
     $p = pop @page_path while @page_path && !$p;
+    print STDERR "page: $p\n";
     if($p) {
-      $part = $p -> page_parts -> find({ name => $content -> content });
+      $part = $p -> page_parts -> find({ name => $nom });
     }
   }
 
@@ -198,7 +169,8 @@ sub _render_page_part {
   else {
     $ret = $self -> _render_html5($stash, $dom, "");
   }
-  $ret -> setAttribute(class => "part-" . $content->{content});
+  # TODO: make sure $nom doesn't have spaces (replace them with '-')
+  $ret -> setAttribute(class => "page-part page-part-" . $nom);
   $ret;
 }
 
@@ -207,35 +179,70 @@ sub _render_box {
 
   my $container = $dom -> createElement( "div" );
   my @classes;
-  if($box->{width} =~ /^(\d+)$/ && 1 <= $1 && $1 <= 12) {
+  my $width = $box -> getAttribute( 'width' );
+  if(defined($width) && $width =~ /^(\d+)$/ && 1 <= $1 && $1 <= 12) {
     push @classes, "span$1";
   }
-  if(defined($box -> {class}) && $box->{class} =~ /^[-_a-zA-Z0-9]+$/) {
-    push @classes, $box->{class};
+  my $class = $box -> getAttribute( 'class' );
+  if(defined($class) && $class =~ /^[-_a-zA-Z0-9]+$/) {
+    push @classes, $class;
   }
   if(@classes) {
     $container -> setAttribute(class => join(" ", @classes));
   }
   
-  for my $b (@{$box -> {content} || []}) {
-    given($b -> {type}) {
-      when('Box') {
+  for my $b ($box -> childNodes()) {
+    given($b -> nodeName) {
+      when('div') {
         $container -> appendChild($self -> _render_box($stash, $dom, $b));
       }
-      when('Content') {
-        $container -> appendChild($self -> _render_content($stash, $dom, $b));
-      }
-      when('Snippet') {
+      #when('Content') {
+        #$container -> appendChild($self -> _render_content($stash, $dom, $b));
+      #}
+      when('snippet') {
         $container -> appendChild($self -> _render_snippet($stash, $dom, $b));
       }
-      when('PagePart') {
+      when('page-part') {
         $container -> appendChild($self -> _render_page_part($stash, $dom, $b));
+      }
+      when('row') {
+        $container -> appendChild($self -> _render_row($stash, $dom, $b));
       }
     }
   }
 
   return $container;
 }
+
+sub _render_row {
+  my($self, $stash, $dom, $row) = @_;
+
+  my $container = $dom -> createElement( "div" );
+  $container -> setAttribute(class => "row");
+
+  for my $b ($row -> childNodes()) {
+    given($b -> nodeName) {
+      when('div') {
+        $container -> appendChild($self -> _render_box($stash, $dom, $b));
+      }
+      #when('Content') {
+        #$container -> appendChild($self -> _render_content($stash, $dom, $b));
+      #}
+      when('snippet') {
+        $container -> appendChild($self -> _render_snippet($stash, $dom, $b));
+      }
+      when('page-part') {
+        $container -> appendChild($self -> _render_page_part($stash, $dom, $b));
+      }
+      when('row') {
+        $container -> appendChild($self -> _render_row($stash, $dom, $b));
+      }
+    }
+  }
+
+  return $container;
+}
+  
 
 sub render {
   my($self, $stash, $config, $page) = @_;
@@ -248,7 +255,15 @@ sub render {
 
   my $dom = XML::LibXML::Document->new();
 
-  my $doc = $self -> _render_box($stash, $dom, $self -> layout);
+  my $layout = eval { XML::LibXML -> load_xml( string => "<layout>" . $self -> layout . "</layout>" ) };
+
+  if($@) {
+    return "Unable to parse layout: $@";
+  }
+
+  $layout = $layout -> documentElement();
+
+  my $doc = $self -> _render_box($stash, $dom, $layout);
   $doc -> setAttribute(class => "layout-" . $self -> uuid);
 
   $dom -> setDocumentElement($doc);

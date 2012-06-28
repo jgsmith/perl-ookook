@@ -44,7 +44,7 @@ __PACKAGE__->table("page_part");
   is_auto_increment: 1
   is_nullable: 0
 
-=head2 page_id
+=head2 page_version_id
 
   data_type: 'integer'
   is_nullable: 0
@@ -65,7 +65,7 @@ __PACKAGE__->table("page_part");
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "page_id",
+  "page_version_id",
   { data_type => "integer", is_nullable => 0 },
   "name",
   { data_type => "varchar", is_nullable => 0, size => 64 },
@@ -86,10 +86,32 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-21 15:40:02
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BU6PxOJ4plpSDoeROy2wVA
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-23 11:50:39
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:QbslHKoxTVykGFiCjOpItQ
 
-__PACKAGE__ -> belongs_to("page" => "OokOok::Schema::Result::Page", "page_id");
+__PACKAGE__ -> belongs_to("page_version" => "OokOok::Schema::Result::PageVersion", "page_version_id");
+
+sub page { $_[0] -> page_version -> page; }
+
+sub GET {
+  my($self, $c, $deep) = @_;
+
+  my $json = {
+    _links => {
+      self => "".$c->uri_for("/page/" . $self->page->uuid . "/part/" . $self->name),
+      collection => "".$c->uri_for("/page/" . $self->page->uuid . "/part"),
+      parent => "".$c->uri_for("/page/" . $self->page->uuid),
+    },
+    name => $self -> name,
+  };
+
+  if($deep) {
+    $json->{content} = $self -> content;
+  }
+
+  return $json;
+}
+
 
 override update => sub {
   my($self, $columns) = @_;
@@ -97,23 +119,23 @@ override update => sub {
   $self -> set_inflated_columns($columns) if $columns;
 
   my(%changes) = $self -> get_dirty_columns;
-  if($changes{page_id}) {
+  if($changes{page_version_id}) {
     $self -> discard_changes();
-    die "Unable to change the associated page";
+    die "Unable to change the associated page version";
   }
 
-  if($self -> page -> edition -> is_frozen) {
+  if($self -> page_version -> edition -> is_closed) {
     # the following will die if we can't duplicate
-    my $page = $self -> page -> duplicate_to_current_edition;
+    my $page_version = $self -> page_version -> duplicate_to_current_edition;
     my $new;
     if($changes{name}) {
       my $copy = $self -> get_from_storage;
-      $new = $page -> page_parts(
+      $new = $page_version -> page_parts(
         { name => $copy -> name }
       ) -> first;
     }
     else {
-      $new = $page -> page_parts(
+      $new = $page_version -> page_parts(
         { name => $self -> name }
       ) -> first;
     }
@@ -127,10 +149,10 @@ override update => sub {
 override delete => sub {
   my($self) = @_;
 
-  my $page = $self -> page;
-  if($page -> edition -> is_frozen) {
-    my $page = $page -> duplicate_to_current_edition;
-    return $page -> page_parts(
+  my $page_version = $self -> page_version;
+  if($page_version -> edition -> is_closed) {
+    $page_version = $page_version -> duplicate_to_current_edition;
+    return $page_version -> page_parts(
       { name => $self -> name }
     ) -> first -> delete;
   }
@@ -142,10 +164,10 @@ override delete => sub {
 before insert => sub {
   my($self) = @_;
 
-  my $page = $self -> page;
-  if($page -> edition -> is_frozen) {
-    my $page = $page -> duplicate_to_current_edition;
-    $self -> page_id($page -> id);
+  my $page_version = $self -> page_version;
+  if($page_version -> edition -> is_closed) {
+    my $page_version = $page_version -> duplicate_to_current_edition;
+    $self -> page_version_id($page_version -> id);
   }
 };
 

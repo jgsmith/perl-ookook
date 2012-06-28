@@ -27,6 +27,18 @@
         <input type="text" class="input-xlarge" id="page-title" value="[% page.title | html %]">
       </div>
     </div>
+    <div class="control-group">
+      <label class="control-label" for="page-layout">Layout</label>
+      <div class="controls">
+        <select class="input" id="page-layout">
+          [% FOR layout IN edition.theme_edition.all_layouts %]
+            <option
+             [% IF layout.uuid == page.layout %]selected[% END %]
+             value='[% layout.uuid %]'>[% layout.name | html %]</option>
+          [% END %]
+        </select>
+      </div>
+    </div>
   </fieldset>
 </div>
 </div>
@@ -75,9 +87,8 @@ $(function() {
     page_parts_list.push(name);
   }
 
-  ookook.ajax({
+  ookook.util.get({
     url: parts_url,
-    type: "GET",
     success: function(data) {
       // data.parts is a hash of part name => part content
       var part_names = [];
@@ -111,9 +122,8 @@ $(function() {
 
     $("#new_part_form").modal('hide');
 
-    ookook.ajax({
+    ookook.util.post({
       url: parts_url + "/" + name,
-      type: 'POST',
       data: {
         content: ""
       },
@@ -128,9 +138,10 @@ $(function() {
 
   $("#save_page_btn").click(function() {
     // send everything to the server
-    var title, parts = {};
+    var title, layout, parts = {};
 
     title = $("#page-title").val();
+    layout = $("#page-layout").val();
     $.each(page_parts_list, function(idx, name) {
       var editor;
       editor = $.wymeditors($(editors[name]).data('wym_index'));
@@ -140,11 +151,11 @@ $(function() {
     });
 
     console.log({ title: title, page_parts: parts });
-    ookook.ajax({
+    ookook.util.put({
       url: "[% c.uri_for("/project/" _ project.uuid _ "/page/" _ page.uuid) %]",
-      type: "PUT",
       data: {
         title: title,
+        layout: layout,
         page_parts: parts
       },
       success: function() {

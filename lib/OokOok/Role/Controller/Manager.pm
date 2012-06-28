@@ -3,6 +3,7 @@ package OokOok::Role::Controller::Manager;
 use Moose::Role;
 use Lingua::EN::Inflect qw(PL_N);
 use MooseX::MethodAttributes::Role;
+#use HTML::FormFu;
 use namespace::autoclean;
 
 sub status_service_unavailable {
@@ -13,24 +14,6 @@ sub status_service_unavailable {
     error => $p{message}
   };
   return 1;
-}
-
-sub _list_top_level_objects {
-  my($self, $c) = @_;
-
-  my $things = [];
-
-  my $q = $c -> model;
-
-  # TODO: now we can apply authorization constraints on $q
-
-  my $thing = $c -> stash -> {names} -> {thing};
-  my $method = "${thing}_to_json";
-  while(my $thing = $q -> next) {
-    push @$things, $self -> $method($c, $thing);
-  }
-
-  return $things;
 }
 
 ###
@@ -49,6 +32,8 @@ sub things_base :Chained('base') :PathPart('') :CaptureArgs(0) {
   my $thing = $self -> config -> {"singular"} || $c -> model -> result_source -> name;
   my $things = $self -> config -> {"plural"} || PL_N($thing);
 
+  $c -> stash(collection => $self -> config -> {'collection_resource_class'} -> new(c => $c));
+
   $c -> stash -> {names} = {
     thing => $thing,
     things => $things,
@@ -60,32 +45,20 @@ sub things :Chained('things_base') :PathPart('') :Args(0) :ActionClass('REST') {
 sub things_GET {
   my($self, $c) = @_;
 
+
   my $things = $c -> stash -> {names} -> {things};
 
   $self -> status_ok(
     $c,
-    entity => {
-      $things => $self -> _list_top_level_objects($c)
-    }
+    entity => $c -> stash -> {collection} -> GET
   );
 }
 
 sub things_POST {
   my($self, $c) = @_;
 
+  my $thing = eval { $c -> stash -> {collection} -> POST($c -> req -> data) };
   my $object_name = $c -> stash -> {names} -> {thing};
-  my $post_method = "${object_name}_from_json";
-  my $get_method = "${object_name}_to_json";
-  my $thing = eval { $self -> $post_method($c, $c -> req -> data) };
-  #eval {
-  #  $thing = $c->stash->{resultset}->new_result({});
-  #  $thing -> insert;
-  #  $ce = $thing -> current_edition;
-  #  $ce -> update({
-  #    name => $c->req->data->{name},
-  #    description => $c->req->data->{description},
-  #  });
-  #};
 
   if($@) {
     $self -> status_bad_request(
@@ -93,12 +66,17 @@ sub things_POST {
       message => "Unable to create $object_name: $@",
     );
   }
-  else {
-    my $json = $self -> $get_method($c, $thing, 1); # deep
+  elsif($thing) {
+    my $json = $thing -> GET(1); # deep
 
     $self -> status_created($c,
-      location => $json -> {url},
+      location => $json -> {_links} -> {self},
       entity => $json,
+    );
+  }
+  else {
+    $self -> status_bad_request($c,
+      message => "Unable to create $object_name",
     );
   }
 }
@@ -122,6 +100,42 @@ sub things_OPTIONS {
   );
 }
 
+#sub new_thing :Chained('things_base') :PathPart('new') :Args(0) { 
+#  my($self, $c) = @_;
+#
+#  $c -> stash -> {projects} = [$c -> model("DB::Project") -> all];
+#  $c -> stash -> {themes} = [$c -> model("DB::Theme") -> all];
+#  $c -> stash -> {libraries} = [$c -> model("DB::Library") -> all];
+#
+#  my $form = HTML::FormFu->new({
+#    action => $c -> req -> uri,
+#    method => 'POST',
+#    auto_fieldset => 1
+#  });
+#
+#  $c -> stash -> {form} = $form;
+#
+#  my $object_name = $c -> stash -> {names} -> {thing};
+#
+#  $form -> load_config_file($c -> path_to('root', 'forms', 'new', $object_name . '.yml'));
+#  if( $c -> req -> method eq 'POST') {
+#    $form -> process($c -> req);
+#  }
+#
+#  if( $form -> submitted_and_valid ) {
+#    my $new_thing = $c -> model -> POST($c, $form -> params);
+#    if($new_thing) {
+#      my $json = $new_thing -> GET($c);
+#      print STDERR "New object: ", JSON::encode_json($json), "\n";
+#      $c -> response -> redirect( $json -> {url} );
+#      $c -> detach;
+#    }
+#    else {
+#      # unable to create project
+#    }
+#  }
+#}
+
 ###
 ### individual Thing handling
 ###
@@ -142,13 +156,12 @@ sub thing_base :Chained('things_base') :PathPart('') :CaptureArgs(1) {
     $c -> detach;
   }
   my $thing_name = $c -> stash -> {names} -> {thing};
-  $c -> stash -> {$thing_name} = $thing;
-  if($thing -> can('editions') && $thing -> can('current_edition')) {
-    my $edition_name = $thing -> editions -> result_source -> name;
-    $c -> stash -> {$edition_name} = $thing -> current_edition;
-    $c -> stash -> {names} -> {edition} = $edition_name;
-  }
-  print STDERR "stash keys: ", join(", ", sort keys %{$c->stash}), "\n";
+  my $resource_class = $self -> config -> {'current_model'};
+  $resource_class =~ s{^DB::}{OokOok::Resource::};
+  $c -> stash -> {$thing_name} = $resource_class -> new(
+    c => $c,
+    source => $thing
+  );
 }
 
 sub thing :Chained('thing_base') :PathPart('') :Args(0) :ActionClass('REST') { }
@@ -158,10 +171,12 @@ sub thing_GET {
 
   my $thing_name = $c -> stash -> {names} -> {thing};
   my $thing = $c -> stash -> {$thing_name};
-  my $method = "${thing_name}_to_json";
-  my $json = $self -> $method($c, $thing, 1);
+  my $json = $thing -> GET(1);
 
-  print STDERR "Json: ", JSON::encode_json($json), "\n";
+  # need to restrict to the columns we need -- uuid and name
+  $c -> stash -> {projects} = [$c -> model("DB::Project") -> all];
+  $c -> stash -> {themes} = [$c -> model("DB::Theme") -> all];
+  $c -> stash -> {libraries} = [$c -> model("DB::Library") -> all];
 
   $self -> status_ok(
     $c,
@@ -174,9 +189,7 @@ sub thing_PUT {
 
   my $thing_name = $c -> stash -> {names} -> {thing};
   my $thing = $c -> stash -> {$thing_name};
-  my $put_method = "update_${thing_name}";
-  my $get_method = "${thing_name}_to_json";
-  $thing = eval { $self -> $put_method($c, $thing, $c -> req -> data) };
+  $thing = eval { $thing -> PUT($c -> req -> data) };
 
   if($@) {
     $self -> status_bad_request($c,
@@ -185,7 +198,7 @@ sub thing_PUT {
   }
   else {
     $self -> status_ok($c,
-      entity => $self -> $get_method($c, $thing, 1)
+      entity => $thing -> GET($c, 1)
     );
   }
 }
@@ -196,7 +209,7 @@ sub thing_DELETE {
   my $thing_name = $c -> stash -> {names} -> {thing};
 
   eval {
-    $c -> stash -> {$thing_name} -> delete;
+    $c -> stash -> {$thing_name} -> DELETE;
   };
 
   $self -> status_no_content($c);

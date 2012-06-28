@@ -1,5 +1,4 @@
 PRAGMA foreign_keys = ON;
-
 --
 -- Users
 --
@@ -14,13 +13,39 @@ CREATE TABLE user_identity (
 ); 
 
 --
+-- Groups
+--
+
+CREATE TABLE collective (
+  id       INTEGER PRIMARY KEY,
+  uuid     CHAR(20),
+  name     VARCHAR(255)
+);
+
+-- overall admin is the top-rank (position==0)
+-- only admin may demote themselves, but we may allow a voting system
+--  for promotion/demotion
+CREATE TABLE collective_rank (
+  id       INTEGER PRIMARY KEY,
+  collective_id INTEGER NOT NULL,
+  name     VARCHAR(255),
+  position INTEGER NOT NULL, -- lower numbers have higher rank
+  is_editor BOOLEAN NOT NULL DEFAULT FALSE
+);  
+
+CREATE TABLE collective_member (
+  id       INTEGER PRIMARY KEY,
+  user_id  INTEGER NOT NULL,
+  collective_rank_id INTEGER NOT NULL
+);
+ 
+--
 -- Projects
 --
 CREATE TABLE project (
   id      INTEGER PRIMARY KEY,
   uuid    char(20) NOT NULL,
-  created_on DATETIME NOT NULL,
-  user_id INTEGER
+  collective_id INTEGER
 );
 
 CREATE TABLE edition (
@@ -33,47 +58,9 @@ CREATE TABLE edition (
   theme_id INTEGER,
   theme_date DATETIME,
   created_on DATETIME NOT NULL,
-  frozen_on DATETIME          -- convenience - should be the same as the next
+  closed_on DATETIME          -- convenience - should be the same as the next
                              -- project instance created_on time
 );
-
--- CREATE TABLE data_store (
---  id         INTEGER PRIMARY KEY,
---  owner_id   INTEGER NOT NULL, -- the object holding this data store
---  owner_type VARCHAR(32),      -- the object type holding this data store
---  name       VARCHAR(64) NOT NULL,
---  description TEXT
---);
---
---CREATE TABLE data_type (
---  id         INTEGER PRIMARY KEY,
---  data_store_id INTEGER,
---  name       VARCHAR(32) NOT NULL
---);
---
---CREATE TABLE data_namespace (
---  id         INTEGER PRIMARY KEY,
---  edition_id INTEGER NOT NULL,
---  prefix     VARCHAR(32) NOT NULL,
---  namespace  VARCHAR(255) NOT NULL
---);
---
---CREATE TABLE data_property (
---  id         INTEGER PRIMARY KEY,
---  data_store_id INTEGER NOT NULL,
---  data_namespace_id INTEGER,
---  name       VARCHAR(64) NOT NULL,
---  type       VARCHAR(32) NOT NULL
---);
---
---CREATE TABLE data_view (
---  id         INTEGER PRIMARY KEY,
---  owner_id   INTEGER NOT NULL, -- the object holding this data store
---  owner_type VARCHAR(32),      -- the object type holding this data store
---  source_id  INTEGER NOT NULL,
---  source_type VARCHAR(16) NOT NULL,
---  name       VARCHAR(64) NOT NULL
---);
 
 --
 -- Content pages
@@ -83,36 +70,48 @@ CREATE TABLE edition (
 -- we follow a Radiant model of page having page parts and layouts
 --
 
-CREATE TABLE layout (
-  id    INTEGER PRIMARY KEY,
-  edition_id INTEGER NOT NULL,
-  uuid  CHAR(20) NOT NULL,
-  theme_layout_uuid CHAR(20) NOT NULL, 
-  type  VARCHAR(32) NOT NULL, -- visual, data, ...
-  configuration TEXT NOT NULL DEFAULT '{}' -- json
-);
+-- CREATE TABLE layout (
+--   id    INTEGER PRIMARY KEY,
+--   edition_id INTEGER NOT NULL,
+--   uuid  CHAR(20) NOT NULL,
+--   theme_layout_uuid CHAR(20) NOT NULL, 
+--   type  VARCHAR(32) NOT NULL, -- visual, data, ...
+--   configuration TEXT NOT NULL DEFAULT '{}' -- json
+-- );
 
 CREATE TABLE page (
   id    INTEGER PRIMARY KEY,
+  project_id INTEGER NOT NULL,
+  uuid  char(20) NOT NULL
+);
+
+CREATE TABLE page_version (
+  id    INTEGER PRIMARY KEY,
   edition_id INTEGER NOT NULL,
-  uuid  char(20) NOT NULL,
+  page_id INTEGER NOT NULL,
   layout CHAR(20),
-  title  VARCHAR(255) NOT NULL,
-  primary_language VARCHAR(32), -- if different than project
+  title VARCHAR(255) NOT NULL DEFAULT '',
+  primary_language VARCHAR(32),
   description TEXT
 );
 
 CREATE TABLE page_part (
   id    INTEGER PRIMARY KEY,
-  page_id INTEGER NOT NULL,
+  page_version_id INTEGER NOT NULL,
   name  VARCHAR(64) NOT NULL,
   content TEXT
 );
 
 CREATE TABLE snippet (
   id    INTEGER PRIMARY KEY,
+  project_id INTEGER NOT NULL,
+  uuid  char(20) NOT NULL
+);
+
+CREATE TABLE snippet_version (
+  id    INTEGER PRIMARY KEY,
   edition_id INTEGER NOT NULL,
-  uuid  varchar(255) NOT NULL, -- not really a uuid, but a unique name
+  snippet_id INTEGER NOT NULL,
   content TEXT
 );
 
@@ -124,8 +123,7 @@ CREATE TABLE snippet (
 CREATE TABLE theme (
   id      INTEGER PRIMARY KEY,
   uuid    char(20) NOT NULL,
-  created_on DATETIME NOT NULL,
-  user_id INTEGER
+  collective_id INTEGER
 );
 
 CREATE TABLE theme_edition (
@@ -134,22 +132,34 @@ CREATE TABLE theme_edition (
   name    VARCHAR(255) NOT NULL DEFAULT '',
   description TEXT,
   created_on DATETIME NOT NULL,
-  frozen_on DATETIME
+  closed_on DATETIME
 );
 
 CREATE TABLE theme_layout (
   id      INTEGER PRIMARY KEY,
+  theme_id INTEGER NOT NULL,
+  uuid   CHAR(20) NOT NULL
+);
+
+CREATE TABLE theme_layout_version (
+  id      INTEGER PRIMARY KEY,
+  theme_layout_id INTEGER NOT NULL,
   theme_edition_id INTEGER NOT NULL,
-  uuid   CHAR(20) NOT NULL,
-  name    VARCHAR(255) NOT NULL,
-  layout TEXT NOT NULL DEFAULT '{}',
+  name    VARCHAR(255) NOT NULL DEFAULT '',
+  layout TEXT NOT NULL DEFAULT '<row><div width="12"><page-part name="body"/></div></row>',
   configuration TEXT NOT NULL DEFAULT '{}'
 );
 
 CREATE TABLE theme_style (
   id      INTEGER PRIMARY KEY,
+  theme_id INTEGER NOT NULL,
+  uuid    CHAR(20) NOT NULL
+);
+
+CREATE TABLE theme_style_version (
+  id      INTEGER PRIMARY KEY,
+  theme_style_id INTEGER NOT NULL,
   theme_edition_id INTEGER NOT NULL,
-  uuid    CHAR(20) NOT NULL,
   name    VARCHAR(255) NOT NULL,
   styles  TEXT
 );
@@ -168,8 +178,7 @@ CREATE TABLE theme_style (
 CREATE TABLE library (
   id INTEGER PRIMARY KEY,
   uuid CHAR(20) NOT NULL,
-  created_on DATETIME NOT NULL,
-  user_id INTEGER
+  collective_id INTEGER
 );
 
 CREATE TABLE library_edition (
@@ -179,13 +188,19 @@ CREATE TABLE library_edition (
   description TEXT,
   namespace VARCHAR(255),
   created_on DATETIME NOT NULL,
-  frozen_on DATETIME
+  closed_on DATETIME
 );
 
 CREATE TABLE function (
   id INTEGER PRIMARY KEY,
+  library_id INTEGER NOT NULL,
+  uuid CHAR(20) NOT NULL
+);
+
+CREATE TABLE function_version (
+  id INTEGER PRIMARY KEY,
+  function_id INTEGER NOT NULL,
   library_edition_id INTEGER NOT NULL,
-  uuid CHAR(20) NOT NULL,
   name VARCHAR(255) NOT NULL,
   definition TEXT NOT NULL
 );
@@ -198,3 +213,76 @@ CREATE TABLE function_session (
   created_on DATETIME NOT NULL,
   expires_on DATETIME NOT NULL
 );
+
+---
+--- Triple Store Database
+---
+
+CREATE TABLE database (
+  id INTEGER PRIMARY KEY,
+  uuid CHAR(20) NOT NULL,
+  collective_id INTEGER
+);
+
+CREATE TABLE database_edition (
+  id INTEGER PRIMARY KEY,
+  database_id INTEGER NOT NULL,
+  name VARCHAR(255),
+  description TEXT,
+  created_on DATETIME NOT NULL,
+  closed_on DATETIME
+);
+
+CREATE TABLE database_namespace_prefix (
+  id INTEGER PRIMARY KEY,
+  database_id INTEGER NOT NULL,
+  uuid VARCHAR(32) NOT NULL -- uuid is the prefix
+);
+
+CREATE TABLE database_namespace_prefix_version (
+  id INTEGER PRIMARY KEY,
+  database_namespace_prefix_id INTEGER NOT NULL,
+  database_edition_id INTEGER NOT NULL,
+  database_namespace_id INTEGER NOT NULL
+);
+
+CREATE TABLE namespace (
+  id INTEGER PRIMARY KEY,
+  namespace VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE predicate (
+  id INTEGER PRIMARY KEY,
+  namespace_id INTEGER,
+  name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE object (
+  id INTEGER PRIMARY KEY,
+  identifier VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE value (
+  id INTEGER PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
+-- CREATE TABLE database_triple (
+--   id INTEGER PRIMARY KEY,
+--   database_id INTEGER NOT NULL,
+--   object_id INTEGER NOT NULL,
+--   predicate_id INTEGER NOT NULL,
+--   values TEXT, -- eventually, this will be an array in PostgreSQL
+--   created_on DATETIME
+-- );
+
+-- CREATE TABLE database_elpirt (
+--   id INTEGER PRIMARY KEY,
+--   database_id INTEGER NOT NULL,
+--   value_id INTEGER NOT NULL,
+--   predicate_id INTEGER NOT NULL,
+--   objects TEXT, -- eventually, this will be an array in PostgreSQL
+--   created_on DATETIME
+-- );
+
+

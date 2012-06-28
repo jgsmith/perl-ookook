@@ -73,11 +73,11 @@
         description: project_desc
       }, function(project) {
         if(project) {
-          $("#messages").append("<div class='alert alert-success'><a class='close' data-dismiss='alert' href='#'>&times;</a><h4 class='alert-heading'>Success!</h4> Project created.</div>");
+          ookook.util.success_message("Project created.");
           display_projects();
         }
         else {
-          $("#messages").append("<div class='alert alert-error'><a class='close' data-dismiss='alert' href='#'>&times;</a><h4 class='alert-heading'>Uh oh!</h4> Unable to create project.</div>");
+          ookook.util.error_message("Unable to create project.");
         }
       });
 

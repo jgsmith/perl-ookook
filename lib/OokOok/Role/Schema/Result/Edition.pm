@@ -3,32 +3,32 @@ package OokOok::Role::Schema::Result::Edition;
 use DateTime;
 use Moose::Role;
 
-requires 'owner';
+#requires 'owner';
 
 before insert => sub {
   $_[0] -> created_on(DateTime->now);
 };
 
-sub is_frozen { defined $_[0] -> frozen_on; }
+sub is_closed { defined $_[0] -> closed_on; }
 
-sub freeze {
+sub close {
   my($self) = @_;
 
-  return if $self -> is_frozen;
+  return if $self -> is_closed;
 
   $self -> copy({
    created_on => DateTime -> now,
-   frozen_on => undef
+   closed_on => undef
   });
 
   $self -> update({
-    frozen_on => DateTime -> now
+    closed_on => DateTime -> now
   });
 }
 
 before delete => sub {
-  if($_[0] -> is_frozen) {
-    die "Unable to delete a frozen instance";
+  if($_[0] -> is_closed) {
+    die "Unable to delete a closed edition";
   }
 };
 
@@ -40,7 +40,7 @@ after delete => sub {
   if($prev) {
     $prev -> copy({
       created_on => DateTime -> now,
-      frozen_on => undef
+      closed_on => undef
     });
   }
   else {
@@ -49,9 +49,9 @@ after delete => sub {
 };
 
 before update => sub {
-  if($_[0] -> is_frozen) {
+  if($_[0] -> is_closed) {
     $_[0] -> discard_changes();
-    die "Unable to modify a frozen instance";
+    die "Unable to modify a closed edition";
   }
 };
 

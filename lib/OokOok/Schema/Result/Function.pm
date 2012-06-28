@@ -44,7 +44,7 @@ __PACKAGE__->table("function");
   is_auto_increment: 1
   is_nullable: 0
 
-=head2 library_edition_id
+=head2 library_id
 
   data_type: 'integer'
   is_nullable: 0
@@ -55,30 +55,15 @@ __PACKAGE__->table("function");
   is_nullable: 0
   size: 20
 
-=head2 name
-
-  data_type: 'varchar'
-  is_nullable: 0
-  size: 255
-
-=head2 definition
-
-  data_type: 'text'
-  is_nullable: 0
-
 =cut
 
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "library_edition_id",
+  "library_id",
   { data_type => "integer", is_nullable => 0 },
   "uuid",
   { data_type => "char", is_nullable => 0, size => 20 },
-  "name",
-  { data_type => "varchar", is_nullable => 0, size => 255 },
-  "definition",
-  { data_type => "text", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -94,19 +79,19 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-03 17:30:31
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:UvD6hw9Ze7+kWfPALmlDLw
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-23 12:46:37
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:fN0ECFYoaH17GGV4hu4YyA
 
 with 'OokOok::Role::Schema::Result::HasVersions';
 
-use JSON ();
+sub link {
+  my($self, $c) = @_;
 
-__PACKAGE__ -> belongs_to( "edition" => "OokOok::Schema::Result::LibraryEdition", "library_edition_id" );
+  $self -> library -> link($c) . "/function/" . $self -> uuid;
+}
 
-__PACKAGE__->inflate_column('definition', {
-  inflate => sub { JSON::decode_json shift },
-  deflate => sub { JSON::encode_json shift },
-});
+__PACKAGE__ -> has_many( "versions" => "OokOok::Schema::Result::FunctionVersion", "function_id" );
+__PACKAGE__ -> belongs_to( "owner" => "OokOok::Schema::Result::Library", "library_id" );
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

@@ -1,318 +1,84 @@
 [%- META title = "Display Project" -%]
-<ul class="breadcrumb">
-<li>
-  <a href="[% c.uri_for("/dashboard") %]">Dashboard</a>
-  <span class="divider">&raquo;</span>
-</li>
-<li>[% edition.name %]</li>
-</ul>
-<div id="messages"></div>
-<div>
-  <ul class="nav nav-tabs" id="projectTabs">
-    <li><a href="#sitemap" data-toggle="tab">Pages</a></li>
-    <li><a href="#apps" data-toggle="tab">Applications</a></li>
-    <li><a href="#comps" data-toggle="tab">Components</a></li>
-    <li><a href="#data" data-toggle="tab">Databases</a></li>
-    <li><a href="#editions" data-toggle="tab">Editions</a></li>
-    <li><a href="#users" data-toggle="tab">Users</a></li>
-  </ul>
-  <div class="tab-content">
-    <div class="tab-pane active" id="sitemap">
-    [% IF edition.sitemap.size == 0 %]
-<div style="text-align: center;">
-<p>You don't have any pages in your project's sitemap!</p>
-<p>
-<a class="btn btn-primary btn-large" style="margin:0 auto;" href="#home_page_form" data-toggle="modal">Create Home Page</a>
-</p>
-      [% IF project.pages.size %]
-        <p>Or select a page as the Home Page: ... </p>
-      [% END %]
-</div>
-    [% ELSE %]
-      <table id="sitemap-content" width="100%">
-        <tr><th width="60%">Path</th><th width="25%">Page Title</th><th width="15%">Modify</th></tr>
-      </table>
-    [% END %]
-    </div>
-    <div class="tab-pane" id="apps">
-      <p>TBD</p>
-      <p>You'll be able to manage applications that can be embedded in your
-         pages.</p>
-    </div>
-    <div class="tab-pane" id="comps">
-      <p>TBD</p>
-      <p>You'll be able to manage components that you can use to build
-         applications.</p>
-    </div>
-    <div class="tab-pane" id="data">
-      <p>TBD</p>
-      <p>You'll be able to manage databases such as triple-stores that
-         can hold information.</p>
-    </div>
-    <div class="tab-pane" id="editions">
-      <div style="float: right;">
-        <button class="btn btn-primary btn-large" id="create_edition_btn">Create Edition</button>
-      </div>
-      <table id="editions-content" width="60%">
-      </table>
-    </div>
-    <div class="tab-pane" id="users">
-      <p>TBD</p>
-      <p>You'll be able to manage groups of users who can help you build
-         your project.</p>
-    </div>
-  </div>
-</div>
-[% IF edition.sitemap.size == 0 %]
-  [% WRAPPER modalForm
-     id = "home_page_form"
-     title = "Create Home Page"
-   %]
-      <label>Page title (optional)</label>
-      <input id="new_page_title" type="text" class="span3" placeholder="Page title...">
-      <label>Page description (optional)</label>
-      <textarea id="new_page_description" rows="4"></textarea>
-  [% END %]
-[% ELSE %]
-  [% WRAPPER modalForm
-     id = "new_page_form"
-     title = "Create New Page"
-   %]
-      <label>Page slug (required)</label>
-      <input id="new_page_slug" type="text" class="span3" placeholder="Page slug...">
-      <label>Page content</label>
-      <select id="new_page_uuid">
-      </select>
-      <label>Page title (optional)</label>
-      <input id="new_page_title" type="text" class="span3" placeholder="Page title...">
-      <label>Page description (optional)</label>
-      <textarea id="new_page_description" rows="4"></textarea>
-  [% END %]
+[% WRAPPER breadcrumbs %]
+  [% PROCESS breadcrumb link="/dashboard" label="Dashboard" %]
+  [% PROCESS breadcrumb link="/project" label="Projects" %]
+  [% PROCESS breadcrumb link="" label=edition.name %]
 [% END %]
+<div id="messages"></div>
+<div class="row">
+<div class="span2">
+<ul class="nav nav-list">
+  <li class="active"><a href="">Project</a></li>
+  <li><a href="[% c.req.uri _ '/sitemap' %]">Pages</a></li>
+  <li><a href="">Applications</a></li>
+  <li><a href="">Components</a></li>
+  <li><a href="">Databases</a></li>
+  <li><a href="[% c.req.uri _ '/edition' %]">Editions</a></li>
+  <li><a href="">Users</a></li>
+</ul>
+</div>
+<div class="span10" id="dashboardItems">
+
+<div class="span3 well">
+  <table class="table">
+    <caption>By the Numbers</caption>
+    <tbody>
+      <tr>
+        <td>Pages:</td><td align="right">[% project.page_count %]</td>
+      </tr>
+      <tr>
+        <td>Applications:</td><td align="right">[% 0 %]</td>
+      </tr>
+      <tr>
+        <td>Components:</td><td align="right">[% 0 %]</td>
+      </tr>
+      <tr>
+        <td>Databases:</td><td align="right">[% 0 %]</td>
+      </tr>
+      <tr>
+        <td>Editions:</td><td align="right">[% project.editions_count %]</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="span4 well">
+  <table class="table">
+    <caption>Appearance</caption>
+    <tbody>
+      <tr>
+        <td>Theme:</td><td>
+          <select id="theme-uuid">
+            [% FOR theme IN c.model("DB::Theme").all %]
+              <option
+                [% IF theme == edition.theme %]selected[% END %]
+                value='[% theme.uuid %]'>[% theme.current_edition.name | html %]</option>
+            [% END %]
+          </select>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <button id="save-appearance" class="btn">Save Appearance Changes</button>
+</div>
+</div>
 <script type="text/javascript">
 $(function() {
-  var tmp
-[% IF edition.sitemap.size == 0 %]
-[% ELSE %]
-  , sitemap
-  , pages
-  , modalCallback
-[% END %]
-  ;
+  $("#save-appearance").click(function() {
+    var theme_uuid = $('#theme-uuid').val();
 
-[% IF edition.sitemap.size == 0 %]
-  $("#home_page_form").modal('hide');
-  $("#home_page_form").on('show', function() {
-    $("#new_page_title").val("");
-    $("#new_page_description").val("");
-  });
-  $("#home_page_form_cancel").click(function() {
-    $("#home_page_form").model('hide');
-  });
-  $("#home_page_form_action").click(function() {
-    var title = $("#new_page_title").val(),
-        desc  = $("#new_page_description").val();
-
-    $("#home_page_form").modal('hide');
-    ookook.util.ajax({
-      url: '[% c.uri_for('/project/' _ project.uuid _ '/page') %]',
-      type: 'POST',
+    ookook.util.put({
+      url: '[% c.uri_for("/project/" _ project.uuid) %]',
       data: {
-        title: title,
-        description: desc
+        theme: theme_uuid
       },
-      success: function(data) {
-        var page_uuid = data.uuid;
-        ookook.util.ajax({
-          url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
-          type: 'PUT',
-          data: {
-            '': { visual: page_uuid }
-          },
-          success: function(data) {
-            location.reload();
-          }
-        });
+      success: function() {
+        ookook.util.success_message("Appearance information saved.");
+      },
+      error: function() {
+        ookook.util.error_message("Unable to save appearnce information.");
       }
     });
   });
-[% ELSE %]
-  ookook.util.ajax({
-    url: "[% c.uri_for("/project/" _ project.uuid _ "/sitemap") %]", 
-    type: "GET",
-    success: function(data) {
-      sitemap = data;
-      ookook.util.ajax({
-        url: "[% c.uri_for("/project/" _ project.uuid _ "/page") %]", 
-        type: "GET",
-        success: function(data) {
-          pages = {};
-          $.each(data.pages, function(idx, page) {
-            pages[page.uuid] = page;
-          });
-          $("#sitemap-content").tree({
-            sitemap: sitemap,
-            pages: pages,
-            operations: {
-              addChild: function(path, item, cb) {
-                // adds a page to a path or creates a new page for the path
-                modalCallback = function(data) {
-                  var newSitemap = {}, root;
-                  root = newSitemap;
-                  $.each(path, function(idx, p) {
-                    root[p] = { children: { } };
-                    root = root[p].children;
-                  });
-                  if(data.uuid != "" && data.uuid != null) {
-                    root[data.slug] = { visual: data.uuid };
-                    ookook.util.ajax({
-                      url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
-                      type: 'PUT',
-                      data: newSitemap,
-                      success: function(sitemapData) {
-                        cb(data.slug, root[data.slug]);
-                      }
-                    });
-                  }
-                  else {
-                    ookook.util.ajax({
-                      url: '[% c.uri_for('/project/' _ project.uuid _ '/page') %]',
-                      type: 'POST',
-                      data: {
-                        title: data.title,
-                        description: data.description
-                      },
-                      success: function(pageData) {
-                        var page_uuid = pageData.page.uuid;
-                        pages[page_uuid] = pageData.page;
-                        root[data.slug] = { visual: page_uuid };
-                        ookook.util.ajax({
-                          url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
-                          type: 'PUT',
-                          data: newSitemap,
-                          success: function(sitemapData) {
-                            cb(data.slug, root[data.slug]);
-                          }
-                        });
-                      }
-                    });
-                  }
-                };
-                $("#new_page_form").modal('show');
-              },
-              removeItem: function(path, item, cb) {
-                // removes the page from the sitemap path
-                var newSitemap = {}, root;
-                root = newSitemap;
-                $.each(path, function(idx, p) {
-                  root[p] = { children: { } };
-                  root = root[p].children;
-                });
-                root[item.path[item.path.length-1]] = { visual: null };
-                ookook.util.ajax({
-                  url: '[% c.uri_for('/project/' _ project.uuid _ '/sitemap') %]',
-                  type: 'PUT',
-                  data: newSitemap,
-                  success: cb
-                });
-              },
-              previewItem: function(path, item, cb) {
-                var uri = path.join("/");
-                window.open('[% c.uri_for("/dev/v/" _ project.uuid) %]' + uri, 'ookook-preview-' + item.visual);
-              },
-              editItem: function(path, item, cb) {
-                // change the page we're pointing to
-                var url;
-                if(item.visual != null) {
-                  url = '[% c.uri_for('/project/' _ project.uuid _ '/page/') %]' + item.visual;
-                  document.location = url;
-                }
-              }
-            }
-          });
-        }
-      });
-    }
-  });
-  $("#new_page_form").modal('hide');
-  $("#new_page_form").on('show', function() {
-    var page_options = [];
-    $("#new_page_title").val("");
-    $("#new_page_slug").val("");
-    $("#new_page_description").val("");
-    // need to provide a list of pages to select from
-    $("#new_page_uuid").empty();
-    $.each(pages, function(uuid, info) {
-      page_options.push(uuid);
-    });
-    page_options.sort(function(a,b) {
-      if(pages[a].title < pages[b].title) { return -1; }
-      else if(pages[a].title > pages[b].title) { return 1; }
-      else { return 0; }
-    });
-    $("#new_page_uuid").append("<option value=''>New blank page</option>");
-    $.each(page_options, function(idx, uuid) {
-      var el;
-      el = $("<option value='" + uuid + "'>" + pages[uuid].title + "</option>");
-      $("#new_page_uuid").append(el);
-    });
-  });
-  $("#new_page_form_cancel").click(function() {
-    $("#new_page_form").modal('hide');
-    modalCallback = function() {};
-  });
-  $("#new_page_form_action").click(function() {
-    var title = $("#new_page_title").val(),
-        slug = $("#new_page_slug").val(),
-        uuid = $("#new_page_uuid").val(),
-        desc  = $("#new_page_description").val();
-
-    $("#new_page_form").modal('hide');
-    modalCallback({
-      title: title,
-      slug: slug,
-      uuid: uuid,
-      description: desc
-    });
-    modalCallback = function() {};
-  });
-[% END %]
-
-  $('#projectTabs a:first').tab('show');
-
-  function updateEditions() {
-    ookook.util.ajax({
-      url: "[% c.uri_for("/project/" _ project.uuid ) %]",
-      type: "GET",
-      success: function(data) {
-        var table = $("#editions-content");
-        table.empty();
-        table.append('<tr><th width="75%">Cut Date</th><th width="25%">Modify</th></tr>');
-console.log(data);
-        $.each(data.editions, function(idx, edition) {
-          var tr, td;
-          tr = $("<tr></tr>");
-          td = $("<td></td>");
-          td.text(edition.frozen_on);
-          tr.append(td);
-          td = $("<td></td>");
-          tr.append(td);
-          table.append(tr);
-        });
-      }
-    });
-  }
-
-  updateEditions();
-
-  $('#create_edition_btn').click(function() {
-    ookook.util.ajax({
-      url: "[% c.uri_for("/project/" _ project.uuid _ "/edition") %]",
-      type: "POST",
-      data: {},
-      success: updateEditions
-    });
-  });
-        
 });
 </script>

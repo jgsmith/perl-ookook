@@ -110,6 +110,16 @@ __PACKAGE__ -> belongs_to('edition' => 'OokOok::Schema::Result::Edition', "editi
 
 with 'OokOok::Role::Schema::Result::HasVersions';
 
+sub GET {
+  my($self, $c, $deep) = @_;
+
+  my $json = {
+    
+  };
+
+  $json;
+}
+
 sub render {
   my($self, $c, $page) = @_;
 

@@ -41,39 +41,6 @@ Standard 404 error page
 sub default :Path {
     my ( $self, $c ) = @_;
 
-#    print STDERR "default path: [", $c -> req -> path, "]\n";
-#    if($c -> stash -> {development}) {
-#      $c -> req -> path = "/dev" . $c -> req -> path;
-#    }
-#    elsif($c -> stash -> {date}) {
-#      $c -> req -> path = "/" . $c -> stash -> {date} -> strftime('%Y%m%d%H%M%S') . $c -> req -> path;
-#    }
-#    else {
-#      my $path = $c -> req -> path;
-#      print STDERR "path: [$path]\n";
-#      if($path =~ s{^dev/}{/}) {
-#        print STDERR "  development...\n";
-#        $c -> stash -> {development} = 1;
-#        $c -> detach($path);
-#        #$c -> req -> path($path);
-#        #$c -> dispatcher -> prepare_action($c);
-#        #return $c -> dispatcher -> dispatch($c);
-#      }
-#      elsif($path =~ s{^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/}{/}) {
-#        $c -> stash -> {date} = DateTime -> new({
-#          year => $1,
-#          month => $2,
-#          day => $3,
-#          hour => $4,
-#          minute => $5,
-#          second => $6
-#        });
-#        print STDERR "  date... ", $c -> stash -> {date}, "\n";
-#        $c -> detach($path);
-#        #$c -> dispatcher -> prepare_action($c);
-#        #return $c -> dispatcher -> dispatch($c);
-#      }
-#    }
     $c->response->body( 'Page not found' );
     $c->response->status(404);
 }
@@ -87,6 +54,9 @@ Show the user an overview of their account and activity.
 sub dashboard :Path('dashboard') :Args(0) {
     my($self, $c) = @_;
 
+    $c -> stash -> {projects} = [$c -> model("DB::Project") -> all];
+    $c -> stash -> {themes} = [$c -> model("DB::Theme") -> all];
+    $c -> stash -> {libraries} = [$c -> model("DB::Library") -> all];
 }
 
 =head2 end

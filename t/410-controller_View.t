@@ -132,8 +132,8 @@ $uuid = $json -> {uuid};
 
 $json = GET_ok("/project/$uuid/page", "Get list of pages");
 
-ok $json->{pages}, "JSON has pages property";
-is scalar(@{$json->{pages}}), 0, "No pages in project yet";
+ok $json->{_embedded}->{pages}, "JSON has pages property";
+is scalar(@{$json->{_embedded}->{pages}}), 1, "One page in project";
 
 my %pages;
 
@@ -155,28 +155,30 @@ for my $nom (qw/Foo Bar Baz/) {
 
 $json = GET_ok("/project/$uuid/page", "Get list of pages");
 
-ok $json->{pages}, "JSON has pages property";
-is scalar(@{$json->{pages}}), 3, "Three pages in project";
+ok $json->{_embedded}->{pages}, "JSON has pages property";
+is scalar(@{$json->{_embedded}->{pages}}), 4, "Four pages in project";
 
 #
 # Then create a sitemap with the pages
 #
 
-PUT_ok("/project/$uuid/sitemap", {
-  '' => {
-    children => {
-      'about' => {
-        'visual' => $pages{"Bar"}
-      },
-      'projects' => {
-        'children' => {
-          'ookook' => {
-            'visual' => $pages{"Baz"}
+PUT_ok("/project/$uuid", {
+  sitemap => {
+    '' => {
+      children => {
+        'about' => {
+          'visual' => $pages{"Bar"}
+        },
+        'projects' => {
+          'children' => {
+            'ookook' => {
+              'visual' => $pages{"Baz"}
+            },
           },
         },
       },
+      'visual' => $pages{"Foo"}
     },
-    'visual' => $pages{"Foo"}
   },
 }, "Create sitemap");
 

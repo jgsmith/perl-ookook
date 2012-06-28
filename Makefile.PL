@@ -17,6 +17,7 @@ requires 'Catalyst::Action::REST';
 requires 'Catalyst::Controller::HTML::FormFu';
 
 requires 'Catalyst::Model::DBIC::Schema';
+requires 'Catalyst::Model::File';
 
 requires 'Catalyst::Plugin::ConfigLoader';
 requires 'Catalyst::Plugin::Static::Simple';
@@ -24,28 +25,43 @@ requires 'Catalyst::Plugin::StackTrace';
 requires 'Catalyst::Plugin::StatusMessage';
 requires 'Catalyst::Plugin::Session';
 requires 'Catalyst::Plugin::Session::State::Cookie';
+requires 'Catalyst::Plugin::Session::Store::FastMmap';
 requires 'Catalyst::Plugin::Unicode::Encoding';
+
+requires 'Catalyst::View::TT';
+requires 'Catalyst::View::Thumbnail';
 
 requires 'CatalystX::RoleApplicator';
 
-requires 'Moose';
-requires 'MooseX::MethodAttributes::Role';
-requires 'namespace::autoclean';
-requires 'Set::Scalar';
-requires 'Data::UUID';
-requires 'Workflow';
-requires 'JSON';
-requires 'HTML::FormFu';
-requires 'XML::LibXML';
-
-requires 'Data::Verifier';
-
-requires 'Net::Twitter';
-
-requires 'HTML::FormFu::Model::DBIC';
+requires 'Catalyst::Authentication::Credential::Twitter';
 
 requires 'Config::General'; # This should reflect the config file format you've chosen
                  # See Catalyst::Plugin::ConfigLoader for supported formats
+
+requires 'Moose';
+requires 'MooseX::MethodAttributes::Role';
+requires 'MooseX::MarkAsMethods' => '0.13';
+requires 'MooseX::NonMoose' => '0.16';
+requires 'MooseX::Singleton' => '0.29';
+
+requires 'Data::UUID';
+requires 'Data::Verifier';
+requires 'DateTime';
+requires 'DBIx::Class';
+requires 'DBIx::Class::Schema::Loader';
+requires 'HTML::FormFu';
+requires 'HTML::FormFu::Model::DBIC';
+requires 'JSON';
+requires 'Lingua::EN::Inflect';
+requires 'LWP::Protocol::https';
+requires 'Net::Twitter';
+requires 'Set::Scalar';
+requires 'String::CamelCase';
+requires 'Workflow';
+requires 'XML::LibXML';
+
+requires 'namespace::autoclean';
+
 test_requires 'Test::More' => '0.88';
 
 author_requires 'Parse::Yapp::Driver';

@@ -1,6 +1,7 @@
 package OokOok::Controller::Library;
 use Moose;
 use namespace::autoclean;
+use OokOok::Collection::Library;
 
 BEGIN {
   extends 'Catalyst::Controller::REST';
@@ -14,6 +15,7 @@ __PACKAGE__ -> config(
   },
   default => 'text/html',
   current_model => 'DB::Library',
+  collection_resource_class => 'OokOok::Collection::Library',
 );
 
 =head1 NAME

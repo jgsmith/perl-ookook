@@ -23,7 +23,7 @@ represents a 'has many' relationship with the edition objects.
 
 =cut
 
-requires 'editions';
+#requires 'editions';
 
 =head1 AUGMENTATIONS
 
@@ -45,7 +45,7 @@ use DateTime;
     my $uuid = substr($ug -> create_b64(),0,20);
     $uuid =~ tr{+/}{-_};
     $self -> uuid($uuid);
-    $self -> created_on(DateTime->now);
+    #$self -> created_on(DateTime->now);
   };
 }
 
@@ -59,8 +59,8 @@ after insert => sub {
 =cut
 
 before delete => sub {
-  if(grep { $_ -> is_frozen } $_[0] -> editions) {
-    die "Unable to delete with published editions";
+  if(grep { $_ -> is_closed } $_[0] -> editions) {
+    die "Unable to delete with closed editions";
   }
 };
 
@@ -92,20 +92,31 @@ Returns the date of the most recently frozen edition.
 
 =cut
 
-sub last_frozen_on {
+sub last_closed_on {
   my($self) = @_;
 
   my $last = $self -> editions -> search(
-    { 'frozen_on' => { '!=', undef } },
+    { 'closed_on' => { '!=', undef } },
     { order_by => { -desc => 'id' }, rows => 1 }
   )->first;
 
   if($last) {
-    return $last->frozen_on;
+    return $last->closed_on;
   }
 }
 
 =head2 relation_for_date
+
+Given the relation for $comp, we want the row from ${comp}_version that
+is closest to the $date.
+
+$comp -> versions -> search({
+  "edition.closed_on" => { '<=' => $date }
+}, {
+  join => [ 'edition' ],
+  order_by => { -desc => 'id' }, 
+  rows => 1
+})
 
 =cut
 
@@ -117,12 +128,12 @@ sub relation_for_date {
 
   my $q = $self -> result_source -> schema -> resultset($relation);
 
-  $q = $q -> search(
-    {
-      "me.uuid" => $uuid,
-      $join_table.".".$target_key => $self -> id
-    }
-  );
+  my $comp = $q -> find({ uuid => $uuid, $target_key => $self -> id });
+
+  return unless $comp;
+
+  $q = $self -> result_source -> schema -> resultset($relation . "Version");
+  $q = $q -> search({ $comp->result_source->from . "_id" => $comp -> id });
 
   return $self -> _apply_date_constraint($q, $join_table, $date) -> first;
 }
@@ -143,17 +154,19 @@ sub _apply_date_constraint {
       $date = $self -> result_source -> schema -> storage -> datetime_parser -> format_datetime($date);
     }
     $q = $q -> search(
-      { $join."frozen_on" => { '<=' => $date } },
+      { $join."closed_on" => { '<=' => $date } },
     );
   }
 
   $q = $q -> search(
     {},
-    { order_by => { -desc => $join."id" } }
+    { order_by => { -desc => "me.id" } }
   );
 
   return $q;
 }
+
+sub editions_count { $_[0] -> editions -> count + 0 - 1; }
 
 1;
 

@@ -44,7 +44,7 @@ __PACKAGE__->table("theme_style");
   is_auto_increment: 1
   is_nullable: 0
 
-=head2 theme_edition_id
+=head2 theme_id
 
   data_type: 'integer'
   is_nullable: 0
@@ -55,30 +55,15 @@ __PACKAGE__->table("theme_style");
   is_nullable: 0
   size: 20
 
-=head2 name
-
-  data_type: 'varchar'
-  is_nullable: 0
-  size: 255
-
-=head2 styles
-
-  data_type: 'text'
-  is_nullable: 1
-
 =cut
 
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "theme_edition_id",
+  "theme_id",
   { data_type => "integer", is_nullable => 0 },
   "uuid",
   { data_type => "char", is_nullable => 0, size => 20 },
-  "name",
-  { data_type => "varchar", is_nullable => 0, size => 255 },
-  "styles",
-  { data_type => "text", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -94,8 +79,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-29 14:50:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:4V0XKeMko64V8dtVHZLfdA
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-24 16:04:48
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:tw+BH3dkRJThMIGB3DLbEg
 
 with 'OokOok::Role::Schema::Result::HasVersions';
 
