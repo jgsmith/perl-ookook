@@ -38,6 +38,8 @@ sub play_base :Chained('base') :PathPart('') :CaptureArgs(1) {
   }
 }
 
+sub end : ActionClass('RenderView') {}
+
 1;
 
 __END__

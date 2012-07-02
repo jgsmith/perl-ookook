@@ -1,6 +1,7 @@
 package OokOok;
 use Moose;
 use namespace::autoclean;
+use Carp::Always;
 
 use Catalyst::Runtime 5.80;
 
@@ -31,8 +32,11 @@ use Catalyst qw/
 
     StackTrace
 
-    +OokOok::Plugin::Twitter
+    +OokOok::Plugin::Authentication
 /;
+    #Authentication
+    #Session::PerUser
+
 use CatalystX::RoleApplicator;
 
 extends 'Catalyst';
@@ -62,14 +66,14 @@ __PACKAGE__->config(
     search_extra => [ 'OokOok::Resource', 'OokOok::Collection' ],
 );
 __PACKAGE__->config(
-    'View::HTML' => {
-      INCLUDE_PATH => [
-        __PACKAGE__->path_to( qw/root src/ ),
-      ],
-    },
-    'Plugin::ConfigLoader' => {
-      file => __PACKAGE__ -> path_to( 'conf' ),
-    },
+  'View::HTML' => {
+    INCLUDE_PATH => [
+      __PACKAGE__->path_to( qw/root src/ ),
+    ],
+  },
+  'Plugin::ConfigLoader' => {
+    file => __PACKAGE__ -> path_to( 'conf' ),
+  },
 );
 
 # Start the application
@@ -114,7 +118,6 @@ override prepare_path => sub {
   my $base = $c->request->base;
   $base->path($base->path . $first);
 };
-
 
 =head1 NAME
 

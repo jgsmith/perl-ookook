@@ -2,28 +2,20 @@ package OokOok::Role::Schema::Result::HasVersions;
 
 use Moose::Role;
 
-use Data::UUID ();
+with 'OokOok::Role::Schema::Result::UUID';
 
-{
-  my $ug = Data::UUID -> new;
-  around insert => sub {
-    my $orig = shift;
-    my $self = shift;
 
-    if(!$self -> uuid) {
-      my $uuid = substr($ug->create_b64(),0,20);
-      $uuid =~ tr{+/}{-_};
-      $self -> uuid($uuid);
-    }
+around insert => sub {
+  my $orig = shift;
+  my $self = shift;
 
-    my $new = $self -> $orig(@_);
+  my $new = $self -> $orig(@_);
 
-    $new -> create_related('versions', {
-      edition => $new -> owner -> current_edition,
-    });
-    $new;
-  };
-}
+  $new -> create_related('versions', {
+    edition => $new -> owner -> current_edition,
+  });
+  $new;
+};
 
 override update => sub {
   my($self, $columns) = @_;

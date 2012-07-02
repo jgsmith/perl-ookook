@@ -2,13 +2,16 @@ package OokOok::Controller::Root;
 use Moose;
 use namespace::autoclean;
 
-BEGIN { extends 'Catalyst::Controller' }
+BEGIN { extends 'Catalyst::Controller::REST' }
 
-#
-# Sets the actions in this controller to be registered with no prefix
-# so they function identically to actions created in MyApp.pm
-#
-__PACKAGE__->config(namespace => '');
+__PACKAGE__ -> config(
+  namespace => '',
+  map => {
+    'text/html' => [ 'View', 'HTML' ],
+  },
+  default => 'text/html',
+);
+
 
 =head1 NAME
 
@@ -26,10 +29,57 @@ The root page (/)
 
 =cut
 
-sub index :Path :Args(0) {
+sub index :Path :Args(0) :ActionClass('REST') { }
+
+sub index_GET {
     my ( $self, $c ) = @_;
 
-    $c -> stash(template => 'index.tt2');
+    if($c -> user) {
+      my %embeddings = (
+        projects => OokOok::Collection::Project->new(c=>$c)->GET,
+        libraries => OokOok::Collection::Library->new(c=>$c)->GET,
+        themes => OokOok::Collection::Theme->new(c=>$c)->GET,
+      );
+      
+      $self -> status_ok($c,
+        entity => {
+          _links => { 
+            self => $c->uri_for('/') -> as_string,
+            projects => $embeddings{projects}{_links}{self},
+            libraries => $embeddings{libraries}{_links}{self},
+            themes => $embeddings{themes}{_links}{self},
+          },
+          _embedded => {
+            projects => $embeddings{projects}{_embedded}{projects},
+            libraries => $embeddings{libraries}{_embedded}{libraries},
+            themes => $embeddings{themes}{_embedded}{themes},
+          }
+        }
+      );
+      $c -> stash(template => 'dashboard.tt2');
+    }
+    else {
+      $self -> status_ok($c,
+        entity => {
+          _links => { self => $c -> uri_for('/') -> as_string },
+        }
+      );
+      $c -> stash(template => 'index.tt2');
+    }
+}
+
+sub index_OPTIONS {
+  my($self, $c) = @_;
+
+  $c -> response -> status(200);
+  $c -> response -> headers -> header(
+    Allow => [qw/GET OPTIONS/],
+    Accept => [qw{application/json text/html}],
+  );
+  $c -> response -> body('');
+  $c -> response -> content_length(0);
+  $c -> response -> content_type("text/plain");
+  $c -> detach;
 }
 
 =head2 default
@@ -45,27 +95,13 @@ sub default :Path {
     $c->response->status(404);
 }
 
-=head2 dashboard
-
-Show the user an overview of their account and activity.
-
-=cut
-
-sub dashboard :Path('dashboard') :Args(0) {
-    my($self, $c) = @_;
-
-    $c -> stash -> {projects} = [$c -> model("DB::Project") -> all];
-    $c -> stash -> {themes} = [$c -> model("DB::Theme") -> all];
-    $c -> stash -> {libraries} = [$c -> model("DB::Library") -> all];
-}
-
 =head2 end
 
 Attempt to render a view, if needed.
 
 =cut
 
-sub end : ActionClass('RenderView') {}
+#sub end : ActionClass('RenderView') {}
 
 =head1 AUTHOR
 

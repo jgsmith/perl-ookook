@@ -1,12 +1,12 @@
 use utf8;
-package OokOok::Schema::Result::Collective;
+package OokOok::Schema::Result::Board;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-OokOok::Schema::Result::Collective
+OokOok::Schema::Result::Board
 
 =cut
 
@@ -30,11 +30,11 @@ extends 'DBIx::Class::Core';
 
 __PACKAGE__->load_components("InflateColumn::DateTime");
 
-=head1 TABLE: C<collective>
+=head1 TABLE: C<board>
 
 =cut
 
-__PACKAGE__->table("collective");
+__PACKAGE__->table("board");
 
 =head1 ACCESSORS
 
@@ -80,9 +80,13 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-24 14:40:01
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:5lh2GnilWcxajdoMJZAVbw
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-01 13:25:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:LWOP9oG5XvbOGWbA+fmcAw
 
+with 'OokOok::Role::Schema::Result::UUID';
+
+__PACKAGE__ -> has_many(board_ranks => 'OokOok::Schema::Result::BoardRank', 'board_id');
+#__PACKAGE__ -> many_to_many(board_members => 'board_ranks', 'board_member');
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

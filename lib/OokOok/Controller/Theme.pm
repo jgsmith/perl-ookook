@@ -26,7 +26,6 @@ web pages. These should not be considered a general purpose API.
 
 __PACKAGE__ -> config(
   map => {
-    'text/html' => [ 'View', 'HTML' ],
   },
   default => 'text/html',
   current_model => 'DB::Theme',

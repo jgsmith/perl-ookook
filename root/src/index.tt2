@@ -1,3 +1,43 @@
-<p>
-This is the front page.
-</p>
+<div id="messages">
+</div>
+<div class="row" id="browser-container">
+
+</div>
+<script type="text/javascript">
+  $(function() {
+    /* ookook.util.get({
+      url: '/',
+      success: function(data) {
+        console.log(data);
+      }
+    }); */
+    var app = ookook.application.top.initInstance($('#browser-container'));
+
+    app.run();
+    app.ready(function() {
+      app.dataStore.data.loadItems([{
+        id: 'hub-projects',
+        type: 'SectionLink',
+        rank: 2,
+        parent: 'top',
+        title: 'Projects'
+      }, {
+        id: 'hub-about',
+        type: 'EmptyItem',
+        rank: 1,
+        parent: 'top',
+        title: 'About'
+      [% FOREACH method IN signupMethods %]
+      }, {
+        id: 'hub-signup-[% method.title %]',
+        type: 'URLLink',
+        rank: 1,
+        parent: 'top',
+        title: 'Sign in with [% method.title %]',
+        class: 'welcome',
+        link: '[% method.url %]'
+      [% END %]
+      }]);
+    });
+  });
+</script>

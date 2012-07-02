@@ -58,14 +58,14 @@ The following methods are provided for collections.
 =cut
 
 sub GET {
-  my($self) = @_;
+  my($self, $deep) = @_;
 
   my $things = $self -> resource_name;
   my $rclass = $self -> resource_class;
   my $things_q = $self -> c -> model($self -> resource_model);
- 
+
   if($self -> can("constrain_collection")) {
-    $things_q = $self -> constrain_collection($things_q);
+    $things_q = $self -> constrain_collection($things_q, $deep);
   }
 
   my $json = {

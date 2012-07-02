@@ -1,29 +1,186 @@
-[%- META title = 'Dashboard' -%]
 <div id="messages">
 </div>
-<div class="page-header">
-<h1>Dashboard</h1>
-</div>
 <div class="row">
-
-<div class="span3 well">
-  <table class="table">
-    <caption>By the Numbers</caption>
-    <tbody>
-      <tr>
-        <td>Projects:</td><td align="right">[% projects.size %]</td>
-      </tr>
-      <tr>
-        <td>Themes:</td><td align="right">[% themes.size %]</td>
-      </tr>
-      <tr>
-        <td>Libraries:</td><td align="right">[% libraries.size %]</td>
-      </tr>
-      <tr>
-        <td>Databases:</td><td align="right">0</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="span2"><h1 id="level-up"></h1></div>
 </div>
+<div class="row" id="browser-container">
 
 </div>
+<script type="text/javascript">
+  $(function() {
+    var app = ookook.application.top.initInstance($('#browser-container'));
+
+    app.run();
+    History.Adapter.bind(window,'statechange',function(){ 
+      console.log("statechange called");
+      var State = History.getState();
+      console.log(State);
+      if(State.data) {
+        app.setMetroParent(State.data.parent);
+      }
+    });
+    $("#level-up").click(function() {
+      var item = app.dataView.metroItems.getItem(app.getMetroParent());
+      if(item && item.parent) {
+        app.setMetroParent(item.parent[0]);
+        if(item.parent == "top") {
+          $("#level-up").animate({
+            height: 0,
+            width: 0,
+            opacity: 0
+          }, 250, function() { $("#level-up").hide() });
+        }
+      }
+    });
+    $("#level-up").width(0);
+    $("#level-up").height(0);
+    $("#level-up").attr({
+      opacity: 0
+    });
+    $("#level-up").hide();
+    app.ready(function() {
+      // now look for a #id we can use to go to a state
+      var bits = window.location.href.split('#');
+      if(bits.length > 1) {
+        if(bits[1] === "") {
+          bits[1] = "top";
+        }
+        app.setMetroParent(bits[1]);
+      }
+      else {
+        app.setMetroParent('top');
+      }
+      app.dataStore.data.loadItems([{
+        id: 'section-projects',
+        type: 'SectionLink',
+        rank: 2,
+        parent: 'top',
+        title: 'Projects'
+      }, {
+        id: 'section-libraries',
+        type: 'SectionLink',
+        rank: 1,
+        parent: 'top',
+        title: 'Libraries'
+      }, {
+        id: 'section-themes',
+        type: 'SectionLink',
+        rank: 1,
+        parent: 'top',
+        title: 'Themes'
+      }, {
+        id: 'section-boards',
+        type: 'SectionLink',
+        rank: 1,
+        parent: 'top',
+        title: 'Editorial Boards'
+      }, {
+        id: 'section-settings',
+        type: 'SectionLink',
+        rank: 1,
+        parent: 'top',
+        title: 'Settings'
+      }, {
+        id: 'section-profile',
+        type: 'SectionLink',
+        rank: 1,
+        parent: 'top',
+        title: 'Profile'
+      }, {
+        id: 'link-logout',
+        type: 'URLLink',
+        rank: 1,
+        parent: 'top',
+        title: 'Logout',
+        link: '/oauth/logout',
+        class: 'danger'
+      }]);
+
+      ookook.util.get({
+        url: '/project',
+        success: function(data) {
+          var items = [];
+          //console.log(data);
+          $.each(data['_embedded'].projects, function(idx, project) {
+            // we want projects that are owned by the user to be
+            // rank 2 - others can be rank 1
+            var item = {
+              parent: 'section-projects',
+              id: 'project-' + project.uuid,
+              rank: 1,
+              title: project.name,
+              type: 'SectionLink',
+              description: project.description
+            };
+            items.push(item);
+          });
+          items.push({
+            parent: 'section-projects',
+            id: 'projects-new',
+            type: 'EmptyItem', // for now
+            rank: 1,
+            title: 'New Project',
+            class: 'welcome plus'
+          });
+          app.dataStore.data.loadItems(items);
+        }
+      });
+      ookook.util.get({
+        url: '/library',
+        success: function(data) {
+          var items = [];
+          //console.log(data);
+          $.each(data['_embedded'].libraries, function(idx, library) {
+            // we want things that are owned by the user to be
+            // rank 2 - others can be rank 1
+            var item = {
+              parent: 'section-libraries',
+              id: 'library-' + library.uuid,
+              rank: 1,
+              title: library.name,
+              type: 'SectionLink',
+              description: library.description
+            };
+            items.push(item);
+          });
+          items.push({
+            parent: 'section-libraries',
+            id: 'library-new',
+            type: 'EmptyItem',
+            rank: 1,
+            title: 'New Library',
+            class: 'welcome plus'
+          });
+          app.dataStore.data.loadItems(items);
+        }
+      });
+      ookook.util.get({
+        url: '/profile',
+        success: function(data) {
+          //console.log(data);
+          var items = [];
+          $.each(data.services, function(idx, service) {
+            var info = {
+              id: "service-" + service.name,
+              type: 'EmptyItem',
+              title: service.name,
+              description: service.name + " is connected to your profile.",
+              parent: "section-profile",
+              rank: 1
+            };
+            if(!service.connected) {
+              info.class = "welcome";
+              info.link  = service.url;
+              info.title = service.name;
+              info.description = "Select to connect " + service.name + " to your profile.";
+              info.type = 'URLLink';
+            };
+            items.push(info);
+          });
+          //console.log(items);
+          app.dataStore.data.loadItems(items);
+        }
+      });
+    });
+  });
+</script>

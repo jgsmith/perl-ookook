@@ -50,7 +50,7 @@ __PACKAGE__->table("theme");
   is_nullable: 0
   size: 20
 
-=head2 collective_id
+=head2 board_id
 
   data_type: 'integer'
   is_nullable: 1
@@ -62,7 +62,7 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "uuid",
   { data_type => "char", is_nullable => 0, size => 20 },
-  "collective_id",
+  "board_id",
   { data_type => "integer", is_nullable => 1 },
 );
 
@@ -79,8 +79,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-24 14:40:01
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ATxsF8nYhk7xH+lNd/8STA
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-01 13:25:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ctXRqxmWwX12XeeZc2e0eA
 
 __PACKAGE__ -> has_many(
   editions => 'OokOok::Schema::Result::ThemeEdition',
@@ -96,6 +96,8 @@ __PACKAGE__ -> has_many(
   styles => 'OokOok::Schema::Result::ThemeStyle',
   'theme_id'
 );
+
+__PACKAGE__ -> belongs_to( board => 'OokOok::Schema::Result::Board', 'board_id' );
 
 with 'OokOok::Role::Schema::Result::HasEditions';
 

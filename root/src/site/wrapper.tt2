@@ -8,30 +8,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>[% template.title %]</title>
     <script src="[% c.uri_for('/static/js/jquery.js') %]"></script>
+    <script src="[% c.uri_for('/static/js/history.js') %]"></script>
     <script src="[% c.uri_for('/static/js/bootstrap.min.js') %]"></script>
     <script src="[% c.uri_for('/static/js/mithgrid.min.js') %]"></script>
+    <script src="[% c.uri_for('/static/js/masonry.js') %]"></script>
     <script src="[% c.uri_for('/static/js/application.js') %]"></script>
-    [% IF template.is_dashboard %]
-      <script src="[% c.uri_for('/static/js/dashboard.js') %]"></script>
-    [% END %]
-    [% IF template.use_wymeditor %]
-      <script src="[% c.uri_for('/static/js/wymeditor/jquery.wymeditor.js') %]"></script>
-    [% END %]
-    [% IF template.use_aceeditor %]
-      <script src="[% c.uri_for('/static/js/ace/ace.js') %]"></script>
-      <script src="[% c.uri_for('/static/js/ace/mode-xml.js') %]"></script>
-    [% END %]
+    <script src="[% c.uri_for('/static/js/wymeditor/jquery.wymeditor.js') %]"></script>
+    <script src="[% c.uri_for('/static/js/ace/ace.js') %]"></script>
+    <script src="[% c.uri_for('/static/js/ace/mode-xml.js') %]"></script>
     <link href="[% c.uri_for('/static/css/bootstrap.css') %]" rel="stylesheet">
     <link href="[% c.uri_for('/static/css/application.css') %]" rel="stylesheet">
     <style type="text/css">
       body {
-        padding-top: 60px;
+        padding-top: 20px;
         padding-bottom: 40px;
       }
     </style>
   </head>
   <body>
-    <div class="navbar navbar-fixed-top">
+    <!-- div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -41,52 +36,40 @@
           </a>
           <a class="brand" href="#">OokOok</a>
           <div class="nav-collapse">
-            <ul class="nav">
-              <li class="[% active.dashboard %]"><a href="/dashboard">Home</a></li>
-              <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                  Project
-                  <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu">
-                  [% FOR project IN projects %]
-                    <li><a href="[% c.uri_for("/project/" _ project.uuid) %]">[% project.current_edition.name %]</a></li>
-                  [% END %]
-                  <li class="divider"></li>
-                  <li><a href="/project/new">New Project</a></li>
-                </ul>
-              </li>
-              <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                  Theme
-                  <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu">
-                  [% FOR theme IN themes %]
-                    <li><a href="[% c.uri_for("/theme/" _ theme.uuid) %]">[% theme.current_edition.name %]</a></li>
-                  [% END %]
-                  <li class="divider"></li>
-                  <li><a href="/theme/new">New Theme</a></li>
-                </ul>
-              </li>
-              <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                  Library
-                  <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu">
-                  [% FOR library IN libraries %]
-                    <li><a href="[% c.uri_for("/library/" _ library.uuid) %]">[% library.current_edition.name %]</a></li>
-                  [% END %]
-                  <li class="divider"></li>
-                  <li><a href="/library/new">New Library</a></li>
-                </ul>
-              </li>
+            <ul class="nav pull-right">
+              [% FOREACH link IN navigation %]
+                [% IF !link.logged_in || c.user.defined %]
+                  <li [% IF c.request.uri == link.url %]
+                        class="active"
+                      [% END %]>
+                    <a href="[% link.url %]">[% link.title %]</a>
+                  </li>
+                [% END %]
+              [% END %]
+              [% IF c.user %]
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Account <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="#profile">Profile</a></li>
+                    <li><a href="#settings">Settings</a></li>
+                    <li><a href="[% c.uri_for('/oauth/logout') %]">Log Out</a></li>
+                  </ul>
+                 </li>
+              [% ELSE %]
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Sign In <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    [% FOREACH method IN signupMethods %]
+                      <li><a class="[% method.class %] " href="[% method.url %]">Sign in with [% method.title %]</a></li>
+                    [% END %]
+                  </ul>
+                </li>
+              [% END %]
             </ul>
           </div>
         </div>
       </div>
-    </div>
+    </div -->
     <div class="container">
       [% IF status_msg %]
         <div class="alert alert-success">
@@ -101,9 +84,9 @@
         </div>
       [% END %]
       [% content %]
-      <footer>
+      <!-- footer>
         <p>&copy; 2012</p>
-      </footer>
+      </footer -->
     </div>
   </body>
 </html>

@@ -50,7 +50,7 @@ __PACKAGE__->table("project");
   is_nullable: 0
   size: 20
 
-=head2 collective_id
+=head2 board_id
 
   data_type: 'integer'
   is_nullable: 1
@@ -62,7 +62,7 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "uuid",
   { data_type => "char", is_nullable => 0, size => 20 },
-  "collective_id",
+  "board_id",
   { data_type => "integer", is_nullable => 1 },
 );
 
@@ -79,8 +79,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-24 14:42:40
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lUgIXttzcBivzSmfbYxbpQ
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-01 13:25:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:DChsPi0zSmJtElf5e4Engg
 
 __PACKAGE__->has_many(
   editions => 'OokOok::Schema::Result::Edition',
@@ -96,6 +96,8 @@ __PACKAGE__->has_many(
   snippets => 'OokOok::Schema::Result::Snippet',
   'project_id'
 );
+
+__PACKAGE__ -> belongs_to( board => 'OokOok::Schema::Result::Board', 'board_id' );
 
 with 'OokOok::Role::Schema::Result::HasEditions';
 
@@ -149,38 +151,6 @@ sub edition_path {
   return $self -> _apply_date_constraint($q, "", $date) -> all;
 }
 
-#sub sitemap_for_date {
-#  my($self, $date) = @_;
-#
-#  my $instance = $self -> edition_for_date($date);
-#
-#  if($instance) {
-#    return $instance -> sitemap;
-#  }
-#  else {
-#    return +{};
-#  }
-#}
-
-#sub current_sitemap { $_[0] -> sitemap_for_date; }
-  
-#sub page_for_date {
-#  my($self, $uuid, $date) = @_;
-#
-#  return $self -> relation_for_date("Page", $uuid, $date);
-#}
-#
-#sub layout_for_date {
-#  my($self, $uuid, $date) = @_;
-#
-#  return $self -> relation_for_date("Layout", $uuid, $date);
-#}
-#
-#sub snippet_for_date {
-#  my($self, $name, $date) = @_;
-#
-#  return $self -> relation_for_date("Snippet", $name, $date);
-#}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

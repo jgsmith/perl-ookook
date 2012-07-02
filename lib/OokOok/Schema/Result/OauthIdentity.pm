@@ -1,12 +1,12 @@
 use utf8;
-package OokOok::Schema::Result::User;
+package OokOok::Schema::Result::OauthIdentity;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-OokOok::Schema::Result::User
+OokOok::Schema::Result::OauthIdentity
 
 =cut
 
@@ -30,11 +30,11 @@ extends 'DBIx::Class::Core';
 
 __PACKAGE__->load_components("InflateColumn::DateTime");
 
-=head1 TABLE: C<user>
+=head1 TABLE: C<oauth_identity>
 
 =cut
 
-__PACKAGE__->table("user");
+__PACKAGE__->table("oauth_identity");
 
 =head1 ACCESSORS
 
@@ -44,25 +44,41 @@ __PACKAGE__->table("user");
   is_auto_increment: 1
   is_nullable: 0
 
-=head2 uuid
+=head2 user_id
 
-  data_type: 'char'
+  data_type: 'integer'
   is_nullable: 0
-  size: 20
 
-=head2 lang
+=head2 oauth_service_id
+
+  data_type: 'integer'
+  is_nullable: 1
+
+=head2 oauth_user_id
 
   data_type: 'varchar'
   is_nullable: 1
-  size: 8
+  size: 128
 
-=head2 name
+=head2 screen_name
 
   data_type: 'varchar'
   is_nullable: 1
   size: 255
 
-=head2 url
+=head2 token
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 255
+
+=head2 token_secret
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 255
+
+=head2 profile_img_url
 
   data_type: 'varchar'
   is_nullable: 1
@@ -73,13 +89,19 @@ __PACKAGE__->table("user");
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "uuid",
-  { data_type => "char", is_nullable => 0, size => 20 },
-  "lang",
-  { data_type => "varchar", is_nullable => 1, size => 8 },
-  "name",
+  "user_id",
+  { data_type => "integer", is_nullable => 0 },
+  "oauth_service_id",
+  { data_type => "integer", is_nullable => 1 },
+  "oauth_user_id",
+  { data_type => "varchar", is_nullable => 1, size => 128 },
+  "screen_name",
   { data_type => "varchar", is_nullable => 1, size => 255 },
-  "url",
+  "token",
+  { data_type => "varchar", is_nullable => 1, size => 255 },
+  "token_secret",
+  { data_type => "varchar", is_nullable => 1, size => 255 },
+  "profile_img_url",
   { data_type => "varchar", is_nullable => 1, size => 255 },
 );
 
@@ -96,15 +118,10 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-01 11:24:08
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7PUIuiEUIIVzJLuFjSsEtQ
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-01 11:44:04
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:LOe3I2T10AZiPpk3hlDN2Q
 
-with 'OokOok::Role::Schema::Result::UUID';
-
-__PACKAGE__ -> has_many( oauth_identities => 'OokOok::Schema::Result::OauthIdentity', 'user_id' );
-
-__PACKAGE__ -> has_many( board_members => 'OokOok::Schema::Result::BoardMember', 'user_id' );
-__PACKAGE__ -> many_to_many( board_ranks => 'board_members', 'board_rank' );
+__PACKAGE__ -> belongs_to( user => 'OokOok::Schema::Result::User', 'user_id' );
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

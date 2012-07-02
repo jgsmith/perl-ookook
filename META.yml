@@ -22,12 +22,13 @@ no_index:
 requires:
   Catalyst::Action::REST: 0
   Catalyst::Action::RenderView: 0
-  Catalyst::Authentication::Credential::Twitter: 0
+  Catalyst::Authentication::Store::DBIx::Class: 0
   Catalyst::Controller::HTML::FormFu: 0
   Catalyst::Model::DBIC::Schema: 0
   Catalyst::Model::File: 0
   Catalyst::Plugin::ConfigLoader: 0
   Catalyst::Plugin::Session: 0
+  Catalyst::Plugin::Session::PerUser: 0
   Catalyst::Plugin::Session::State::Cookie: 0
   Catalyst::Plugin::Session::Store::FastMmap: 0
   Catalyst::Plugin::StackTrace: 0
@@ -54,7 +55,7 @@ requires:
   MooseX::MethodAttributes::Role: 0
   MooseX::NonMoose: 0.16
   MooseX::Singleton: 0.29
-  Net::Twitter: 0
+  Net::OAuth: 0
   Set::Scalar: 0
   String::CamelCase: 0
   Workflow: 0

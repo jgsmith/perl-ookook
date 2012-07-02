@@ -9,6 +9,8 @@ __PACKAGE__->config(
     render_die => 1,
     PRE_PROCESS => 'config/main.tt2',
     WRAPPER => 'site/wrapper.tt2',
+    ABSOLUTE => 1,
+    RELATIVE => 1,
 );
 
 #

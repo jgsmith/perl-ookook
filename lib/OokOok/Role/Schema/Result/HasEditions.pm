@@ -2,6 +2,8 @@ package OokOok::Role::Schema::Result::HasEditions;
 
 use Moose::Role;
 
+with 'OokOok::Role::Schema::Result::UUID';
+
 =head1 NAME
 
 OokOok::Role::Schema::Result::HasEditions
@@ -33,21 +35,21 @@ The following methods are overridden or otherwise altered in functionality.
 
 =cut
 
-use Data::UUID ();
-use DateTime;
-
-{
-  my $ug = Data::UUID -> new;
-
-  before insert => sub {
-    my($self) = @_;
-
-    my $uuid = substr($ug -> create_b64(),0,20);
-    $uuid =~ tr{+/}{-_};
-    $self -> uuid($uuid);
-    #$self -> created_on(DateTime->now);
-  };
-}
+#use Data::UUID ();
+#use DateTime;
+#
+#{
+#  my $ug = Data::UUID -> new;
+#
+#  before insert => sub {
+#    my($self) = @_;
+#
+#    my $uuid = substr($ug -> create_b64(),0,20);
+#    $uuid =~ tr{+/}{-_};
+#    $self -> uuid($uuid);
+#    #$self -> created_on(DateTime->now);
+#  };
+#}
 
 after insert => sub {
   $_[0] -> create_related('editions', {});

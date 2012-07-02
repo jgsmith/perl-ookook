@@ -24,6 +24,7 @@ requires 'Catalyst::Plugin::Static::Simple';
 requires 'Catalyst::Plugin::StackTrace';
 requires 'Catalyst::Plugin::StatusMessage';
 requires 'Catalyst::Plugin::Session';
+requires 'Catalyst::Plugin::Session::PerUser';
 requires 'Catalyst::Plugin::Session::State::Cookie';
 requires 'Catalyst::Plugin::Session::Store::FastMmap';
 requires 'Catalyst::Plugin::Unicode::Encoding';
@@ -33,7 +34,7 @@ requires 'Catalyst::View::Thumbnail';
 
 requires 'CatalystX::RoleApplicator';
 
-requires 'Catalyst::Authentication::Credential::Twitter';
+requires 'Catalyst::Authentication::Store::DBIx::Class';
 
 requires 'Config::General'; # This should reflect the config file format you've chosen
                  # See Catalyst::Plugin::ConfigLoader for supported formats
@@ -54,7 +55,7 @@ requires 'HTML::FormFu::Model::DBIC';
 requires 'JSON';
 requires 'Lingua::EN::Inflect';
 requires 'LWP::Protocol::https';
-requires 'Net::Twitter';
+requires 'Net::OAuth';
 requires 'Set::Scalar';
 requires 'String::CamelCase';
 requires 'Workflow';

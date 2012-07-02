@@ -4,19 +4,41 @@ PRAGMA foreign_keys = ON;
 --
 
 CREATE TABLE user (
-  id      INTEGER PRIMARY KEY
+  id      INTEGER PRIMARY KEY,
+  uuid    CHAR(20) NOT NULL,
+  lang    VARCHAR(8),
+  name    VARCHAR(255),
+  url     VARCHAR(255)
 );
 
-CREATE TABLE user_identity (
-  id      INTEGER PRIMARY KEY,
-  user_id INTEGER NOT NULL
-); 
+CREATE TABLE oauth_identity (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  oauth_service_id INTEGER, -- defined in the ookook_local.conf file
+  oauth_user_id VARCHAR(128), -- internal unique id from service
+  screen_name VARCHAR(255), -- public unique id from service
+  token VARCHAR(255),
+  token_secret VARCHAR(255),
+  profile_img_url VARCHAR(255)
+);
+
+--
+-- api keys are for programattic access to the API when OAuth isn't an
+-- option -- these don't grant access to certain things, like profile
+-- information
+--
+CREATE TABLE api_key (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  token VARCHAR(255),
+  token_secret VARCHAR(255)
+);
 
 --
 -- Groups
 --
 
-CREATE TABLE collective (
+CREATE TABLE board (
   id       INTEGER PRIMARY KEY,
   uuid     CHAR(20),
   name     VARCHAR(255)
@@ -25,18 +47,18 @@ CREATE TABLE collective (
 -- overall admin is the top-rank (position==0)
 -- only admin may demote themselves, but we may allow a voting system
 --  for promotion/demotion
-CREATE TABLE collective_rank (
+CREATE TABLE board_rank (
   id       INTEGER PRIMARY KEY,
-  collective_id INTEGER NOT NULL,
+  board_id INTEGER NOT NULL,
   name     VARCHAR(255),
   position INTEGER NOT NULL, -- lower numbers have higher rank
   is_editor BOOLEAN NOT NULL DEFAULT FALSE
 );  
 
-CREATE TABLE collective_member (
+CREATE TABLE board_member (
   id       INTEGER PRIMARY KEY,
   user_id  INTEGER NOT NULL,
-  collective_rank_id INTEGER NOT NULL
+  board_rank_id INTEGER NOT NULL
 );
  
 --
@@ -45,7 +67,7 @@ CREATE TABLE collective_member (
 CREATE TABLE project (
   id      INTEGER PRIMARY KEY,
   uuid    char(20) NOT NULL,
-  collective_id INTEGER
+  board_id INTEGER
 );
 
 CREATE TABLE edition (
@@ -123,7 +145,7 @@ CREATE TABLE snippet_version (
 CREATE TABLE theme (
   id      INTEGER PRIMARY KEY,
   uuid    char(20) NOT NULL,
-  collective_id INTEGER
+  board_id INTEGER
 );
 
 CREATE TABLE theme_edition (
@@ -178,7 +200,7 @@ CREATE TABLE theme_style_version (
 CREATE TABLE library (
   id INTEGER PRIMARY KEY,
   uuid CHAR(20) NOT NULL,
-  collective_id INTEGER
+  board_id INTEGER
 );
 
 CREATE TABLE library_edition (
@@ -221,7 +243,7 @@ CREATE TABLE function_session (
 CREATE TABLE database (
   id INTEGER PRIMARY KEY,
   uuid CHAR(20) NOT NULL,
-  collective_id INTEGER
+  board_id INTEGER
 );
 
 CREATE TABLE database_edition (
