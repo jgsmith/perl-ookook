@@ -44,6 +44,12 @@ sub index_GET {
       };
     }
 
+#    $profile -> {_links}{oauth_logout} = {
+#      url => $c -> uri_for('/oauth/logout') -> as_string,
+#      title => "Log out",
+#      dangerous => 1,
+#    };
+
     $self -> status_ok($c,
       entity => $profile
     );

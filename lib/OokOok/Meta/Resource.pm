@@ -28,6 +28,13 @@ has embedded => (
   lazy => 1,
 );
 
+has schema => (
+  is => 'rw',
+  isa => 'HashRef',
+  lazy => 1,
+  builder => '_build_schema',
+);
+
 has resource_collection_class => (
   is => 'rw',
   isa => 'Str',
@@ -93,6 +100,8 @@ sub add_prop {
   else {
     $self -> properties -> {$key} = \%config;
   }
+  my $method = $config{source} || sub { $_[0] -> source -> $key };
+  $self -> add_method( $key => $method );
 }
 
 sub get_prop_list { keys %{$_[0] -> properties} }
@@ -125,6 +134,8 @@ sub get_owner_list { keys %{$_[0]->owners} }
 
 sub has_owner { defined $_[0]->owners->{$_[1]} }
 
+sub get_owner { $_[0]->owners->{$_[1]} }
+
 sub add_embedded {
   my($self, $key, %config) = @_;
 
@@ -149,5 +160,37 @@ sub add_embedded {
 sub get_embedded_list { keys %{$_[0]->embedded} }
 
 sub has_embedded { defined $_[0]->embedded->{$_[1]} }
+
+sub get_embedded { $_[0]->embedded->{$_[1]} }
+
+sub _build_schema {
+  my($self) = @_;
+
+  my $schema = {};
+
+  for my $prop ($self -> get_prop_list) {
+    my $info = $self -> get_prop($prop);
+    $schema -> {properties} -> {$prop} -> {source} = $info -> {maps_to} || $prop;
+    $schema -> {properties} -> {$prop} -> {is} = $info -> {is} || 'rw';
+    $schema -> {properties} -> {$prop} -> {valueType} = $info -> {value_type} || 'text';
+  }
+
+  for my $key ($self -> get_embedded_list) {
+    $schema -> {embedded} -> {$key} = {};
+  }
+
+  for my $key ($self -> get_owner_list) {
+    my $info = $self -> get_owner($key);
+    $schema -> {belongs_to} -> {$key} = {
+      source => $info -> {maps_to} || $key,
+      is => $info->{is} || 'ro',
+    };
+    if($info->{value_type}) {
+      $schema -> {belongs_to} -> {$key} -> {valueType} = $info->{value_type};
+    }
+  }
+
+  $schema;
+}
 
 1;

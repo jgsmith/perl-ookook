@@ -6,33 +6,33 @@ use namespace::autoclean;
 sub constrain_collection {
   my($self, $q, $deep) = @_;
 
-  return $q;
-
   if($self -> c -> user) {
     if($deep) {
       # we want all publicly accessible projects and projects managed by
       # this person
       $q = $q -> search({
-        'board_member.user_id' => $self -> c -> user -> id,
-        'board_member.board_rank_id' => \'board_rank.id',
-        'board_rank.board_id' => \'project.board_id',
+        'board_members.user_id' => $self -> c -> user -> id,
       }, {
-        join => [qw/board_member board_rank/],
+        join => { board => { board_ranks => 'board_members' } }
       });
     }
     else {
       # we only want projects managed/owned/edited by this person
       $q = $q -> search({
-        'board_member.user_id' => $self -> c -> user -> id,
-        'board_member.board_rank_id' => \'board_rank.id',
-        'board_rank.board_id' => \'project.board_id',
+        'board_members.user_id' => $self -> c -> user -> id,
       }, {
-        join => [qw/board_member board_rank/],
+        join => { board => { board_ranks => 'board_members' } }
       });
     }
   }
   else {
     # we only want projects with a publicly available edition
+    $q = $q -> search({ 
+        "editions.closed_on" => { '!=' => undef },
+      }, {
+        join => [qw/editions/],
+      }
+    );
   }
   $q;
 }
@@ -53,12 +53,12 @@ sub POST {
   });
   $board -> insert;
 
-  my $rank = $board -> create_related('board_rank', {
+  my $rank = $board -> create_related('board_ranks', {
     name => 'Administrator',
     position => 0,
     is_editor => 1,
   });
-  $rank -> create_related('board_member', {
+  $rank -> create_related('board_members', {
     user_id => $owner -> id,
   });
 

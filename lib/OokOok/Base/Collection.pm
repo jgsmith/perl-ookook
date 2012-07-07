@@ -18,19 +18,26 @@ sub resource_model { $_[0] -> meta -> resource_model }
 
 sub resource_name { $_[0] -> meta -> resource_name }
 
+sub resource {
+  my($self, $uuid) = @_;
+
+  my $thing = $self -> c -> model($self -> resource_model) -> find({uuid => $uuid});
+  if($thing) {
+    return $self -> resource_class -> new(
+      source => $thing,
+      c => $self -> c,
+    );
+  }
+}
+ 
+
 sub resource_for_url {
   my($self, $url) = @_;
 
   my $prefix = $self -> link . '/';
   if(substr($url, 0, length($prefix), '') eq $prefix) {
     if($url =~ m{^([-A-Za-z0-9_]{20})(/|$)}) {
-      my $thing = $self -> c -> model($self -> resource_model) -> find({uuid => $1});
-      if($thing) {
-        return $self -> resource_class -> new(
-          source => $thing,
-          c => $self -> c,
-        );
-      }
+      return $self -> resource($1);
     }
   }
 }
@@ -38,6 +45,11 @@ sub resource_for_url {
 sub verify { 
   my $self = shift;
   $self -> resource_class -> new(c => $self -> c) -> verify(@_) 
+}
+
+sub schema {
+  my $self = shift;
+  $self -> resource_class -> new(c => $self -> c) -> schema
 }
 
 sub link {
@@ -57,6 +69,14 @@ The following methods are provided for collections.
 
 =cut
 
+sub can_GET { 1 } # by default, the collection can be retrieved - the list of
+                  # items is defined by the constraint on the collection
+sub can_POST { 0 } # by default, no one can POST
+
+sub _GET {
+  shift -> GET(@_);
+}
+
 sub GET {
   my($self, $deep) = @_;
 
@@ -72,13 +92,12 @@ sub GET {
     _links => {
       self => $self -> link
     },
-    _embedded => {
-      $things => [
-        map {
-          $rclass -> new(c => $self -> c, source => $_) -> GET
-        } $things_q -> all
-      ],
-    },
+    _schema => $self -> schema,
+    _embedded => [
+      map {
+        $rclass -> new(c => $self -> c, source => $_) -> GET
+      } $things_q -> all
+    ],
   };
 
   return $json;
@@ -87,6 +106,16 @@ sub GET {
 =head2 POST
 
 =cut
+
+sub _POST {
+  my $self = shift;
+
+  die "Unable to POST unless authenticated" unless $self -> c -> user;
+
+  die "Unable to POST" unless $self -> can_POST;
+
+  $self -> POST(@_);
+}
 
 sub POST {
   my($self, $json) = @_;

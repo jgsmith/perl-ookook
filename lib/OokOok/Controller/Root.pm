@@ -2,6 +2,14 @@ package OokOok::Controller::Root;
 use Moose;
 use namespace::autoclean;
 
+use OokOok::Collection::Project;
+use OokOok::Collection::Board;
+use OokOok::Collection::Theme;
+use OokOok::Collection::Library;
+use OokOok::Collection::Database;
+
+use YAML::Any ();
+
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__ -> config(
@@ -34,38 +42,71 @@ sub index :Path :Args(0) :ActionClass('REST') { }
 sub index_GET {
     my ( $self, $c ) = @_;
 
+    my %embeddings = (
+      projects => OokOok::Collection::Project->new(c=>$c),
+      boards => OokOok::Collection::Board->new(c=>$c),
+      themes => OokOok::Collection::Theme->new(c=>$c),
+      libraries => OokOok::Collection::Library->new(c=>$c),
+      databases => OokOok::Collection::Database->new(c=>$c),
+    );
+
+    my $entity = {
+      _links => {
+        self => $c->uri_for('/') -> as_string,
+      },
+      _auth => { authenticated => 0 },
+      _embedded => [
+        {
+          _links => $embeddings{projects} -> GET -> {_links},
+          dataType => 'Project',
+          title => 'Projects',
+          id => 'projects',
+          schema => $embeddings{projects} -> schema,
+        },
+      ],
+    };
+
     if($c -> user) {
-      my %embeddings = (
-        projects => OokOok::Collection::Project->new(c=>$c)->GET,
-        libraries => OokOok::Collection::Library->new(c=>$c)->GET,
-        themes => OokOok::Collection::Theme->new(c=>$c)->GET,
-      );
-      
-      $self -> status_ok($c,
-        entity => {
-          _links => { 
-            self => $c->uri_for('/') -> as_string,
-            projects => $embeddings{projects}{_links}{self},
-            libraries => $embeddings{libraries}{_links}{self},
-            themes => $embeddings{themes}{_links}{self},
-          },
-          _embedded => {
-            projects => $embeddings{projects}{_embedded}{projects},
-            libraries => $embeddings{libraries}{_embedded}{libraries},
-            themes => $embeddings{themes}{_embedded}{themes},
-          }
-        }
-      );
-      $c -> stash(template => 'dashboard.tt2');
+      $entity -> {_auth}{authenticated} = 1;
+      push @{$entity->{_embedded}}, {
+        _links => $embeddings{boards} -> GET -> {_links},
+        dataType => 'Board',
+        title => 'Editorial Boards',
+        id => 'boards',
+        schema => $embeddings{boards} -> schema,
+#      }, {
+#        _links => $embeddings{libraries} -> GET -> {_links},
+#        dataType => 'Library',
+#        title => 'Libraries',
+#        id => 'libraries',
+#        schema => $embeddings{libraries} -> schema,
+#      }, {
+#        _links => $embeddings{themes} -> GET -> {_links},
+#        dataType => 'Theme',
+#        title => 'Themes',
+#        id => 'themes',
+#        schema => $embeddings{themes} -> schema,
+#      }, {
+#        _links => $embeddings{databases} -> GET -> {_links},
+#        dataType => 'Database',
+#        title => 'Databases',
+#        id => 'databases',
+#        schema => $embeddings{databases} -> schema,
+      };
     }
     else {
-      $self -> status_ok($c,
-        entity => {
-          _links => { self => $c -> uri_for('/') -> as_string },
-        }
-      );
-      $c -> stash(template => 'index.tt2');
+      $entity -> {_links}{oauth_twitter} = {
+        url => $c -> uri_for('/oauth/twitter') -> as_string,
+        title => 'Sign in with Twitter',
+      };
+      $entity -> {_links}{oauth_google} = {
+        url => $c -> uri_for('/oauth/google') -> as_string,
+        title => 'Sign in with Google',
+      };
+      $entity -> {_text}{about} = YAML::Any::LoadFile( $c -> path_to( qw/root texts about.yml/ ) );
+      $entity -> {_text}{top} = YAML::Any::LoadFile( $c -> path_to( qw/root texts top.yml/ ) );
     }
+    $self -> status_ok($c, entity => $entity);
 }
 
 sub index_OPTIONS {

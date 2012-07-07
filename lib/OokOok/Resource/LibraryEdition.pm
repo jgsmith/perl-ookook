@@ -1,16 +1,16 @@
-package OokOok::Resource::ThemeEdition;
+package OokOok::Resource::LibraryEdition;
 use Moose;
 use namespace::autoclean;
 use OokOok::Resource;
 
-sub resource_collection_class { 'OokOok::Resource::Theme' }
+sub resource_collection_class { 'OokOok::Resource::Library' }
 
 has '+collection' => (
   lazy => 1,
   default => sub {
     my($self) = @_;
 
-    OokOok::Resource::Theme->new(
+    OokOok::Resource::Library->new(
       c => $self -> c, 
       source => $self -> source -> theme
     );

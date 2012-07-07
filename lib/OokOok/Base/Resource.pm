@@ -2,6 +2,9 @@ package OokOok::Base::Resource;
 use Moose;
 use namespace::autoclean;
 
+use Lingua::EN::Inflect qw(PL_V);
+use String::CamelCase qw(decamelize);
+
 has c => (
   is => 'rw',
   isa => 'Object',
@@ -29,9 +32,15 @@ Module::Load::load($class);
 sub link {
   my($self) = @_;
 
-  if(!$self -> has_source) { die "Unable to create resource link" }
-
-  $self -> collection -> link . '/' . $self -> source -> uuid;
+  if(!$self -> has_source) { 
+    my $nom = $self -> meta -> {package};
+    $nom =~ s{^.*::}{};
+    $nom = decamelize($nom);
+    $self -> collection -> link . "/:${nom}_id";
+  }
+  else {
+    $self -> collection -> link . '/' . $self -> source -> uuid;
+  }
 }
 
 sub link_for {
@@ -43,11 +52,24 @@ sub link_for {
   my $meta = $self -> meta;
 
   if($meta -> has_embedded($for)) {
-    return $self -> link . '/' . $for;
+    my $frag = $meta -> get_embedded($for) -> {link_fragment} || PL_V($for);
+    return $self -> link . '/' . $frag;
   }
   if($meta -> has_owner($for)) {
     return $self -> $for -> link;
   }
+}
+
+sub schema { 
+  my $self = shift;
+
+  my $schema = $self -> meta -> schema;
+
+  for my $k (keys %{$schema -> {embedded}}) {
+    $schema -> {embedded} -> {$k} -> {_links} -> {self} = $self -> link_for($k);
+  }
+
+  return $schema;
 }
 
 sub verify { 
@@ -104,6 +126,18 @@ sub verify {
   return $values;
 }
 
+sub can_GET { 1 } # by default, we can read anything
+sub can_PUT { 0 } # by default, we can't modify anything
+sub can_DELETE { 0 } # by default, we can't delete anything
+
+sub _GET { 
+  my $self = shift;
+
+  die "Unable to GET resource" unless $self -> can_GET;
+
+  $self -> GET(@_) 
+}
+
 sub GET {
   my($self, $deep) = @_;
 
@@ -113,13 +147,11 @@ sub GET {
   $json = {} unless defined $json;
 
   if($self -> can("link")) {
-    $json -> {_links} //= {};
     $json -> {_links} -> {self}  = $self -> link;
   }
 
   if($self -> collection) {
-    $json -> {_links} //= {};
-    $json -> {_links} -> {collection} = $self -> collection -> link;
+    #$json -> {_links} -> {collection} = $self -> collection -> link;
   }
 
   my $meta = $self -> meta;
@@ -135,22 +167,21 @@ sub GET {
   for my $key ($meta -> get_prop_list) {
     my $prop = $meta -> get_prop($key);
     next if $prop->{deep} && !$deep;
-    my $value;
-    if($prop->{source}) {
-      $value = $prop->{source} -> ($self);
-    }
-    elsif($prop->{method}) {
-      my $method = $prop->{method};
-      $value = $self -> source -> $method;
-    }
-    else {
-      $value = $self -> source -> $key;
-    }
-    $json -> {$key} = $value;
+    #my $value;
+    #if($prop->{source}) {
+    #  $value = $prop->{source} -> ($self);
+    #}
+    #elsif($prop->{method}) {
+    #  my $method = $prop->{method};
+    #  $value = $self -> source -> $method;
+    #}
+    #else {
+    #  $value = $self -> source -> $key;
+    #}
+    $json -> {$key} = $self -> $key; #$value;
   }
 
   for my $key ($meta -> get_embedded_list) {
-    $json -> {_embedded} //= {};
     $json -> {_embedded} -> {$key} //= [];
     my $hm = $self -> $key;
     $json -> {_links} -> {$key} = $self -> link_for($key);
@@ -167,7 +198,24 @@ sub GET {
     }
   }
 
+  for my $key ($meta -> get_owner_list) {
+    my $o = $self -> $key;
+    if($o) {
+      $json -> {_links} -> {$key} = $o -> link;
+    }
+  }
+
   return $json;
+}
+
+sub _DELETE {
+  my($self) = @_;
+
+  die "Unable to DELETE unless authenticated" unless $self -> c -> user;
+
+  die "Unable to DELETE" unless $self -> can_DELETE;
+
+  $self -> DELETE
 }
 
 sub DELETE { 
@@ -176,6 +224,16 @@ sub DELETE {
   if(!$self -> has_source) { die "Unable to DELETE without source"; }
 
   $self -> source -> delete; 
+}
+
+sub _PUT {
+  my $self = shift;
+
+  die "Unable to PUT unless authenticated" unless $self -> c -> user;
+
+  die "Unable to PUT" unless $self -> can_PUT;
+
+  $self -> PUT(@_);
 }
 
 1;

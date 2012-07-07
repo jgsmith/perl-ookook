@@ -1,93 +1,41 @@
-[% IF template.no_wrapper %]
-[% content %]
-[% ELSE %]
+[%- IF template.no_wrapper -%]
+[%- content -%]
+[%- ELSE -%]
 <!DOCTYPE html>
 <html lang="en>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>[% template.title %]</title>
-    <script src="[% c.uri_for('/static/js/jquery.js') %]"></script>
+    <script src="[% c.uri_for('/static/js/combined.js') %]"></script>
+    <!-- script src="[% c.uri_for('/static/js/jquery.js') %]"></script>
     <script src="[% c.uri_for('/static/js/history.js') %]"></script>
     <script src="[% c.uri_for('/static/js/bootstrap.min.js') %]"></script>
     <script src="[% c.uri_for('/static/js/mithgrid.min.js') %]"></script>
-    <script src="[% c.uri_for('/static/js/masonry.js') %]"></script>
+    <script src="[% c.uri_for('/static/js/masonry.js') %]"></script -->
     <script src="[% c.uri_for('/static/js/application.js') %]"></script>
-    <script src="[% c.uri_for('/static/js/wymeditor/jquery.wymeditor.js') %]"></script>
+    <!-- script src="[% c.uri_for('/static/js/wymeditor/jquery.wymeditor.js') %]"></script>
     <script src="[% c.uri_for('/static/js/ace/ace.js') %]"></script>
-    <script src="[% c.uri_for('/static/js/ace/mode-xml.js') %]"></script>
-    <link href="[% c.uri_for('/static/css/bootstrap.css') %]" rel="stylesheet">
+    <script src="[% c.uri_for('/static/js/ace/mode-xml.js') %]"></script -->
+    <link href="[% c.uri_for('/static/css/bootstrap.min.css') %]" rel="stylesheet">
     <link href="[% c.uri_for('/static/css/application.css') %]" rel="stylesheet">
-    <style type="text/css">
-      body {
-        padding-top: 20px;
-        padding-bottom: 40px;
-      }
-    </style>
   </head>
   <body>
-    <!-- div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="#">OokOok</a>
-          <div class="nav-collapse">
-            <ul class="nav pull-right">
-              [% FOREACH link IN navigation %]
-                [% IF !link.logged_in || c.user.defined %]
-                  <li [% IF c.request.uri == link.url %]
-                        class="active"
-                      [% END %]>
-                    <a href="[% link.url %]">[% link.title %]</a>
-                  </li>
-                [% END %]
-              [% END %]
-              [% IF c.user %]
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Account <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="#profile">Profile</a></li>
-                    <li><a href="#settings">Settings</a></li>
-                    <li><a href="[% c.uri_for('/oauth/logout') %]">Log Out</a></li>
-                  </ul>
-                 </li>
-              [% ELSE %]
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Sign In <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    [% FOREACH method IN signupMethods %]
-                      <li><a class="[% method.class %] " href="[% method.url %]">Sign in with [% method.title %]</a></li>
-                    [% END %]
-                  </ul>
-                </li>
-              [% END %]
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div -->
     <div class="container">
-      [% IF status_msg %]
+      [%- IF status_msg -%]
         <div class="alert alert-success">
           <a class="close" data-dismiss="alert" href="#">&times;</a>
           [% status_msg %]
         </div>
-      [% END %]
-      [% IF error_msg %]
+      [%- END -%]
+      [%- IF error_msg -%]
         <div class="alert alert-error">
           <a class="close" data-dismiss="alert" href="#">&times;</a>
           [% error_msg %]
         </div>
-      [% END %]
-      [% content %]
-      <!-- footer>
-        <p>&copy; 2012</p>
-      </footer -->
+      [%- END -%]
+      [%- content -%]
     </div>
   </body>
 </html>
-[% END %]
+[%- END -%]

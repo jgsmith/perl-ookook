@@ -26,10 +26,13 @@ use Moose::Exporter;
 use Moose::Util::MetaRole;
 use namespace::autoclean;
 
+use Carp;
+
 use OokOok::Base::Collection;
 use OokOok::Meta::Collection;
 use String::CamelCase qw(decamelize);
 use Lingua::EN::Inflect qw(PL_N);
+use Module::Load ();
 
 Moose::Exporter->setup_import_methods(
   with_meta => [ 'resource_class', 'resource_model' ],
@@ -59,6 +62,7 @@ sub init_meta {
   $class =~ s{::Collection::}{::Resource::};
 
   eval { Module::Load::load($class) };
+  carp $@ if $@;
   $meta -> resource_class($class);
 
   $class =~ s{^.*::Resource::}{DB::};

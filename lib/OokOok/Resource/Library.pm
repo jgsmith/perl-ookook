@@ -1,7 +1,7 @@
 package OokOok::Resource::Library;
 use OokOok::Resource;
 use namespace::autoclean;
-with 'OokOok::Base::EditionedResource';
+with 'OokOok::Role::Resource::HasEditions';
 
 prop name => (
   required => 1,

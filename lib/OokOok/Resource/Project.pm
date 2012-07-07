@@ -11,11 +11,14 @@ prop name => (
   required => 1,
   type => 'Str',
   source => sub { $_[0] -> source -> current_edition -> name },
+  maps_to => 'title',
 );
 
-prop uuid => (
+prop id => (
   is => 'ro',
   type => 'Str',
+  maps_to => 'id',
+  source => sub { $_[0] -> source -> uuid },
 );
 
 prop description => (
@@ -27,6 +30,7 @@ prop sitemap => (
   type => 'HashRef',
   source => sub { $_[0] -> source -> current_edition -> sitemap },
   verifier => sub { 1 },
+  value_type => 'hash',
 );
 
 has_many pages => 'OokOok::Resource::Page', (
@@ -40,6 +44,15 @@ has_many editions => 'OokOok::Resource::Edition', (
 belongs_to theme => 'OokOok::Resource::Theme', (
   source => sub { $_[0] -> source -> current_edition -> theme },
   is => 'rw',
+  maps_to => 'theme',
+  value_type => "Theme",
+);
+
+belongs_to board => 'OokOok::Resource::Board', (
+  source => sub { $_[0] -> source -> board },
+  is => 'rw',
+  maps_to => 'board',
+  value_type => 'Board',
 );
 
 sub _walk_sitemaps {
@@ -89,6 +102,25 @@ sub PUT {
   $self -> source -> current_edition -> update( $values );
 
   $self;
+}
+
+sub can_PUT {
+  my($self) = @_;
+
+  # the user has to be in a rank that can modify the project itself
+  # if we get here, we have a user
+  my $rank = $self -> c -> model('DB::BoardRank') -> search({
+    'board.id' => $self -> source -> board -> id,
+    'board_members.user_id' => $self -> c -> user -> id,
+  }, {
+    joins => [qw/board_members board/],
+    rows => 1,
+  }) -> first;
+  return 0 unless $rank;
+
+  return 1 if $rank -> position == 0; # top rank can always do stuff
+
+  return 0;
 }
 
 1;
