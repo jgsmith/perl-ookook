@@ -63,7 +63,7 @@ sub PUT_ok {
     HTTP::Request->new( PUT => $url, $headers, $content )
   ), "PUT: $desc");
 
-  diag $res -> content;
+  #diag $res -> content;
 
   eval { $json = decode_json($res -> content) };
   ok !$@, "Decode: $desc";

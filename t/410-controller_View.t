@@ -8,8 +8,6 @@ BEGIN {
   $ENV{'OOKOOK_CONFIG_LOCAL_SUFFIX'} = "testing";
 }
 
-
-#use Catalyst::Test 'OokOok';
 use lib 't/lib';
 use OokOok::Test::REST;
 use OokOok::Controller::View;
