@@ -14,6 +14,13 @@ __PACKAGE__->load_namespaces;
 # Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-21 15:39:15
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:sUKIshFTrsfsCwi3JdVYpw
 
+has is_development => (
+  is => 'rw',
+  isa => 'Bool',
+  default => 0,
+  lazy => 1,
+);
+
 after connection => sub {
   my($self) = @_;
 
@@ -32,6 +39,7 @@ after connection => sub {
   }
   if($dsn eq 'dbi:SQLite:dbname=:memory:') {
     $self -> deploy;
+    $self -> is_development(1);
   }
 };
 

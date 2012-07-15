@@ -5,13 +5,35 @@ ookook.namespace "model", (model) ->
   # the data store
   model.initModel = (config) ->
     that = {}
-    that.getCollection = (cb) ->
+    makeSubstitutions = (template, data) ->
+      orig = template
+      if template.indexOf("{?") >= 0
+        bits = template.split('{?')
+        for i in [0...bits.length]
+          if i % 2 == 1
+            mbs = bits[i].split("}")
+            bits[i] = (data[mbs[0]]||'') + mbs[1]
+        template = bits.join("")
+      template
+
+    that.getCollection = (info, cb) ->
+      if $.isFunction(info)
+        cb = info
+        info = {}
+
+      url = makeSubstitutions config.collection_url, info
+      parent = makeSubstitutions config.parent, info
+
       ookook.util.get
-        url: config.collection_url
+        url: url
         success: (data) ->
           items = []
           for thing in data._embedded
-            items.push that.importItem thing
+            json = that.importItem thing
+            json.parent = parent
+            if !json.id? and config.buildId?
+              json.id = config.buildId json
+            items.push json
           config.dataStore.loadItems items
           if cb?
             cb(data._embedded)
@@ -51,18 +73,17 @@ ookook.namespace "model", (model) ->
                     
       json.type = config.itemType || 'SectionLink'
       json.restType = config.restType
-      json.parent = config.parent
       json
 
     that.exportItem = (data) ->
       json = {}
       for k, v of config?.schema?.properties
         if v.is == "rw" and v.valueType != "hash"
-          if data[v.source].length == 1
+          if data[v.source]?.length == 1
             json[k] = data[v.source][0]
-          else if data[v.source].length > 1
+          else if data[v.source]?.length > 1
             json[k] = data[v.source]
-          else
+          else if data[v.source]?
             json[k] = null
       json
 
@@ -85,29 +106,39 @@ ookook.namespace "model", (model) ->
         parent: id
       }
 
-      console.log "inflating", id
       if config?.inflateItem?
-        console.log "calling out to inflateItem"
         items = items.concat config.inflateItem(id)
+      parents = MITHGrid.Data.Set.initInstance [ id ]
+      newParents = parents
+      newSize = parents.size()
+      oldSize = 0
+      while oldSize != newSize
+        newParents = config.dataStore.getObjectsUnion(newParents, "parent")
+        parents.add(x) for x in newParents.items()
+        oldSize = newSize
+        newSize = parents.size()
+      
       if config?.schema?
         if config.schema.belongs_to?
           for k, v of config.schema.belongs_to
             if item[v.source || k]?
               for i in item[v.source || k]
-                linkedItem = config.dataStore.getItem i
-                if linkedItem?.restType?
-                  if typeNames[linkedItem.restType[0]]?
-                    title = typeNames[linkedItem.restType[0]]
+                # if i is in the chain above us, then don't add it here
+                if !parents.contains(i)
+                  linkedItem = config.dataStore.getItem i
+                  if linkedItem?.restType?
+                    if typeNames[linkedItem.restType[0]]?
+                      title = typeNames[linkedItem.restType[0]]
+                    else
+                      title = linkedItem.restType[0]
                   else
-                    title = linkedItem.restType[0]
-                else
-                  title = v.source || l
-                items.push
-                  id: "#{id}-#{i}-link"
-                  type: "ItemLink"
-                  title: title
-                  parent: id
-                  link: i
+                    title = v.source || l
+                  items.push
+                    id: "#{id}-#{i}-link"
+                    type: "ItemLink"
+                    title: title
+                    parent: id
+                    link: i
       newItems = []
       updatedItems = []
       for item in items
@@ -126,13 +157,19 @@ ookook.namespace "model", (model) ->
         config.dataStore.removeItems objects.items()
         objects = config.dataStore.getSubjectsUnion(objects, "parent")
 
-    that.load = (id) ->
+    that.load = (info, id) ->
+      if !id?
+        id = info
+        info = {}
+      url = makeSubstitutions config.collection_url, info
       ookook.util.get
-        url: config.collection_url + '/' + id
+        url: url + '/' + id
         success: (data) ->
           json = that.importItem data
           json.restType = config.restType
           json.parent = config.parent
+          if !json.id? and config.buildId?
+            json.id = config.buildId json
           if config.dataStore.contains(id)
             config.dataStore.updateItems [ json ], ->
               list = config.dataStore.withParent(config.parent)
@@ -151,14 +188,17 @@ ookook.namespace "model", (model) ->
               }]
 
     that.create = (data) ->
+      url = makeSubstitutions config.collection_url, data
       json = that.exportItem data
       ookook.util.post
-        url: config.collection_url
+        url: url
         data: json
         success: (data) ->
           json = that.importItem data
           json.restType = config.restType
           json.parent = config.parent
+          if !json.id and config.buildId?
+            json.id = config.buildId json
           config.dataStore.loadItems [ json ]
           parentItem = config.dataStore.getItem config.parent
           config.dataStore.updateItems [{
@@ -166,9 +206,14 @@ ookook.namespace "model", (model) ->
             badge: parseInt(parentItem.badge[0],10) + 1
           }]
 
-    that.delete = (id, cb) ->
+    that.delete = (info, id, cb) ->
+      if $.isFunction(id)
+        cb = id
+        id = info
+        info = {}
+      url = makeSubstitutions config.collection_url, info
       ookook.util.delete
-        url: config.collection_url + '/' + id
+        url: url + '/' + id
         success: ->
           that.deflateItem id
           config.dataStore.removeItems [ id ]
@@ -183,8 +228,9 @@ ookook.namespace "model", (model) ->
 
     that.update = (item) ->
       json = that.exportItem item
+      url = makeSubstitutions config.collection_url, item
       ookook.util.put
-        url: config.collection_url + '/' + item.id
+        url: url + '/' + item.id
         data: json
 
     that

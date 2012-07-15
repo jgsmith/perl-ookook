@@ -34,11 +34,26 @@ sub constrain_collection {
       }
     );
   }
+
   $q;
 }
 
-sub POST {
-  my($self, $json) = @_;
+sub can_POST {
+  my($self) = @_;
+
+  return defined $self -> c -> user;
+}
+
+sub may_POST {
+  my($self) = @_;
+
+  # we could put a limit in here about how may projects a person can lead
+  1;
+}
+
+around POST => sub {
+  my $orig = shift;
+  my $self= shift;
 
   my $owner = $self -> c -> user;
 
@@ -46,10 +61,10 @@ sub POST {
     die "Unable to create a project without an owner";
   }
 
-  my $values = $self -> verify($json);
+  my $project = $self->$orig(@_);
 
   my $board = $self -> c -> model('DB::Board') -> new_result({
-    name => $values->{name} . ' Management',
+    name => $project->name . ' Management',
   });
   $board -> insert;
 
@@ -62,16 +77,11 @@ sub POST {
     user_id => $owner -> id,
   });
 
-  my $project = $self -> c -> model('DB::Project') -> new_result({
-    board_id => $board -> id,
+  $project -> source -> update({
+    board_id => $board -> id
   });
-  $project -> insert;
-  $project -> current_edition -> update($json);
-  OokOok::Resource::Project -> new(
-    source => $project,
-    c => $self -> c
-  );
-}
+  $project;
+};
 
 
 1;

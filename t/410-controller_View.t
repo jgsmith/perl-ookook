@@ -9,108 +9,10 @@ BEGIN {
 }
 
 
-use Catalyst::Test 'OokOok';
+#use Catalyst::Test 'OokOok';
+use lib 't/lib';
+use OokOok::Test::REST;
 use OokOok::Controller::View;
-
-#
-# Set up our protocol helpers
-#
-
-sub GET_ok {
-  my($url, $desc) = @_;
-
-  my($res, $json);
-  my $headers = HTTP::Headers -> new;
-
-  $headers -> header('Accept' => 'application/json');
-  $headers -> header('Content-Type' => 'application/json');
-
-  ok( $res = request(
-    HTTP::Request->new( GET => $url, $headers )
-  ), "GET: $desc");
-
-  #diag( $res -> content );
-
-  eval { $json = decode_json($res -> content) };
-  ok !$@, "Decode: $desc";
-  return $json;
-}
-
-sub GET_not_ok {
-  my($url, $desc) = @_;
-
-  my($res, $json);
-  my $headers = HTTP::Headers -> new;
-
-  $headers -> header('Accept' => 'application/json');
-  $headers -> header('Content-Type' => 'application/json');
-
-  $res = request(
-    HTTP::Request->new( GET => $url, $headers )
-  );
-
-  ok( $res->code >= 400, "GET failed successfully: $desc" );
-}
-
-sub PUT_ok {
-  my($url, $content, $desc) = @_;
-
-  my($res, $json);
-  if(ref $content) {
-    $content = encode_json $content;
-  }
-
-  my $headers = HTTP::Headers -> new;
-
-  $headers -> header('Accept' => 'application/json');
-  $headers -> header('Content-Type' => 'application/json');
-
-  ok( $res = request(
-    HTTP::Request->new( PUT => $url, $headers, $content )
-  ), "PUT: $desc");
-
-  eval { $json = decode_json($res -> content) };
-  ok !$@, "Decode: $desc";
-  return $json;
-}
-
-sub POST_ok {
-  my($url, $content, $desc) = @_;
-
-  my($res, $json);
-  if(ref $content) {
-    $content = encode_json $content;
-  }
-
-  my $headers = HTTP::Headers -> new;
-
-  $headers -> header('Accept' => 'application/json');
-  $headers -> header('Content-Type' => 'application/json');
-
-
-  ok( $res = request(
-    HTTP::Request->new( POST => $url, $headers, $content )
-  ), "POST: $desc");
-
-  eval { $json = decode_json($res -> content) };
-  ok !$@, "Decode: $desc";
-  return $json;
-}
-
-sub DELETE_ok {
-  my($url, $desc) = @_;
-
-  my $headers = HTTP::Headers -> new;
-
-  $headers -> header('Accept' => 'application/json');
-  $headers -> header('Content-Type' => 'application/json');
-
-  # We add an empty JSON body to satisfy the deserializer in Catalyst
-  my($res);
-  ok( $res = request(
-    HTTP::Request->new( DELETE => $url, $headers, "{}" )
-  ), "DELETE: $desc");
-}
 
 #
 # Create project and populate with sitemap
@@ -124,7 +26,7 @@ $json = POST_ok("/project", {
   description => "Test project description",
 }, "create project");
 
-$uuid = $json -> {uuid};
+$uuid = $json -> {id};
 
 #
 # Now we need to add a few pages to the project
@@ -132,8 +34,8 @@ $uuid = $json -> {uuid};
 
 $json = GET_ok("/project/$uuid/page", "Get list of pages");
 
-ok $json->{_embedded}->{pages}, "JSON has pages property";
-is scalar(@{$json->{_embedded}->{pages}}), 1, "One page in project";
+ok $json->{_embedded}, "JSON has pages property";
+is scalar(@{$json->{_embedded}}), 1, "One page in project";
 
 my %pages;
 
@@ -144,7 +46,7 @@ for my $nom (qw/Foo Bar Baz/) {
     description => "Description of " . lc($nom) . " page",
   }, "create $nom page");
 
-  my $page_uuid = $json->{uuid};
+  my $page_uuid = $json->{id};
   ok $page_uuid, "JSON has page uuid";
   is $json->{title}, "$nom Title", "Right value for title";
   is $json->{description}, "Description of ".lc($nom)." page", "Right value for description";
@@ -155,32 +57,48 @@ for my $nom (qw/Foo Bar Baz/) {
 
 $json = GET_ok("/project/$uuid/page", "Get list of pages");
 
-ok $json->{_embedded}->{pages}, "JSON has pages property";
-is scalar(@{$json->{_embedded}->{pages}}), 4, "Four pages in project";
+ok $json->{_embedded}, "JSON has pages property";
+is scalar(@{$json->{_embedded}}), 4, "Four pages in project";
 
 #
 # Then create a sitemap with the pages
 #
 
+# $pages{'Bar'} has slug 'about' and parent ''
+# $pages{'Baz'} has slug 'projects' and parent ''
+# $pages{'Foo'} has slug '' and no parent
+
+PUT_ok("/page/$pages{'Bar'}", {
+  parent_page => $pages{'Foo'},
+  slug => 'about',
+}, "Make Bar a child of Foo");
+
+$json = GET_ok("/page/$pages{'Bar'}", "Get updated Bar page");
+is $json->{slug}, "about", "Right slug";
+
+PUT_ok("/page/$pages{'Baz'}", {
+  parent_page => $pages{'Foo'},
+  slug => 'projects',
+}, "Make Baz a child of Foo");
+
+$json = GET_ok("/page/$pages{'Baz'}", "Get updated Baz page");
+is $json->{slug}, "projects", "Right slug";
+
+PUT_ok("/page/$pages{'Foo'}", {
+  parent_page => undef,
+  slug => ''
+}, "No parent page for Foo");
+
+$json = GET_ok("/page/$pages{'Foo'}", "Get updated Foo page");
+is $json->{slug}, "", "Right slug";
+
 PUT_ok("/project/$uuid", {
-  sitemap => {
-    '' => {
-      children => {
-        'about' => {
-          'visual' => $pages{"Bar"}
-        },
-        'projects' => {
-          'children' => {
-            'ookook' => {
-              'visual' => $pages{"Baz"}
-            },
-          },
-        },
-      },
-      'visual' => $pages{"Foo"}
-    },
-  },
-}, "Create sitemap");
+  page => $pages{'Foo'}
+}, "Set root page for project to Foo");
+
+$json = GET_ok("/project/$uuid", "Get update project");
+
+diag JSON::to_json( $json );
 
 ok( !request('/v')->is_success, 'Request should not succeed' );
 
@@ -188,8 +106,8 @@ ok( request("/dev/v/$uuid/") -> is_success, 'Request should succeed' );
 
 ok( !request("/dev/v/$uuid/boo") -> is_success, "/boo isn't in project" );
 ok( request("/dev/v/$uuid/about") -> is_success, "/about is in project" );
-ok( !request("/dev/v/$uuid/projects") -> is_success, "/projects isn't in project" );
-ok( request("/dev/v/$uuid/projects/ookook") -> is_success, "/projects/ookook is in project" );
+ok( request("/dev/v/$uuid/projects") -> is_success, "/projects is in project" );
+ok( !request("/dev/v/$uuid/projects/ookook") -> is_success, "/projects/ookook isn't in project" );
 
 my $before_date = DateTime->now;
 $before_date = $before_date->ymd('').$before_date->hms('');

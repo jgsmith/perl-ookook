@@ -1,35 +1,50 @@
 package OokOok::Controller::Library;
+
 use Moose;
 use namespace::autoclean;
+
 use OokOok::Collection::Library;
 
 BEGIN {
-  extends 'Catalyst::Controller::REST';
-  with 'OokOok::Role::Controller::Manager';
-  with 'OokOok::Role::Controller::HasEditions';
+  extends 'OokOok::Base::REST';
 }
 
 __PACKAGE__ -> config(
   map => {
   },
   default => 'text/html',
-  current_model => 'DB::Library',
-  collection_resource_class => 'OokOok::Collection::Library',
 );
+
+sub base :Chained('/') :PathPart('library') :CaptureArgs(0) { 
+  my($self, $c) = @_;
+
+  if($c -> stash -> {development} || $c -> stash -> {date}) {
+    $c -> detach(qw/Controller::Root default/);
+  }
+
+  $c -> stash -> {development} = 1; # for use by resources/collections
+
+  $c -> stash -> {collection} = OokOok::Collection::Library -> new(c => $c);
+}
+
+__PACKAGE__->meta->make_immutable;
+
+1;
+
+__END__
 
 =head1 NAME
 
-OokOok::Controller::Library - Catalyst Controller
+OokOok::Controller::Theme - Catalyst Controller
 
 =head1 DESCRIPTION
 
-Catalyst Controller.
+Provides the REST API for theme management used by the theme management
+web pages. These should not be considered a general purpose API.
 
 =head1 METHODS
 
-=cut
 
-sub base :Chained('/') :PathPart('library') :CaptureArgs(0) { }
 
 =head1 AUTHOR
 
@@ -40,8 +55,3 @@ James Smith,,,
 This library is free software. You can redistribute it and/or modify
 it under the same terms as Perl itself.
 
-=cut
-
-__PACKAGE__->meta->make_immutable;
-
-1;

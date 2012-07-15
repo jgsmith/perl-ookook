@@ -46,16 +46,13 @@ ookook.namespace "component", (component) ->
               options.update data
 
         $(container).on 'show', ->
-          console.log "Showing", container
           app = options.application()
           item = app.dataStore.data.getItem app.getMetroParent()
-          console.log "editing", item
           #$(container).find('.modal-form-input').val("")
           $(container).find('.modal-form-input').each (idx, el) ->
             el = $(el)
             elId = el.attr('id')
             elId = elId.substr(id.length+1)
-            console.log "Value for", elId
             el.val(item[elId]?[0] || "")
 
           if options.initForm?

@@ -23,10 +23,13 @@ sub status_service_unavailable {
 sub things_base :Chained('base') :PathPart('') :CaptureArgs(0) {
   my($self, $c) = @_;
 
-  # the management interface isn't versioned
+  # the management interface isn't versioned up to this point in the
+  # execution path
   if($c -> stash -> {development} || $c -> stash -> {date}) {
     $c -> detach(qw/Controller::Root default/);
   }
+
+  $c -> stash -> {development} = 1; # for use by resources/collections
 
   $c -> stash(current_model_instance => $c -> model($self -> config -> {'current_model'}));
   my $thing = $self -> config -> {"singular"} || $c -> model -> result_source -> name;
@@ -50,14 +53,14 @@ sub things_GET {
 
   $self -> status_ok(
     $c,
-    entity => $c -> stash -> {collection} -> GET
+    entity => $c -> stash -> {collection} -> _GET
   );
 }
 
 sub things_POST {
   my($self, $c) = @_;
 
-  my $thing = eval { $c -> stash -> {collection} -> POST($c -> req -> data) };
+  my $thing = eval { $c -> stash -> {collection} -> _POST($c -> req -> data) };
   my $object_name = $c -> stash -> {names} -> {thing};
 
   if($@) {
@@ -67,7 +70,7 @@ sub things_POST {
     );
   }
   elsif($thing) {
-    my $json = $thing -> GET(1); # deep
+    my $json = $thing -> _GET(1); # deep
 
     $self -> status_created($c,
       location => $json -> {_links} -> {self},
@@ -100,42 +103,6 @@ sub things_OPTIONS {
   );
 }
 
-#sub new_thing :Chained('things_base') :PathPart('new') :Args(0) { 
-#  my($self, $c) = @_;
-#
-#  $c -> stash -> {projects} = [$c -> model("DB::Project") -> all];
-#  $c -> stash -> {themes} = [$c -> model("DB::Theme") -> all];
-#  $c -> stash -> {libraries} = [$c -> model("DB::Library") -> all];
-#
-#  my $form = HTML::FormFu->new({
-#    action => $c -> req -> uri,
-#    method => 'POST',
-#    auto_fieldset => 1
-#  });
-#
-#  $c -> stash -> {form} = $form;
-#
-#  my $object_name = $c -> stash -> {names} -> {thing};
-#
-#  $form -> load_config_file($c -> path_to('root', 'forms', 'new', $object_name . '.yml'));
-#  if( $c -> req -> method eq 'POST') {
-#    $form -> process($c -> req);
-#  }
-#
-#  if( $form -> submitted_and_valid ) {
-#    my $new_thing = $c -> model -> POST($c, $form -> params);
-#    if($new_thing) {
-#      my $json = $new_thing -> GET($c);
-#      print STDERR "New object: ", JSON::encode_json($json), "\n";
-#      $c -> response -> redirect( $json -> {url} );
-#      $c -> detach;
-#    }
-#    else {
-#      # unable to create project
-#    }
-#  }
-#}
-
 ###
 ### individual Thing handling
 ###
@@ -156,12 +123,7 @@ sub thing_base :Chained('things_base') :PathPart('') :CaptureArgs(1) {
     $c -> detach;
   }
   my $thing_name = $c -> stash -> {names} -> {thing};
-  my $resource_class = $self -> config -> {'current_model'};
-  $resource_class =~ s{^DB::}{OokOok::Resource::};
-  $c -> stash -> {$thing_name} = $resource_class -> new(
-    c => $c,
-    source => $thing
-  );
+  $c -> stash -> {$thing_name} = $c -> stash -> {collection} -> resource($uuid);
 }
 
 sub thing :Chained('thing_base') :PathPart('') :Args(0) :ActionClass('REST') { }
@@ -171,7 +133,7 @@ sub thing_GET {
 
   my $thing_name = $c -> stash -> {names} -> {thing};
   my $thing = $c -> stash -> {$thing_name};
-  my $json = $thing -> GET(1);
+  my $json = $thing -> _GET(1);
 
   # need to restrict to the columns we need -- uuid and name
   $c -> stash -> {projects} = [$c -> model("DB::Project") -> all];
@@ -189,7 +151,7 @@ sub thing_PUT {
 
   my $thing_name = $c -> stash -> {names} -> {thing};
   my $thing = $c -> stash -> {$thing_name};
-  $thing = eval { $thing -> PUT($c -> req -> data) };
+  $thing = eval { $thing -> _PUT($c -> req -> data) };
 
   if($@) {
     $self -> status_bad_request($c,
@@ -198,7 +160,7 @@ sub thing_PUT {
   }
   else {
     $self -> status_ok($c,
-      entity => $thing -> GET($c, 1)
+      entity => $thing -> _GET($c, 1)
     );
   }
 }
@@ -209,7 +171,7 @@ sub thing_DELETE {
   my $thing_name = $c -> stash -> {names} -> {thing};
 
   eval {
-    $c -> stash -> {$thing_name} -> DELETE;
+    $c -> stash -> {$thing_name} -> _DELETE;
   };
 
   $self -> status_no_content($c);

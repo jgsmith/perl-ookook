@@ -2,13 +2,17 @@ package OokOok::Controller::View;
 use Moose;
 use namespace::autoclean;
 
+use OokOok::Template::Context;
+
 BEGIN { 
-  extends 'Catalyst::Controller'; 
-  with 'OokOok::Role::Controller::Player';
+  extends 'OokOok::Base::Player';
 }
 
 __PACKAGE__ -> config(
-  current_model => 'DB::Project',
+  map => {
+    'text/html' => [ 'View', 'HTML' ],
+  },
+  default => 'text/html',
 );
 
 =head1 NAME
@@ -47,44 +51,58 @@ Theme components:
 
 =cut
 
-sub base :Chained('/') :PathPart('v') :CaptureArgs(0) { }
+sub base :Chained('/') :PathPart('v') :CaptureArgs(0) { 
+  my($self, $c) = @_;
+
+  $c -> stash -> {collection} = OokOok::Collection::Project -> new(
+    c => $c,
+  );
+}
 
 sub play :Chained('play_base') :PathPart('') {
   my ( $self, $c ) = @_;
 
   my @path = @{$c -> request -> arguments};
 
-  #my @path = @{$c -> stash -> {path}};
-  unshift @path, '';
-
-  print STDERR "Path: <", join("><", @path), ">\n";
-
   my $date = $c -> stash -> {date};
 
-  # Now we know which edition of which project we want to look in
-  # for the requested resource
-  # We walk through the sitemap using the elements in @path
+  # now we walk the sitemap to find the right page
+  my $page = $c -> stash -> {project} -> page;
+  my($slug, $last_page);
 
-  $c -> stash -> {path} = [reverse $c -> stash -> {edition} -> page_path(@path)];
+  $last_page = $page;
+  while($page && @path) {
+    $slug = shift @path;
+    $last_page = $page;
+    $page = $page -> get_child_page($slug);
+    if(!$page) { unshift @path, $slug; }
+  }
+  $page = $last_page;
 
   # we expect as many entries in the stashed path as are in the @path
-  if(scalar(@{$c->stash->{path}}) != scalar(@path)) {
-    $c -> response->body( 'Page not found' );
-    $c -> response -> status(404);
-    $c -> detach;
-  }
-
-  my $page = $c -> stash -> {path} -> [0];
-
-  if(!$page) {
+  # for now, we shouldn't have anything left in @path -- we don't have
+  # pages yet that can react to extra path info
+  if(!$page || @path) {
     $c -> response->body( 'Page not found' );
     $c -> response -> status(404);
     $c -> detach;
   }
 
   $c -> stash -> {page} = $page;
+}
 
-  $c -> stash -> {rendering} = $page -> render($c);
+sub play_GET {
+  my($self, $c) = @_;
+
+  my $context = OokOok::Template::Context -> new(
+    c => $c
+  );
+
+  my $page = $c -> stash -> {page};
+  $context -> set_resource(page => $page);
+  $context -> set_resource(project => $c -> stash -> {project});
+
+  $c -> stash -> {rendering} = $page -> render($context);
 
   $c -> stash -> {template} = 'view/play.tt2';
 };

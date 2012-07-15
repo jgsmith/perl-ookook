@@ -87,6 +87,7 @@ with 'OokOok::Role::Schema::Result::UUID';
 
 __PACKAGE__ -> has_many(board_ranks => 'OokOok::Schema::Result::BoardRank', 'board_id');
 __PACKAGE__ -> many_to_many(board_members => 'board_ranks', 'board_member');
+
 __PACKAGE__ -> has_many(projects => 'OokOok::Schema::Result::Project', 'board_id');
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

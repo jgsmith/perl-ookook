@@ -7,7 +7,7 @@ use OokOok::Collection::Board;
 use OokOok::Resource::Board;
 
 BEGIN {
-  extends 'OokOok::Base::ResourceController';
+  extends 'OokOok::Base::REST';
 }
 
 __PACKAGE__ -> config(

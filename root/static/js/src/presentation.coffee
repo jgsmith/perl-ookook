@@ -143,7 +143,6 @@ ookook.namespace "presentation", (presentation) ->
           if !rendering.order?
             $(container).append(cdiv)
           else
-            console.log "order:", rendering.order
             if orderedRenderings.length == 0
               $(container).prepend(cdiv)
               orderedRenderings.push rendering
@@ -282,7 +281,6 @@ ookook.namespace "presentation", (presentation) ->
         that.addLens 'URLLink', (hubEl, presentation, model, itemId) ->
           rendering = baseLens(hubEl, presentation, model, itemId)
           item = model.getItem itemId
-          console.log rendering
 
           if item.link?
             link = item.link[0]
@@ -354,7 +352,7 @@ ookook.namespace "presentation", (presentation) ->
 
           content = template(data)
           el.attr
-            class: "tile width4 height6 subhead"
+            class: "tile width6 height2 subhead"
           el.append($(content))
           rendering.el = el
 

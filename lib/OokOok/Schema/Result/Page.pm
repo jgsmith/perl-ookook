@@ -93,6 +93,11 @@ __PACKAGE__ -> has_many( "versions" => "OokOok::Schema::Result::PageVersion", "p
   cascade_delete => 1,
 } );
 
+__PACKAGE__ -> has_many( "children" => "OokOok::Schema::Result::PageVersion", "parent_page_id", {
+  cascade_copy => 0,
+  cascade_delete => 0,
+} );
+
 with 'OokOok::Role::Schema::Result::HasVersions';
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

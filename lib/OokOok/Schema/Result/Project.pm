@@ -105,18 +105,15 @@ after insert => sub {
   my($self) = @_;
 
   my $ce = $self -> current_edition;
-  my $home_page = $self -> create_related('pages', {});
+  my $home_page = $self -> create_related('pages', { });
 
   $home_page -> current_version -> update({
     title => 'Home',
     description => 'Top-level page for the project site.',
+    slug => '',
   });
   $ce -> update({
-    sitemap => {
-      '' => {
-        visual => $home_page -> uuid
-      }
-    }
+    page_id => $home_page->id
   });
   $self;
 };

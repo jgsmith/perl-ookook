@@ -37,7 +37,7 @@ div.editor {
   height: 350px;
 }
 
-.width1, .width2, .width3, .width4, .width5, .width6 {
+.width1, .width2, .width3, .width4, .width5, .width6, .fullwidth {
   border-left: 3px;
   border-right: 3px;
   margin-left: 7px;
@@ -138,59 +138,26 @@ div.editor {
   font-size: 40px;
 }
 
-.tile.primary .badge {
+.tile.width4 .badge, .tile.width5 .badge, .tile.width6 .badge, .tile.fullwidth .badge {
   top: 250px;
   color: #ddd;
   font-size: 84px;
 }
 
-.width1 {
-  width: 60px;
-}
+.width1 { width: 60px; }
+.width2 { width: 140px; }
+.width3 { width: 220px; }
+.width4 { width: 300px; }
+.width5 { width: 380px; }
+.width6 { width: 460px; }
+.fullwidth { width: 100%; }
 
-.width2 {
-  width: 140px;
-}
-
-.width3 {
-  width: 220px;
-}
-
-.width4 {
-  width: 300px;
-}
-
-.width5 {
-  width: 380px;
-}
-
-.width6 {
-  width: 460px;
-}
-
-.height1 {
-  height: 60px;
-}
-
-.height2 {
-  height: 140px;
-}
-
-.height3 {
-  height: 220px;
-}
-
-.height4 {
-  height: 300px;
-}
-
-.height5 {
-  height: 380px;
-}
-
-.height6 {
-  height: 460px;
-}
+.height1 { height: 60px; }
+.height2 { height: 140px; }
+.height3 { height: 220px; }
+.height4 { height: 300px; }
+.height5 { height: 380px; }
+.height6 { height: 460px; }
 
 .subhead p.type {
   opacity: 0.5;

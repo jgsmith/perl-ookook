@@ -73,12 +73,12 @@ CREATE TABLE project (
 CREATE TABLE edition (
   id      INTEGER PRIMARY KEY,
   project_id INTEGER NOT NULL,
+  page_id INTEGER, -- root page
   primary_language VARCHAR(32) NOT NULL DEFAULT 'en',
   name    VARCHAR(255) NOT NULL DEFAULT '',
   description TEXT,
   sitemap TEXT NOT NULL DEFAULT '{}', -- json-encoded sitemap
-  theme_id INTEGER,
-  theme_date DATETIME,
+  theme_edition_id INTEGER,
   created_on DATETIME NOT NULL,
   closed_on DATETIME          -- convenience - should be the same as the next
                              -- project instance created_on time
@@ -112,6 +112,8 @@ CREATE TABLE page_version (
   edition_id INTEGER NOT NULL,
   page_id INTEGER NOT NULL,
   layout CHAR(20),
+  slug VARCHAR(255) NOT NULL DEFAULT '',
+  parent_page_id INTEGER,
   title VARCHAR(255) NOT NULL DEFAULT '',
   primary_language VARCHAR(32),
   description TEXT
@@ -168,6 +170,7 @@ CREATE TABLE theme_layout_version (
   theme_layout_id INTEGER NOT NULL,
   theme_edition_id INTEGER NOT NULL,
   name    VARCHAR(255) NOT NULL DEFAULT '',
+  parent_layout_id INTEGER,
   layout TEXT NOT NULL DEFAULT '<row><div width="12"><page-part name="body"/></div></row>',
   configuration TEXT NOT NULL DEFAULT '{}'
 );

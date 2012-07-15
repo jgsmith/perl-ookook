@@ -132,7 +132,7 @@ my $json;
 
 $json = GET_ok("/project", "JSON listing of projects");
 
-is_deeply $json->{_embedded}, { projects => [] }, "Empty list of projects";
+is_deeply $json->{_embedded}, [], "Empty list of projects";
 
 #
 # Create a project
@@ -145,9 +145,9 @@ $json = POST_ok("/project", {
 
 is $json->{name}, "Test Project", "Name returned";
 is $json->{description}, "Test project description", "Description returned";
-ok $json->{uuid}, "Project has a uuid";
+ok $json->{id}, "Project has a uuid";
 
-my $uuid = $json->{uuid};
+my $uuid = $json->{id};
 
 #
 # Get the newly created project
@@ -156,17 +156,18 @@ $json = GET_ok("/project/$uuid", "Get new project");
 
 is $json->{name}, "Test Project", "Right name returned";
 is $json->{description}, "Test project description", "Right description returned";
-is $json->{uuid}, $uuid, "Right uuid returned";
+is $json->{id}, $uuid, "Right uuid returned";
 
 #
 # See if list of projects has one member
 #
 
 $json = GET_ok("/project", "JSON listing of projects");
+diag JSON::encode_json($json);
 
-ok $json->{_embedded}->{projects}, "Projects key exists in returned JSON";
-is scalar(@{$json->{_embedded}->{projects}}), 1, "One project";
-is $json->{_embedded}->{projects}->[0]->{uuid}, $uuid, "Right project";
+ok $json->{_embedded}, "Projects key exists in returned JSON";
+is scalar(@{$json->{_embedded}}), 1, "One project";
+is $json->{_embedded}->[0]->{id}, $uuid, "Right project";
 
 #
 # Now see if we can delete the project
@@ -185,8 +186,8 @@ GET_not_ok("/project/$uuid", "get deleted project");
 
 $json = GET_ok("/project", "JSON listing of projects");
 
-ok $json->{_embedded}->{projects}, "Projects key exists in returned JSON";
-is scalar(@{$json->{_embedded} -> {projects}}), 0, "No projects";
+ok $json->{_embedded}, "Projects key exists in returned JSON";
+is scalar(@{$json->{_embedded}}), 0, "No projects";
 
 #
 # Add another project
@@ -200,7 +201,7 @@ $json = POST_ok("/project", {
 is $json->{name}, "Test Project 2", "Right name";
 is $json->{description}, "Another test project", "Right description";
 
-$uuid = $json -> {uuid};
+$uuid = $json -> {id};
 
 #
 # Get the project
@@ -208,7 +209,7 @@ $uuid = $json -> {uuid};
 
 $json = GET_ok("/project/$uuid", "Get the project");
 
-is $json->{uuid}, $uuid, "Right uuid";
+is $json->{id}, $uuid, "Right uuid";
 
 ok $json->{_embedded} -> {editions}, "JSON has an editions key";
 is scalar(@{$json->{_embedded}->{editions}}), 1, "Only one edition";
@@ -223,7 +224,7 @@ $json = PUT_ok("/project/$uuid", {
   description => "Second description",
 }, "Update project description");
 
-is $json->{uuid}, $uuid, "Right uuid";
+is $json->{id}, $uuid, "Right uuid";
 is $json->{description}, "Second description", "Right description";
 
 #
@@ -232,7 +233,7 @@ is $json->{description}, "Second description", "Right description";
 
 $json = GET_ok("/project/$uuid", "Get the project");
 
-is $json->{uuid}, $uuid, "Right uuid";
+is $json->{id}, $uuid, "Right uuid";
 is $json->{description}, "Second description", "Right description";
 
 ok $json->{_embedded}->{editions}, "JSON has a project.editions key";
@@ -241,42 +242,12 @@ is scalar(@{$json->{_embedded}->{editions}}), 1, "Only one edition";
 ok !$json->{_embedded}->{editions}->[0]->{closed_on}, "Edition isn't frozen";
 
 #
-# See if we can get the sitemap
-#
-
-$json = GET_ok("/project/$uuid", "Get the project ");
-
-ok $json, "JSON has sitemap key";
-
-#
-# Now add something to the sitemap
-#
-
-my $sitemap = {
-  '' => {
-    'visual' => 'home-page',
-    'children' => {
-      'about' => {
-        visual => 'about-page',
-      }
-    }
-  }
-};
-
-$json = PUT_ok("/project/$uuid", { sitemap => $sitemap }, "Update sitemap");
-        
-is_deeply $json -> {sitemap}, $sitemap, "Sitemap updated correctly";
-
-$json = GET_ok("/project/$uuid", "Get sitemap");
-is_deeply $json->{sitemap}, $sitemap, "Sitemap updated correctly";
-
-#
 # Make sure project still has no frozen editions
 #
 
 $json = GET_ok("/project/$uuid", "Get the project");
 
-is $json->{uuid}, $uuid, "Right uuid";
+is $json->{id}, $uuid, "Right uuid";
 is $json->{description}, "Second description", "Right description";
 
 ok $json->{_embedded} -> {editions}, "JSON has a project.editions key";
@@ -285,107 +256,32 @@ is scalar(@{$json->{_embedded} -> {editions}}), 1, "Only one edition";
 ok !$json->{_embedded} -> {editions}->[0]->{closed_on}, "Edition isn't frozen";
 
 #
-# Remove a page from the sitemap
-#
-
-$json = PUT_ok("/project/$uuid", {
-  sitemap => {
-    '' => {
-      'children' => {
-        'about' => {
-          visual => undef
-        }
-      }
-    }
-  }
-}, "Remove about page from sitemap");
-
-is_deeply $json->{sitemap}, {
-  '' => {
-    'visual' => 'home-page'
-  }
-}, "About page removed from sitemap";
-
-#
-# Add a page to the sitemap
-#
-
-$json = PUT_ok("/project/$uuid", {
-  sitemap => {
-    '' => {
-      children => {
-        'foo' => {
-          visual => 'bar'
-        }
-      }
-    }
-  }
-}, "Add a page to the sitemap");
-
-is_deeply $json -> {sitemap}, {
-  '' => {
-    'visual' => 'home-page',
-    'children' => {
-      'foo' => {
-        'visual' => 'bar'
-      }
-    }
-  }
-}, "Page added to sitemap";
-
-#
-# Modify a page in the sitemap
-#
-$json = PUT_ok("/project/$uuid", {
-  sitemap => {
-    '' => {
-      children => {
-        'foo' => {
-          'visual' => 'baz'
-        }
-      }
-    }
-  }
-}, "Modify a page in the sitemap");
-
-is_deeply $json->{sitemap}, {
-  '' => {
-    'visual' => 'home-page',
-    'children' => {
-      'foo' => {
-        'visual' => 'baz'
-      }
-    }
-  }
-}, "Page modified in sitemap";
-
-#
 # Now we need to add a few pages to the project
 #
 
 $json = GET_ok("/project/$uuid/page", "Get list of pages");
 
-ok $json->{_embedded}->{pages}, "JSON has pages property";
-is scalar(@{$json->{_embedded}->{pages}}), 1, "One page in project";
+ok $json->{_embedded}, "JSON has pages property";
+is scalar(@{$json->{_embedded}}), 1, "One page in project";
 
 $json = POST_ok("/project/$uuid/page", {
   title => "Page Title",
   description => "Description of page",
 }, "create page");
 
-my $page_uuid = $json->{uuid};
+my $page_uuid = $json->{id};
 ok $page_uuid, "JSON has page uuid";
 is $json->{title}, "Page Title", "Right value for title";
 is $json->{description}, "Description of page", "Right value for description";
 
 $json = GET_ok("/project/$uuid/page", "Get list of pages");
 
-ok $json->{_embedded}->{pages}, "JSON has pages property";
-is scalar(@{$json->{_embedded}->{pages}}), 2, "Two pages in project";
+ok $json->{_embedded}, "JSON has pages property";
+is scalar(@{$json->{_embedded}}), 2, "Two pages in project";
 
 $json = GET_ok("/page/$page_uuid", "Get page info");
 
-is $json->{uuid}, $page_uuid, "Right uuid";
+is $json->{id}, $page_uuid, "Right uuid";
 is $json->{title}, "Page Title", "Right value for title";
 is $json->{description}, "Description of page", "Right value for description";
 
@@ -399,37 +295,23 @@ $json = POST_ok("/project/$uuid/edition", {}, "create new working edition");
 
 ok $json->{created_on}, "JSON has created on date";
 
-$json = GET_ok("/project/$uuid", "Get sitemap");
-is_deeply $json->{sitemap}, {
-  '' => {
-    'visual' => 'home-page',
-    'children' => {
-      'foo' => {
-        'visual' => 'baz'
-      }
-    }
-  }
-}, "New edition saves sitemap";
-
 $json = POST_ok("/project/$uuid/page", {
   title => "Second page title",
   description => "Description of another page",
 }, "Create a new page");
 
-my $page2_uuid = $json -> {uuid};
+my $page2_uuid = $json -> {id};
 
 isnt $page2_uuid, $page_uuid, "Two pages are two uuids";
 
 $json = GET_ok("/project/$uuid/page", "Get list of pages");
 
-is scalar(@{$json->{_embedded}->{pages}}), 3, "Three pages in project";
+is scalar(@{$json->{_embedded}}), 3, "Three pages in project";
 
 $json = DELETE_ok("/project/$uuid/edition", "Clear working edition");
 
 $json = GET_ok("/project/$uuid/page", "Get list of pages");
 
-is scalar(@{$json->{_embedded} -> {pages}}), 2, "Two pages in project after clearing working edition";
-
-
+is scalar(@{$json->{_embedded}}), 2, "Two pages in project after clearing working edition";
 
 done_testing();

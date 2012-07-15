@@ -19,6 +19,12 @@ has _user => (
     if($c -> session -> {user_id}) {
       $c -> model('DB::User') -> find({ id => $c -> session -> {user_id} });
     }
+    elsif($c -> model('DB') -> schema -> is_development) {
+      my $user = $c -> model('DB::User') -> find_or_create({
+        uuid => 'cookeddeadbeafstasty',
+      });
+      return $user;
+    }
     else {
       # check request headers for API keys - we don't store anything in the
       # session, so these are needed on each request

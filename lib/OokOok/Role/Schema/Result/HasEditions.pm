@@ -35,22 +35,6 @@ The following methods are overridden or otherwise altered in functionality.
 
 =cut
 
-#use Data::UUID ();
-#use DateTime;
-#
-#{
-#  my $ug = Data::UUID -> new;
-#
-#  before insert => sub {
-#    my($self) = @_;
-#
-#    my $uuid = substr($ug -> create_b64(),0,20);
-#    $uuid =~ tr{+/}{-_};
-#    $self -> uuid($uuid);
-#    #$self -> created_on(DateTime->now);
-#  };
-#}
-
 after insert => sub {
   $_[0] -> create_related('editions', {});
   $_[0];
@@ -82,11 +66,15 @@ sub edition_for_date {
   return $self -> _apply_date_constraint($q, "", $date) -> first;
 }
 
+*version_for_date = \&edition_for_date;
+
 =head2 current_edition
 
 =cut
 
 sub current_edition { $_[0] -> edition_for_date; }
+
+*current_version = \&current_edition;
 
 =head2 last_frozen_on
 

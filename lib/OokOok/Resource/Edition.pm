@@ -3,28 +3,28 @@ use Moose;
 use namespace::autoclean;
 use OokOok::Resource;
 
-sub resource_collection_class { 'OokOok::Resource::Project' }
+#sub resource_collection_class { 'OokOok::Resource::Project' }
+#
+#has '+collection' => (
+#  lazy => 1,
+#  default => sub {
+#    my($self) = @_;
+#
+#    OokOok::Collection::Project->new(
+#      c => $self -> c, 
+#    ) -> resource($self -> source -> project -> uuid);
+#  },
+#);
 
-has '+collection' => (
-  lazy => 1,
-  default => sub {
-    my($self) = @_;
-
-    OokOok::Resource::Project->new(
-      c => $self -> c, 
-      source => $self -> source -> project
-    );
-  },
-);
-
+# Changes are made via the project - not the edition
 prop name => (
-  is => 'rw',
+  is => 'ro',
   deep => 1,
   isa => 'Str'
 );
 
 prop description => (
-  is => 'rw',
+  is => 'ro',
   deep => 1,
   isa => 'Str',
 );
@@ -41,21 +41,10 @@ prop closed_on => (
   source => sub { "".($_[0] -> source -> closed_on || "") }
 );
 
-augment GET => sub {
-  my($self, $deep) = @_;
-
-  my $json = {};
-
-  if($self -> source -> theme) {
-    $json -> {theme} = OokOok::Resource::Theme->new(
-      source => $self -> source -> theme,
-      c => $self -> c
-    ) -> link
-    #$json -> {theme_date} = $self -> source -> theme_date;
-  }
-
-  return $json;
-};
+belongs_to theme => 'OokOok::Resource::Theme', (
+  source => sub { $_[0] -> source -> theme_edition },
+  is => 'ro'
+);
 
 sub link {
   my($self) = @_;

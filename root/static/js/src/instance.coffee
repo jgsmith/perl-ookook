@@ -15,15 +15,17 @@ $ ->
 
     $("#cmd-plus").click ->
       if app.getAuthenticated()
-        formId = app.getMetroParent() + "-new-form"
-        console.log "Showing", formId
-        $('#'+formId).modal('show')
+        item = app.dataStore.data.getItem app.getMetroParent()
+        if item["cmd-plus"]?
+          formId = item["cmd-plus"][0] + "-new-form"
+          console.log "Showing", formId
+          $('#'+formId).modal('show')
 
     $("#cmd-edit").click ->
       if app.getAuthenticated()
         item = app.dataStore.data.getItem app.getMetroParent()
-        if item.restType?
-          formId = item.restType[0] + "-edit-form"
+        if item["cmd-edit"]?
+          formId = item["cmd-edit"][0] + "-edit-form"
           console.log "Showing", formId
           $('#'+formId).modal('show')
 
@@ -51,6 +53,19 @@ $ ->
       item = app.dataStore.data.getItem id
       if item.restType? and app.model(item.restType[0])?
         app.model(item.restType[0]).inflateItem id
+
+      if app.getAuthenticated()
+        if item["cmd-edit"]?
+          $("#li-edit").show()
+        else
+          $("#li-edit").hide()
+        if item["cmd-plus"]?
+          $("#li-plus").show()
+        else
+          $("#li-plus").hide()
+      else
+        $("#li-edit").hide()
+        $("#li-plus").hide()
 
       # build breadcrumb
       crumbs = []
@@ -88,7 +103,7 @@ $ ->
         }]
 
       if model != "Board"
-        ookook.component.newItemForm.initInstance $("#section-#{nom}-new-form"),
+        ookook.component.newItemForm.initInstance $("##{model}-new-form"),
           application: -> app
           model: app.model(model)
         ookook.component.editItemForm.initInstance $("##{model}-edit-form"),
@@ -118,8 +133,7 @@ $ ->
           for info in data._embedded
              count += 1
              key = info.id
-             if info._links?.self? && info.dataType?
-               console.log "Adding model", info.dataType
+             if info._links?.self? && info.dataType? && !app.model(info.dataType)?
                app.addModel info.dataType, ookook.model.initModel
                  collection_url: info._links.self
                  dataStore: app.dataStore.data
@@ -128,7 +142,7 @@ $ ->
                  schema: info.schema
                  application: -> app
 
-             items.push
+             pi =
                id: "section-#{key}"
                type: 'SectionLink'
                rank: (if count == 1 then 2 else 1)
@@ -138,6 +152,9 @@ $ ->
                badge: 0
                title: info.title
                model: info.dataType
+             if key != "board"
+               pi["cmd-plus"] = info.dataType
+             items.push pi
         if data._links?
           for key, info of data._links
             if typeof info != "string"
@@ -176,7 +193,6 @@ $ ->
                 items.push si
                 i += 1
 
-        console.log "Looking to add inflateItem to Project config"
         walkSitemap = (parent, map) ->
           i = 0
           items = []
@@ -206,7 +222,6 @@ $ ->
         if app.model('Project')?
           app.model('Project').addConfig
             inflateItem: (id) ->
-              console.log "inflating Project", id
               pitems = []
               item = app.dataStore.data.getItem id
               # item.sitemap[0]
@@ -231,7 +246,93 @@ $ ->
                 pitems.push pi
                 if item.sitemap[0][""]?.children?
                   pitems = pitems.concat walkSitemap "#{id}-sitemap-0", item.sitemap[0][""].children
+              # now we want to make sure pages are loaded
+              pitems.push
+                id: "#{id}-pages"
+                parent: id
+                type: "SectionLink"
+                title: "Pages"
+                badge: 0
+              app.model("Page").getCollection {
+                project_id: id
+              }, (list) ->
+                # we want to update the number of pages
+                app.dataStore.data.updateItems [
+                  id: "#{id}-pages"
+                  badge: list.length
+                ]
               pitems
+
+        ookook.util.get
+          url: '/page'
+          success: (data) ->
+            app.addModel 'PagePart', ookook.model.initModel
+              collection_url: '/page/{?page_id}/page_part'
+              dataStore: app.dataStore.data
+              restType: 'PagePart'
+              parent: "{?page_id}"
+              schema:
+                properties:
+                  title:
+                    is: 'rw'
+                    source: 'title'
+                    valueType: 'text'
+                  content:
+                    is: 'rw'
+                    source: 'content'
+                    valueType: 'text'
+                  id:
+                    is: 'ro'
+                    source: 'id'
+                    valueType: 'text'
+                belongs_to:
+                  page:
+                    is: 'ro'
+                    source: 'page'
+              application: -> app
+              buildId: (item) -> item.parent + "-part-" + item.title
+              
+            app.addModel 'Page', ookook.model.initModel
+              collection_url: '/project/{?project_id}/page'
+              dataStore: app.dataStore.data
+              restType: 'Page'
+              parent: "{?project_id}-pages"
+              schema: data._schema
+              application: -> app
+              inflateItem: (id) ->
+                item = app.dataStore.data.getItem id
+                pitems = []
+                if app.getAuthenticated()
+                  pitems.push
+                    id: "#{id}-factsheet"
+                    parent: id
+                    title: item.title
+                    description: item.description
+                    restType: "Page"
+                    type: "FactSheet"
+                  pitems.push
+                    id: id
+                    "cmd-plus": "PagePart"
+                    "cmd-edit": "Page"
+                  # now push an item for each page part
+                  app.model('PagePart').getCollection {
+                    page_id: id
+                  }
+                pitems
+
+            ookook.component.newItemForm.initInstance $("#PagePart-new-form"),
+              application: -> app
+              model: app.model("PagePart")
+            ookook.component.editItemForm.initInstance $("#PagePart-edit-form"),
+              application: -> app
+              model: app.model("PagePart")
+            ookook.component.newItemForm.initInstance $("#Page-new-form"),
+              application: -> app
+              model: app.model("Page")
+            ookook.component.editItemForm.initInstance $("#Page-edit-form"),
+              application: -> app
+              model: app.model("Page")
+
         ookook.util.get
           url: '/profile'
           error: ->

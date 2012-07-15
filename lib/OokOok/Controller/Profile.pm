@@ -4,6 +4,12 @@ use namespace::autoclean;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
+__PACKAGE__ -> config(
+  map => {
+  },
+  default => 'text/html',
+);
+
 =head1 NAME
 
 OokOok::Controller::Profile - Catalyst Controller
@@ -43,12 +49,6 @@ sub index_GET {
         connected => defined($oauth_identity),
       };
     }
-
-#    $profile -> {_links}{oauth_logout} = {
-#      url => $c -> uri_for('/oauth/logout') -> as_string,
-#      title => "Log out",
-#      dangerous => 1,
-#    };
 
     $self -> status_ok($c,
       entity => $profile

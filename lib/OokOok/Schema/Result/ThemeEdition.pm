@@ -115,20 +115,6 @@ __PACKAGE__ -> has_many("layout_versions" => "OokOok::Schema::Result::ThemeLayou
 
 sub owner { $_[0] -> theme; }
 
-sub GET {
-  my($self, $c) = @_;
-
-  my $json = {
-    url => "".$c->uri_for("/theme/" . $self->theme->uuid . "/edition"),
-    name => $self -> name,
-    description => $self -> description,
-    frozen_on => (map { $_ ? $_->strftime('%Y%m%d%H%M%S') : undef } $self->frozen_on),
-    created_on => (map { $_ ? $_->strftime('%Y%m%d%H%M%S') : undef } $self->created_on),
-  };
-  return $json;
-}
-
-
 # returns all layouts for this edition
 sub all_layouts {
   my($self) = @_;

@@ -1,7 +1,11 @@
 #!/usr/bin/env perl
 
-use DBIx::Class::Fixtures;
-use Test::More no_plan;
+use XML::LibXML;
+use Test::More;
+
+BEGIN {
+  $ENV{'OOKOOK_CONFIG_LOCAL_SUFFIX'} = "testing";
+}
 
 BEGIN {
   use_ok "OokOok::Model::DB";
@@ -43,29 +47,7 @@ my $layout_version = $layout->current_version;
 $layout_version -> update({
   name => 'Simple',
   layout => <<'EOXML',
-<row>
-  <div width="12">
-    <snippet name="header" />
-  </div>
-</row>
-<row>
-  <div width="12">
-    <snippet name="navigation" />
-  </div>
-</row>
-<row>
-  <div width="9">
-    <page-part name="sidebar" />
-  </div>
-  <div width="3">
-    <page-part name="sidebar" />
-  </div>
-</row>
-<row>
-  <div width="12">
-    <snippet name="footer" />
-  </div>
-</row>
+<div></div>
 EOXML
   configuration => '{}'
 });
@@ -78,31 +60,7 @@ my $stash = {};
 $stash -> {parser} = XML::LibXML->new;
 
 my $layoutXml = XML::LibXML -> load_xml(string => <<'EOXML');
-<layout>
-  <row>
-    <div width="12"></div>
-  </row>
-</layout>
+<div></div>
 EOXML
 
-my $doc = $layout -> _render_box($stash, $dom, $layoutXml->documentElement);
-
-ok $doc, "We got something back from the rendering";
-
-$dom -> setDocumentElement($doc);
-
-diag $dom -> toStringHTML();
-
-is $dom -> toStringHTML(), qq{<div><div class="row"><div class="span12"></div></div></div>\n}, "Got right HTML out";
-
-#$doc = $layout -> _render_box($stash, $dom, {
-  #width => 12,
-  #content => [{
-    #type => 'Content',
-    #content => 'Foo'
-  #}]
-#});
-
-#$dom -> setDocumentElement($doc);
-
-#is $dom -> toStringHTML(), qq{<div class="span12"><div>Foo</div></div>\n}, "Got right HTML out for a content box";
+done_testing();

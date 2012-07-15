@@ -5,6 +5,7 @@ use Moose::Exporter;
 use Moose::Util::MetaRole;
 
 use Module::Load ();
+use String::CamelCase qw(decamelize);
 
 use OokOok::Base::Resource;
 use OokOok::Meta::Resource;
@@ -13,7 +14,7 @@ use namespace::autoclean;
 use 5.10.0;
 
 Moose::Exporter->setup_import_methods(
-  with_meta => [ 'prop', 'has_many', 'belongs_to', 'collection_class' ],
+  with_meta => [ 'prop', 'has_many', 'belongs_to', 'collection_class', 'has_a', 'resource_name' ],
   as_is     => [ ],
   also      => 'Moose',
 );
@@ -35,7 +36,18 @@ sub init_meta {
 
   $meta -> superclasses("OokOok::Base::Resource");
 
+  my $nom = $args{for_class};
+  $nom =~ s{^.*::}{};
+  $nom = decamelize($nom);
+  $meta -> resource_name($nom);
+
   return $meta;
+}
+
+sub resource_name {
+  my($meta, $name) = @_;
+
+  $meta -> resource_name($name);
 }
 
 sub collection_class {
@@ -74,6 +86,29 @@ sub belongs_to {
     isa => $resource_class,
     source => $method,
   );
+}
+
+sub has_a {
+  my($meta, $key, $resource_class, %config) = @_;
+
+  my $method;
+
+  if(!$config{source}) {
+    $method = sub { $_[0] -> source -> $key };
+  }
+  elsif(!ref $config{source}) {
+    my $mkey = $config{source};
+    $method = sub { $_[0] -> source -> $mkey };
+  }
+  else {
+    $method = $config{source};
+  }
+
+  $meta -> add_hasa( $key, (
+    %config,
+    isa => $resource_class,
+    source => $method,
+  ) );
 }
 
 sub has_many {

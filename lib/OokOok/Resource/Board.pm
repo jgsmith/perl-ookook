@@ -2,6 +2,10 @@ package OokOok::Resource::Board;
 use OokOok::Resource;
 use namespace::autoclean;
 
+has '+source' => (
+  isa => 'OokOok::Model::DB::Board'
+);
+
 prop name => (
   required => 1,
   type => 'Str',

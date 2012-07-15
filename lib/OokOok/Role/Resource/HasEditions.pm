@@ -21,12 +21,4 @@ sub edition {
   );
 }
 
-sub PUT {
-  my($self, $json) = @_;
-
-  my $values = $self -> verify($json);
-  $self -> source -> current_edition -> update($values);
-  $self;
-}
-
 1;

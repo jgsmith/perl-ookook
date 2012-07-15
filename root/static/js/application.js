@@ -66,18 +66,45 @@
     });
     ookook.namespace("model", function(model) {
       return model.initModel = function(config) {
-        var that, typeNames;
+        var makeSubstitutions, that, typeNames;
         that = {};
-        that.getCollection = function(cb) {
+        makeSubstitutions = function(template, data) {
+          var bits, i, mbs, orig, _i, _ref;
+          orig = template;
+          if (template.indexOf("{?") >= 0) {
+            bits = template.split('{?');
+            for (i = _i = 0, _ref = bits.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+              if (i % 2 === 1) {
+                mbs = bits[i].split("}");
+                bits[i] = (data[mbs[0]] || '') + mbs[1];
+              }
+            }
+            template = bits.join("");
+          }
+          return template;
+        };
+        that.getCollection = function(info, cb) {
+          var parent, url;
+          if ($.isFunction(info)) {
+            cb = info;
+            info = {};
+          }
+          url = makeSubstitutions(config.collection_url, info);
+          parent = makeSubstitutions(config.parent, info);
           return ookook.util.get({
-            url: config.collection_url,
+            url: url,
             success: function(data) {
-              var items, thing, _i, _len, _ref;
+              var items, json, thing, _i, _len, _ref;
               items = [];
               _ref = data._embedded;
               for (_i = 0, _len = _ref.length; _i < _len; _i++) {
                 thing = _ref[_i];
-                items.push(that.importItem(thing));
+                json = that.importItem(thing);
+                json.parent = parent;
+                if (!(json.id != null) && (config.buildId != null)) {
+                  json.id = config.buildId(json);
+                }
+                items.push(json);
               }
               config.dataStore.loadItems(items);
               if (cb != null) {
@@ -134,21 +161,20 @@
           }
           json.type = config.itemType || 'SectionLink';
           json.restType = config.restType;
-          json.parent = config.parent;
           return json;
         };
         that.exportItem = function(data) {
-          var json, k, v, _ref, _ref1;
+          var json, k, v, _ref, _ref1, _ref2, _ref3;
           json = {};
           _ref1 = config != null ? (_ref = config.schema) != null ? _ref.properties : void 0 : void 0;
           for (k in _ref1) {
             v = _ref1[k];
             if (v.is === "rw" && v.valueType !== "hash") {
-              if (data[v.source].length === 1) {
+              if (((_ref2 = data[v.source]) != null ? _ref2.length : void 0) === 1) {
                 json[k] = data[v.source][0];
-              } else if (data[v.source].length > 1) {
+              } else if (((_ref3 = data[v.source]) != null ? _ref3.length : void 0) > 1) {
                 json[k] = data[v.source];
-              } else {
+              } else if (data[v.source] != null) {
                 json[k] = null;
               }
             }
@@ -165,7 +191,7 @@
           return config = $.extend(config, true, c);
         };
         that.inflateItem = function(id) {
-          var i, item, items, k, linkedItem, newItems, oldItem, title, updatedItems, v, _i, _j, _len, _len1, _ref, _ref1;
+          var i, item, items, k, linkedItem, newItems, newParents, newSize, oldItem, oldSize, parents, title, updatedItems, v, x, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
           item = config.dataStore.getItem(id);
           items = [];
           items.push($.extend({}, true, item, {
@@ -173,37 +199,51 @@
             type: "FactSheet",
             parent: id
           }));
-          console.log("inflating", id);
           if ((config != null ? config.inflateItem : void 0) != null) {
-            console.log("calling out to inflateItem");
             items = items.concat(config.inflateItem(id));
+          }
+          parents = MITHGrid.Data.Set.initInstance([id]);
+          newParents = parents;
+          newSize = parents.size();
+          oldSize = 0;
+          while (oldSize !== newSize) {
+            newParents = config.dataStore.getObjectsUnion(newParents, "parent");
+            _ref = newParents.items();
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              x = _ref[_i];
+              parents.add(x);
+            }
+            oldSize = newSize;
+            newSize = parents.size();
           }
           if ((config != null ? config.schema : void 0) != null) {
             if (config.schema.belongs_to != null) {
-              _ref = config.schema.belongs_to;
-              for (k in _ref) {
-                v = _ref[k];
+              _ref1 = config.schema.belongs_to;
+              for (k in _ref1) {
+                v = _ref1[k];
                 if (item[v.source || k] != null) {
-                  _ref1 = item[v.source || k];
-                  for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-                    i = _ref1[_i];
-                    linkedItem = config.dataStore.getItem(i);
-                    if ((linkedItem != null ? linkedItem.restType : void 0) != null) {
-                      if (typeNames[linkedItem.restType[0]] != null) {
-                        title = typeNames[linkedItem.restType[0]];
+                  _ref2 = item[v.source || k];
+                  for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+                    i = _ref2[_j];
+                    if (!parents.contains(i)) {
+                      linkedItem = config.dataStore.getItem(i);
+                      if ((linkedItem != null ? linkedItem.restType : void 0) != null) {
+                        if (typeNames[linkedItem.restType[0]] != null) {
+                          title = typeNames[linkedItem.restType[0]];
+                        } else {
+                          title = linkedItem.restType[0];
+                        }
                       } else {
-                        title = linkedItem.restType[0];
+                        title = v.source || l;
                       }
-                    } else {
-                      title = v.source || l;
+                      items.push({
+                        id: "" + id + "-" + i + "-link",
+                        type: "ItemLink",
+                        title: title,
+                        parent: id,
+                        link: i
+                      });
                     }
-                    items.push({
-                      id: "" + id + "-" + i + "-link",
-                      type: "ItemLink",
-                      title: title,
-                      parent: id,
-                      link: i
-                    });
                   }
                 }
               }
@@ -211,8 +251,8 @@
           }
           newItems = [];
           updatedItems = [];
-          for (_j = 0, _len1 = items.length; _j < _len1; _j++) {
-            item = items[_j];
+          for (_k = 0, _len2 = items.length; _k < _len2; _k++) {
+            item = items[_k];
             oldItem = config.dataStore.getItem(item.id);
             if (oldItem.type != null) {
               updatedItems.push(item);
@@ -234,14 +274,23 @@
           }
           return _results;
         };
-        that.load = function(id) {
+        that.load = function(info, id) {
+          var url;
+          if (!(id != null)) {
+            id = info;
+            info = {};
+          }
+          url = makeSubstitutions(config.collection_url, info);
           return ookook.util.get({
-            url: config.collection_url + '/' + id,
+            url: url + '/' + id,
             success: function(data) {
               var json;
               json = that.importItem(data);
               json.restType = config.restType;
               json.parent = config.parent;
+              if (!(json.id != null) && (config.buildId != null)) {
+                json.id = config.buildId(json);
+              }
               if (config.dataStore.contains(id)) {
                 return config.dataStore.updateItems([json], function() {
                   var count, list;
@@ -271,16 +320,20 @@
           });
         };
         that.create = function(data) {
-          var json;
+          var json, url;
+          url = makeSubstitutions(config.collection_url, data);
           json = that.exportItem(data);
           return ookook.util.post({
-            url: config.collection_url,
+            url: url,
             data: json,
             success: function(data) {
               var parentItem;
               json = that.importItem(data);
               json.restType = config.restType;
               json.parent = config.parent;
+              if (!json.id && (config.buildId != null)) {
+                json.id = config.buildId(json);
+              }
               config.dataStore.loadItems([json]);
               parentItem = config.dataStore.getItem(config.parent);
               return config.dataStore.updateItems([
@@ -292,9 +345,16 @@
             }
           });
         };
-        that["delete"] = function(id, cb) {
+        that["delete"] = function(info, id, cb) {
+          var url;
+          if ($.isFunction(id)) {
+            cb = id;
+            id = info;
+            info = {};
+          }
+          url = makeSubstitutions(config.collection_url, info);
           return ookook.util["delete"]({
-            url: config.collection_url + '/' + id,
+            url: url + '/' + id,
             success: function() {
               var parentItem;
               that.deflateItem(id);
@@ -313,10 +373,11 @@
           });
         };
         that.update = function(item) {
-          var json;
+          var json, url;
           json = that.exportItem(item);
+          url = makeSubstitutions(config.collection_url, item);
           return ookook.util.put({
-            url: config.collection_url + '/' + item.id,
+            url: url + '/' + item.id,
             data: json
           });
         };
@@ -396,16 +457,13 @@
             });
             return $(container).on('show', function() {
               var app, item;
-              console.log("Showing", container);
               app = options.application();
               item = app.dataStore.data.getItem(app.getMetroParent());
-              console.log("editing", item);
               $(container).find('.modal-form-input').each(function(idx, el) {
                 var elId, _ref;
                 el = $(el);
                 elId = el.attr('id');
                 elId = elId.substr(id.length + 1);
-                console.log("Value for", elId);
                 return el.val(((_ref = item[elId]) != null ? _ref[0] : void 0) || "");
               });
               if (options.initForm != null) {
@@ -577,7 +635,6 @@
               if (!(rendering.order != null)) {
                 $(container).append(cdiv);
               } else {
-                console.log("order:", rendering.order);
                 if (orderedRenderings.length === 0) {
                   $(container).prepend(cdiv);
                   orderedRenderings.push(rendering);
@@ -725,7 +782,6 @@
               var item, link, rendering;
               rendering = baseLens(hubEl, presentation, model, itemId);
               item = model.getItem(itemId);
-              console.log(rendering);
               if (item.link != null) {
                 link = item.link[0];
                 $(rendering.el).click(function() {
@@ -803,7 +859,7 @@
               }
               content = template(data);
               el.attr({
-                "class": "tile width4 height6 subhead"
+                "class": "tile width6 height2 subhead"
               });
               el.append($(content));
               rendering.el = el;
@@ -838,7 +894,8 @@
       return template.namespace('factsheet', function(fs) {
         fs.Project = t("<h2>{{ data.title[0] }}</h2>\n<p class='type'>Project</p>\n<p>{{ data.description[0] }}</p>");
         fs.Board = t("<h2>{{ data.title[0] }}</h2>\n<p class='type'>Editorial Board</p>\n[[ if(data.description != null && data.description.length > 0) { ]]\n<p>{{ data.description[0] }}</p>\n[[ } ]]");
-        return fs.SitemapPage = t("<h2>{{ data.title[0] }}</h2>\n<p class='type'>Sitemap Page</p>\n[[ if(data.page != null && data.page.length > 0) { ]]\n  <p>Linked to: {{ data.page[0] }}</p>\n[[ } ]]\n[[ if(data.description != null && data.description.length > 0) { ]]\n  <p>{{ data.description[0] }}</p>\n[[ } ]]");
+        fs.SitemapPage = t("<h2>{{ data.title[0] }}</h2>\n<p class='type'>Sitemap Page</p>\n[[ if(data.page != null && data.page.length > 0) { ]]\n  <p>Linked to: {{ data.page[0] }}</p>\n[[ } ]]\n[[ if(data.description != null && data.description.length > 0) { ]]\n  <p>{{ data.description[0] }}</p>\n[[ } ]]");
+        return fs.Page = t("<h2>{{ data.title[0] }}</h2>\n<p class='type'>Page</p>\n<p>{{ data.description[0] }}</p>");
       });
     });
     ookook.namespace("application", function(apps) {
@@ -968,19 +1025,22 @@
           });
         });
         $("#cmd-plus").click(function() {
-          var formId;
+          var formId, item;
           if (app.getAuthenticated()) {
-            formId = app.getMetroParent() + "-new-form";
-            console.log("Showing", formId);
-            return $('#' + formId).modal('show');
+            item = app.dataStore.data.getItem(app.getMetroParent());
+            if (item["cmd-plus"] != null) {
+              formId = item["cmd-plus"][0] + "-new-form";
+              console.log("Showing", formId);
+              return $('#' + formId).modal('show');
+            }
           }
         });
         $("#cmd-edit").click(function() {
           var formId, item;
           if (app.getAuthenticated()) {
             item = app.dataStore.data.getItem(app.getMetroParent());
-            if (item.restType != null) {
-              formId = item.restType[0] + "-edit-form";
+            if (item["cmd-edit"] != null) {
+              formId = item["cmd-edit"][0] + "-edit-form";
               console.log("Showing", formId);
               return $('#' + formId).modal('show');
             }
@@ -1018,6 +1078,21 @@
           item = app.dataStore.data.getItem(id);
           if ((item.restType != null) && (app.model(item.restType[0]) != null)) {
             app.model(item.restType[0]).inflateItem(id);
+          }
+          if (app.getAuthenticated()) {
+            if (item["cmd-edit"] != null) {
+              $("#li-edit").show();
+            } else {
+              $("#li-edit").hide();
+            }
+            if (item["cmd-plus"] != null) {
+              $("#li-plus").show();
+            } else {
+              $("#li-plus").hide();
+            }
+          } else {
+            $("#li-edit").hide();
+            $("#li-plus").hide();
           }
           crumbs = [];
           tid = id;
@@ -1069,7 +1144,7 @@
             ]);
           });
           if (model !== "Board") {
-            ookook.component.newItemForm.initInstance($("#section-" + nom + "-new-form"), {
+            ookook.component.newItemForm.initInstance($("#" + model + "-new-form"), {
               application: function() {
                 return app;
               },
@@ -1113,7 +1188,7 @@
         return ookook.util.get({
           url: '/',
           success: function(data) {
-            var count, i, info, items, key, parentId, s, si, walkSitemap, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+            var count, i, info, items, key, parentId, pi, s, si, walkSitemap, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
             items = [];
             if (data._embedded != null) {
               count = 0;
@@ -1122,8 +1197,7 @@
                 info = _ref[_i];
                 count += 1;
                 key = info.id;
-                if ((((_ref1 = info._links) != null ? _ref1.self : void 0) != null) && (info.dataType != null)) {
-                  console.log("Adding model", info.dataType);
+                if ((((_ref1 = info._links) != null ? _ref1.self : void 0) != null) && (info.dataType != null) && !(app.model(info.dataType) != null)) {
                   app.addModel(info.dataType, ookook.model.initModel({
                     collection_url: info._links.self,
                     dataStore: app.dataStore.data,
@@ -1135,7 +1209,7 @@
                     }
                   }));
                 }
-                items.push({
+                pi = {
                   id: "section-" + key,
                   type: 'SectionLink',
                   rank: (count === 1 ? 2 : 1),
@@ -1145,7 +1219,11 @@
                   badge: 0,
                   title: info.title,
                   model: info.dataType
-                });
+                };
+                if (key !== "board") {
+                  pi["cmd-plus"] = info.dataType;
+                }
+                items.push(pi);
               }
             }
             if (data._links != null) {
@@ -1203,7 +1281,6 @@
                 }
               }
             }
-            console.log("Looking to add inflateItem to Project config");
             walkSitemap = function(parent, map) {
               var item, n;
               i = 0;
@@ -1239,8 +1316,7 @@
             if (app.model('Project') != null) {
               app.model('Project').addConfig({
                 inflateItem: function(id) {
-                  var item, pi, pitems, _ref7, _ref8, _ref9;
-                  console.log("inflating Project", id);
+                  var item, pitems, _ref7, _ref8, _ref9;
                   pitems = [];
                   item = app.dataStore.data.getItem(id);
                   if (app.getAuthenticated() && (((_ref7 = item.sitemap) != null ? _ref7[0] : void 0) != null)) {
@@ -1266,10 +1342,127 @@
                       pitems = pitems.concat(walkSitemap("" + id + "-sitemap-0", item.sitemap[0][""].children));
                     }
                   }
+                  pitems.push({
+                    id: "" + id + "-pages",
+                    parent: id,
+                    type: "SectionLink",
+                    title: "Pages",
+                    badge: 0
+                  });
+                  app.model("Page").getCollection({
+                    project_id: id
+                  }, function(list) {
+                    return app.dataStore.data.updateItems([
+                      {
+                        id: "" + id + "-pages",
+                        badge: list.length
+                      }
+                    ]);
+                  });
                   return pitems;
                 }
               });
             }
+            ookook.util.get({
+              url: '/page',
+              success: function(data) {
+                app.addModel('PagePart', ookook.model.initModel({
+                  collection_url: '/page/{?page_id}/page_part',
+                  dataStore: app.dataStore.data,
+                  restType: 'PagePart',
+                  parent: "{?page_id}",
+                  schema: {
+                    properties: {
+                      title: {
+                        is: 'rw',
+                        source: 'title',
+                        valueType: 'text'
+                      },
+                      content: {
+                        is: 'rw',
+                        source: 'content',
+                        valueType: 'text'
+                      },
+                      id: {
+                        is: 'ro',
+                        source: 'id',
+                        valueType: 'text'
+                      }
+                    },
+                    belongs_to: {
+                      page: {
+                        is: 'ro',
+                        source: 'page'
+                      }
+                    }
+                  },
+                  application: function() {
+                    return app;
+                  },
+                  buildId: function(item) {
+                    return item.parent + "-part-" + item.title;
+                  }
+                }));
+                app.addModel('Page', ookook.model.initModel({
+                  collection_url: '/project/{?project_id}/page',
+                  dataStore: app.dataStore.data,
+                  restType: 'Page',
+                  parent: "{?project_id}-pages",
+                  schema: data._schema,
+                  application: function() {
+                    return app;
+                  },
+                  inflateItem: function(id) {
+                    var item, pitems;
+                    item = app.dataStore.data.getItem(id);
+                    pitems = [];
+                    if (app.getAuthenticated()) {
+                      pitems.push({
+                        id: "" + id + "-factsheet",
+                        parent: id,
+                        title: item.title,
+                        description: item.description,
+                        restType: "Page",
+                        type: "FactSheet"
+                      });
+                      pitems.push({
+                        id: id,
+                        "cmd-plus": "PagePart",
+                        "cmd-edit": "Page"
+                      });
+                      app.model('PagePart').getCollection({
+                        page_id: id
+                      });
+                    }
+                    return pitems;
+                  }
+                }));
+                ookook.component.newItemForm.initInstance($("#PagePart-new-form"), {
+                  application: function() {
+                    return app;
+                  },
+                  model: app.model("PagePart")
+                });
+                ookook.component.editItemForm.initInstance($("#PagePart-edit-form"), {
+                  application: function() {
+                    return app;
+                  },
+                  model: app.model("PagePart")
+                });
+                ookook.component.newItemForm.initInstance($("#Page-new-form"), {
+                  application: function() {
+                    return app;
+                  },
+                  model: app.model("Page")
+                });
+                return ookook.component.editItemForm.initInstance($("#Page-edit-form"), {
+                  application: function() {
+                    return app;
+                  },
+                  model: app.model("Page")
+                });
+              }
+            });
             return ookook.util.get({
               url: '/profile',
               error: function() {

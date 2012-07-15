@@ -7,10 +7,14 @@ has '+edition_resource_class' => (
   default => 'OokOok::Resource::Edition',
 );
 
+has '+source' => (
+  isa => 'OokOok::Model::DB::Project',
+);
+
 prop name => (
   required => 1,
   type => 'Str',
-  source => sub { $_[0] -> source -> current_edition -> name },
+  source => sub { $_[0] -> source_version -> name },
   maps_to => 'title',
 );
 
@@ -23,94 +27,50 @@ prop id => (
 
 prop description => (
   type => 'Str',
-  source => sub { $_[0] -> source -> current_edition -> description },
-);
-
-prop sitemap => (
-  type => 'HashRef',
-  source => sub { $_[0] -> source -> current_edition -> sitemap },
-  verifier => sub { 1 },
-  value_type => 'hash',
+  source => sub { $_[0] -> source_version -> description },
 );
 
 has_many pages => 'OokOok::Resource::Page', (
   is => 'ro',
+  source => sub { $_[0] -> source -> pages },
 );
 
 has_many editions => 'OokOok::Resource::Edition', (
   is => 'ro',
+  source => sub { $_[0] -> source -> editions },
 );
 
 belongs_to theme => 'OokOok::Resource::Theme', (
-  source => sub { $_[0] -> source -> current_edition -> theme },
+  source => sub { $_[0] -> source_version -> theme_edition },
   is => 'rw',
   maps_to => 'theme',
   value_type => "Theme",
 );
 
-belongs_to board => 'OokOok::Resource::Board', (
+has_a board => 'OokOok::Resource::Board', (
   source => sub { $_[0] -> source -> board },
   is => 'rw',
   maps_to => 'board',
   value_type => 'Board',
 );
 
-sub _walk_sitemaps {
-  my($self, $sitemap, $changes) = @_;
-
-  my($k, $v, $kk, $vv);
-
-  while(($k, $v) = each(%$changes)) {
-    if(!exists $sitemap->{$k}) {
-      $sitemap->{$k} = { };
-    }
-    while(($kk, $vv) = each(%$v)) {
-      if($kk eq 'children') {
-        if(!exists $sitemap -> {$k} -> {children}) {
-          $sitemap->{$k} -> {children} = {};
-        }
-        $self -> _walk_sitemaps($sitemap -> {$k} -> {children}, $vv);
-        if(0 == scalar(keys %{$sitemap->{$k}->{children}})) {
-          delete $sitemap->{$k}->{children};
-        }
-      }
-      elsif(defined $vv) {
-        $sitemap -> {$k} -> {$kk} = $vv;
-      }
-      elsif(exists $sitemap->{$k}->{$kk}) {
-        delete $sitemap->{$k}->{$kk};
-      }
-    }
-    if(!scalar(keys(%{$sitemap->{$k}}))) {
-      delete $sitemap->{$k};
-    }
-  }
-}
-
-sub PUT {
-  my($self, $json) = @_;
-
-  my $values = $self -> verify($json);
-
-  my $sitemap = delete $values->{sitemap};
-  if(defined $sitemap) {
-    my $old_sitemap = $self -> source -> current_edition -> sitemap;
-    $self -> _walk_sitemaps($old_sitemap, $sitemap);
-    $values -> {sitemap} = $old_sitemap;
-  }
-
-  $self -> source -> current_edition -> update( $values );
-
-  $self;
-}
+has_a page => 'OokOok::Resource::Page', (
+  source => sub { 
+    my $sv = $_[0] -> source_version;
+    if($sv) { $sv -> page }
+  },
+  is => 'rw',
+);
 
 sub can_PUT {
   my($self) = @_;
 
+  return 1 if $self -> is_development;
+
   # the user has to be in a rank that can modify the project itself
   # if we get here, we have a user
   my $rank = $self -> c -> model('DB::BoardRank') -> search({
-    'board.id' => $self -> source -> board -> id,
+    'board.id' => $self -> source -> project -> board -> id,
     'board_members.user_id' => $self -> c -> user -> id,
   }, {
     joins => [qw/board_members board/],

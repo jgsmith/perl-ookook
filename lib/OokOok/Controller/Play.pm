@@ -3,15 +3,14 @@ use Moose;
 use namespace::autoclean;
 
 BEGIN { 
-  extends 'Catalyst::Controller::REST'; 
-  with 'OokOok::Role::Controller::Player';
+  extends 'OokOok::Base::Player';
 }
 
 __PACKAGE__ -> config(
-  current_model => 'DB::Library',
+  map => {
+  },
+  default => 'text/html',
 );
-
-use feature qw(switch);
 
 =head1 NAME
 
@@ -30,7 +29,13 @@ Provides access to library functions via a REST interface.
 
 =cut
 
-sub base :Chained('/') :PathPart('p') :CaptureArgs(0) { }
+sub base :Chained('/') :PathPart('p') :CaptureArgs(0) { 
+  my($self, $c) = @_;
+
+  $c -> stash -> {collection} = OokOok::Collection::Library -> new(
+    c => $c
+  );
+}
 
 # paths: /p/.../$library/(function|...)/(function-uuid)/(mode)/
 #        /p/.../$library/session/(session-uuid)

@@ -60,6 +60,18 @@ __PACKAGE__->table("page_version");
   is_nullable: 1
   size: 20
 
+=head2 slug
+
+  data_type: 'varchar'
+  default_value: (empty string)
+  is_nullable: 0
+  size: 255
+
+=head2 parent_page_id
+
+  data_type: 'integer'
+  is_nullable: 1
+
 =head2 title
 
   data_type: 'varchar'
@@ -89,6 +101,10 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_nullable => 0 },
   "layout",
   { data_type => "char", is_nullable => 1, size => 20 },
+  "slug",
+  { data_type => "varchar", default_value => "", is_nullable => 0, size => 255 },
+  "parent_page_id",
+  { data_type => "integer", is_nullable => 1 },
   "title",
   { data_type => "varchar", default_value => "", is_nullable => 0, size => 255 },
   "primary_language",
@@ -110,13 +126,14 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-24 15:04:08
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ejhadd4Y8xcl4eRXHqIL1A
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-12 16:21:45
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:8jLf2ZYAwFwQUDGjMQsQJQ
 
 with 'OokOok::Role::Schema::Result::Version';
 
 __PACKAGE__ -> belongs_to( 'edition' => 'OokOok::Schema::Result::Edition', 'edition_id');
 __PACKAGE__ -> belongs_to( 'page' => 'OokOok::Schema::Result::Page', 'page_id');
+__PACKAGE__ -> belongs_to( 'parent_page' => 'OokOok::Schema::Result::Page', 'parent_page_id');
 __PACKAGE__ -> has_many('page_parts' => 'OokOok::Schema::Result::PagePart', 'page_version_id');
 
 sub owner { $_[0] -> page }
