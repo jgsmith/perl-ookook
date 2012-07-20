@@ -5,6 +5,8 @@ use namespace::autoclean;
 
 use OokOok::Collection::Project;
 use OokOok::Collection::Edition;
+use OokOok::Collection::Page;
+use OokOok::Collection::Snippet;
 
 use JSON;
 
@@ -47,6 +49,17 @@ sub pages :Chained('resource_base') :PathPart('page') :Args(0) :ActionClass('RES
 
 sub pages_GET { shift -> collection_GET(@_) }
 sub pages_POST { shift -> collection_POST(@_) }
+
+
+sub snippets :Chained('resource_base') :PathPart('snippet') :Args(0) :ActionClass('REST') {
+  my($self, $c) = @_;
+
+  $c -> stash -> {collection} = OokOok::Collection::Snippet -> new(c => $c);
+}
+
+sub snippets_GET { shift -> collection_GET(@_) }
+sub snippets_POST { shift -> collection_POST(@_) }
+
 
 sub editions :Chained('resource_base') :PathPart('edition') :Args(0) :ActionClass('REST') { 
   my($self, $c) = @_;

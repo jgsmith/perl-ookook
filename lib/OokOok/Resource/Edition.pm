@@ -41,8 +41,20 @@ prop closed_on => (
   source => sub { "".($_[0] -> source -> closed_on || "") }
 );
 
-belongs_to theme => 'OokOok::Resource::Theme', (
-  source => sub { $_[0] -> source -> theme_edition },
+prop theme_date => (
+  is => 'ro',
+  isa => 'Str',
+  source => sub { "".($_[0] -> source -> theme_date || "") },
+);
+
+has_a theme => 'OokOok::Resource::Theme', (
+  source => sub { $_[0] -> source -> theme },
+  date => sub { $_[0] -> source -> theme_date },
+  is => 'ro'
+);
+
+has_a page => 'OokOok::Resource::Page', (
+  source => sub { $_[0] -> source -> page },
   is => 'ro'
 );
 

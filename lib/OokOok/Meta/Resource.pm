@@ -291,6 +291,20 @@ sub _build_schema {
     $schema -> {properties} -> {$prop} -> {source} = $info -> {maps_to} || $prop;
     $schema -> {properties} -> {$prop} -> {is} = $info -> {is} || 'rw';
     $schema -> {properties} -> {$prop} -> {valueType} = $info -> {value_type} || 'text';
+    if($info -> {type} eq 'Enum') {
+      $schema -> {properties} -> {$prop} -> {valueType} = 'text';
+      $schema -> {properties} -> {$prop} -> {allowedValues} = $info -> {values};
+    }
+    if(defined $info -> {default} && !ref($info -> {default})) {
+      $schema -> {properties} -> {$prop} -> {default} = $info->{default};
+    }
+  }
+
+  for my $h ($self -> get_hasa_list) {
+    my $info = $self -> get_hasa($h);
+    $schema -> {properties} -> {$h} -> {source} = $info -> {maps_to} || $h;
+    $schema -> {properties} -> {$h} -> {is} = $info -> {is} || 'ro';
+    $schema -> {properties} -> {$h} -> {valueType} = $info -> {value_type} || 'link';
   }
 
   for my $key ($self -> get_embedded_list) {

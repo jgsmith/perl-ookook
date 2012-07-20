@@ -10,14 +10,22 @@
    title = "New Project"
  -%]
  [%- PROCESS modalInput
-    id = "section-projects-new-form-title"
+    id = "Project-new-form-title"
     label = "Name"
+    type = "text"
     placeholder = "Name of project..."
   -%]
  [%- PROCESS modalInput
-    id = "section-projects-new-form-description"
+    id = "Project-new-form-description"
     label = "Description"
+    type = "textarea"
     placeholder = "Description of project..."
+  -%]
+ [%- PROCESS modalInput
+    id = "Project-new-form-theme"
+    label = "Theme"
+    type = "selection"
+    selectType = "Theme"
   -%]
 [%- END -%]
 <!-- edit Project form -->
@@ -28,11 +36,13 @@
  [%- PROCESS modalInput
     id = "Project-edit-form-title"
     label = "Name"
+    type = "text"
     placeholder = "Name of project..."
   -%]
  [%- PROCESS modalInput
     id = "Project-edit-form-description"
     label = "Description"
+    type = "textarea"
     placeholder = "Description of project..."
   -%]
 [%- END -%]
@@ -44,6 +54,7 @@
 [%- PROCESS modalInput
    id = "sitemap-page-new-form-title"
    label = "Slug"
+    type = "text"
    placeholder = "Slug for page..."
  -%]
 [%- END -%]
@@ -55,6 +66,30 @@
  [%- PROCESS modalInput
      id = "PagePart-new-form-name"
      label = "Name"
+     type = "text"
      placeholder = "Name of page part..."
+  -%]
+[%- END -%]
+<!-- new Theme form -->
+[%- WRAPPER modalForm
+  id = "Theme-new-form"
+  title = "New Theme"
+ -%]
+ [%- PROCESS modalInput
+    id = "Theme-new-form-title"
+    type = "text"
+    label = "Name"
+    placeholder = "Name of theme..."
+  -%]
+[%- END -%]
+[%- WRAPPER modalForm
+  id = "ThemeLayout-new-form"
+  title = "New Theme Layout"
+ -%]
+ [%- PROCESS modalInput
+   id = "ThemeLayout-new-form-name"
+   type = "text"
+   label = "Name"
+   placeholder = "Name of layout..."
   -%]
 [%- END -%]

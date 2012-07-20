@@ -42,69 +42,83 @@ sub index :Path :Args(0) :ActionClass('REST') { }
 sub index_GET {
     my ( $self, $c ) = @_;
 
-    my %embeddings = (
-      projects => OokOok::Collection::Project->new(c=>$c),
-      boards => OokOok::Collection::Board->new(c=>$c),
-      themes => OokOok::Collection::Theme->new(c=>$c),
-      libraries => OokOok::Collection::Library->new(c=>$c),
-      databases => OokOok::Collection::Database->new(c=>$c),
-    );
+    my $entity = { };
 
-    my $entity = {
-      _links => {
-        self => $c->uri_for('/') -> as_string,
-      },
-      _auth => { authenticated => 0 },
-      _embedded => [
-        {
-          _links => $embeddings{projects} -> GET -> {_links},
-          dataType => 'Project',
-          title => 'Projects',
-          id => 'projects',
-          schema => $embeddings{projects} -> schema,
+    if($c -> request -> content_type ne 'text/html') {
+      my %embeddings = (
+        projects => OokOok::Collection::Project->new(c=>$c),
+        boards => OokOok::Collection::Board->new(c=>$c),
+        themes => OokOok::Collection::Theme->new(c=>$c),
+        libraries => OokOok::Collection::Library->new(c=>$c),
+        databases => OokOok::Collection::Database->new(c=>$c),
+      );
+  
+      $entity = {
+        _links => {
+          self => $c->uri_for('/') -> as_string,
         },
-      ],
-    };
-
-    if($c -> user) {
-      $entity -> {_auth}{authenticated} = 1;
-      push @{$entity->{_embedded}}, {
-        _links => $embeddings{boards} -> GET -> {_links},
-        dataType => 'Board',
-        title => 'Editorial Boards',
-        id => 'boards',
-        schema => $embeddings{boards} -> schema,
-#      }, {
-#        _links => $embeddings{libraries} -> GET -> {_links},
-#        dataType => 'Library',
-#        title => 'Libraries',
-#        id => 'libraries',
-#        schema => $embeddings{libraries} -> schema,
-#      }, {
-#        _links => $embeddings{themes} -> GET -> {_links},
-#        dataType => 'Theme',
-#        title => 'Themes',
-#        id => 'themes',
-#        schema => $embeddings{themes} -> schema,
-#      }, {
-#        _links => $embeddings{databases} -> GET -> {_links},
-#        dataType => 'Database',
-#        title => 'Databases',
-#        id => 'databases',
-#        schema => $embeddings{databases} -> schema,
+        _auth => { authenticated => 0 },
+        _embedded => [
+          {
+            _links => { self => $embeddings{projects} -> link },
+            dataType => 'Project',
+            title => 'Projects',
+            id => 'projects',
+            schema => $embeddings{projects} -> schema,
+          },
+        ],
       };
-    }
-    else {
-      $entity -> {_links}{oauth_twitter} = {
-        url => $c -> uri_for('/oauth/twitter') -> as_string,
-        title => 'Sign in with Twitter',
-      };
-      $entity -> {_links}{oauth_google} = {
-        url => $c -> uri_for('/oauth/google') -> as_string,
-        title => 'Sign in with Google',
-      };
-      $entity -> {_text}{about} = YAML::Any::LoadFile( $c -> path_to( qw/root texts about.yml/ ) );
-      $entity -> {_text}{top} = YAML::Any::LoadFile( $c -> path_to( qw/root texts top.yml/ ) );
+  
+      if($c -> user) {
+        $entity -> {_auth}{authenticated} = 1;
+        $c -> stash -> {development} = 1;
+        push @{$entity->{_embedded}}, {
+          _links => { self => $embeddings{boards} -> link },
+          dataType => 'Board',
+          title => 'Editorial Boards',
+          id => 'boards',
+          schema => $embeddings{boards} -> schema,
+  #      }, {
+  #        _links => $embeddings{libraries} -> GET -> {_links},
+  #        dataType => 'Library',
+  #        title => 'Libraries',
+  #        id => 'libraries',
+  #        schema => $embeddings{libraries} -> schema,
+  #      }, {
+  #        _links => $embeddings{themes} -> GET -> {_links},
+  #        dataType => 'Theme',
+  #        title => 'Themes',
+  #        id => 'themes',
+  #        schema => $embeddings{themes} -> schema,
+  #      }, {
+  #        _links => $embeddings{databases} -> GET -> {_links},
+  #        dataType => 'Database',
+  #        title => 'Databases',
+  #        id => 'databases',
+  #        schema => $embeddings{databases} -> schema,
+        };
+        if($c -> user -> is_admin) {
+          push @{$entity->{_embedded}}, {
+            _links => { self => $embeddings{themes} -> link },
+            dataType => 'Theme',
+            title => 'Themes',
+            id => 'themes',
+            schema => $embeddings{themes} -> schema,
+          };
+        }
+      }
+      else {
+        $entity -> {_links}{oauth_twitter} = {
+          url => $c -> uri_for('/oauth/twitter') -> as_string,
+          title => 'Sign in with Twitter',
+        };
+        $entity -> {_links}{oauth_google} = {
+          url => $c -> uri_for('/oauth/google') -> as_string,
+          title => 'Sign in with Google',
+        };
+        $entity -> {_text}{about} = YAML::Any::LoadFile( $c -> path_to( qw/root texts about.yml/ ) );
+        $entity -> {_text}{top} = YAML::Any::LoadFile( $c -> path_to( qw/root texts top.yml/ ) );
+      }
     }
     $self -> status_ok($c, entity => $entity);
 }

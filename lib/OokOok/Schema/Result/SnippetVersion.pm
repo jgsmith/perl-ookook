@@ -54,6 +54,12 @@ __PACKAGE__->table("snippet_version");
   data_type: 'integer'
   is_nullable: 0
 
+=head2 name
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 255
+
 =head2 content
 
   data_type: 'text'
@@ -68,6 +74,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_nullable => 0 },
   "snippet_id",
   { data_type => "integer", is_nullable => 0 },
+  "name",
+  { data_type => "varchar", is_nullable => 1, size => 255 },
   "content",
   { data_type => "text", is_nullable => 1 },
 );
@@ -85,9 +93,15 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-23 12:03:24
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:93lyCKqaFoa6jGF4naw9kQ
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-16 13:53:15
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Gm4m3NZJXcXSEBpnAU7KYQ
 
+with 'OokOok::Role::Schema::Result::Version';
+
+__PACKAGE__ -> belongs_to( edition => "OokOok::Schema::Result::Edition", 'edition_id');
+__PACKAGE__ -> belongs_to( snippet => "OokOok::Schema::Result::Snippet", 'snippet_id');
+
+sub owner { $_[0] -> snippet }
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

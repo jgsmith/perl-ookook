@@ -56,8 +56,11 @@ requires:
   MooseX::NonMoose: 0.16
   MooseX::Singleton: 0.29
   Net::OAuth: 0
+  Parse::BBCode: 0
   Set::Scalar: 0
   String::CamelCase: 0
+  Text::Markdown: 0
+  Text::Textile: 0
   Workflow: 0
   XML::LibXML: 0
   namespace::autoclean: 0

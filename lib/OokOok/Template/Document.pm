@@ -44,6 +44,10 @@ sub render {
   # embedding this in an HTML document
   #
   $r =~ s{^\s*<\?xml\b.*?\?>\s*}{};
+  #
+  # now get rid of namespace declarations
+  $r =~ s{\s*xmlns:.*?="[^"]*"}{}g;
+  $r =~ s{\s*xmlns:.*?='[^']*'}{}g;
   $r;
 }
 

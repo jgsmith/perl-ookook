@@ -36,8 +36,21 @@ ookook.namespace "application", (apps) ->
               that.dataStore.data.removeItems that.dataStore.data.withParent(oldParent)
 
         models = {}
+        modelCallbacks = {}
 
-        that.addModel = (nom, model) -> models[nom] = model
+        that.addModel = (nom, model) -> 
+          models[nom] = model
+          if modelCallbacks[nom]?
+            cb(model) for cb in modelCallbacks[nom]
+          delete modelCallbacks[nom]
+
+        that.onModel = (nom, cb) ->
+          if models[nom]?
+            cb(models[nom])
+          else
+            modelCallbacks[nom] ?= []
+            modelCallbacks[nom].push cb
+
         that.model = (nom) -> models[nom]
 
         that.dataStore.data.withParent = (p) ->

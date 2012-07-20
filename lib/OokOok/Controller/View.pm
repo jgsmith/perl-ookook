@@ -59,7 +59,7 @@ sub base :Chained('/') :PathPart('v') :CaptureArgs(0) {
   );
 }
 
-sub play :Chained('play_base') :PathPart('') {
+sub play :Chained('play_base') :PathPart('') :ActionClass('REST') {
   my ( $self, $c ) = @_;
 
   my @path = @{$c -> request -> arguments};

@@ -35,10 +35,18 @@ EOXML
 
 my $context = OokOok::Template::Context -> new;
 
+my $theme_collection = OokOok::Collection::Theme -> new(c => $c);
+my $theme = $theme_collection -> _POST({
+  name => 'FooTheme',
+  description => "Test Theme",
+});
+
 my $project_collection = OokOok::Collection::Project->new(c => $c);
 my $project = $project_collection -> _POST({
   name => 'Foo',
   description => 'Test project',
+  theme => $theme->id,
+  theme_date => "".DateTime->now
 });
 
 $context -> set_resource(project => $project);

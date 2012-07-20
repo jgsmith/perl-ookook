@@ -39,7 +39,7 @@ ok $instance, "We have a current edition for the theme";
 # We shouldn't have any pages in the DB when we start.
 is scalar($layout_rs->all), 0, "No layouts in the DB";
 
-my $layout = $theme -> create_related('layouts', {});
+my $layout = $theme -> create_related('theme_layouts', {});
 ok $layout, "Layout was created";
 
 my $layout_version = $layout->current_version;

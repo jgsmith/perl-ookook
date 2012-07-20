@@ -1,13 +1,13 @@
-package OokOok::Collection::Edition;
+package OokOok::Collection::ThemeEdition;
 
 use OokOok::Collection;
 use namespace::autoclean;
 
-has project => (
+has theme => (
   is => 'rw',
-  isa => 'OokOok::Resource::Project',
+  isa => 'OokOok::Resource::Theme',
   lazy => 1,
-  default => sub { $_[0] -> c -> stash -> {project} },
+  default => sub { $_[0] -> c -> stash -> {theme} },
 );
 
 sub can_POST {
@@ -20,7 +20,7 @@ sub can_POST {
 sub may_POST {
   my($self) = @_;
 
-  if($self -> project -> source -> current_edition -> created_on <
+  if($self -> theme -> source -> current_edition -> created_on <
        DateTime->now) {
     return 1;
   }
@@ -31,14 +31,14 @@ sub POST {
   my($self, $json) = @_;
 
   # we ignore data in a POST to create a new edition
-  my $project = $self -> project -> source;
+  my $theme = $self -> theme -> source;
 
-  $project -> current_edition -> close;
+  $theme -> current_edition -> close;
 
-  return OokOok::Resource::Edition -> new(
+  return OokOok::Resource::ThemeEdition -> new(
     c => $self -> c, 
     date => $self -> date, 
-    source => $project -> current_edition,
+    source => $theme -> current_edition,
   );
 }
 
@@ -51,8 +51,8 @@ sub GET {
     },
     _embedded => [
       map {
-        OokOok::Resource::Edition->new(c => $self -> c, source => $_) -> GET
-     } grep { defined } $self -> project -> source -> editions
+        OokOok::Resource::ThemeEdition->new(c => $self -> c, source => $_) -> GET
+     } $self -> theme -> source -> editions
     ]
   };
 }

@@ -17,4 +17,7 @@ sub constrain_collection {
   $q;
 }
 
+sub can_POST { 1 }
+sub may_POST { 1 }
+
 1;

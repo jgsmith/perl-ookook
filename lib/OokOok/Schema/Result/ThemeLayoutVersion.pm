@@ -69,7 +69,7 @@ __PACKAGE__->table("theme_layout_version");
 =head2 layout
 
   data_type: 'text'
-  default_value: '<row><div width="12"><page-part name="body"/></div></row>'
+  default_value: '<div><page-part name="body"/></div>'
   is_nullable: 0
 
 =head2 configuration
@@ -94,7 +94,7 @@ __PACKAGE__->add_columns(
   "layout",
   {
     data_type     => "text",
-    default_value => "<row><div width=\"12\"><page-part name=\"body\"/></div></row>",
+    default_value => "<div><page-part name=\"body\"/></div>",
     is_nullable   => 0,
   },
   "configuration",
@@ -114,18 +114,19 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-14 09:28:06
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:C/GpPomsXtwuh/Ptd30jTw
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-15 19:36:49
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2Kq2pxIZd9JQflhLgC0OYQ
 
 with 'OokOok::Role::Schema::Result::Version';
 
 __PACKAGE__ -> belongs_to( edition => 'OokOok::Schema::Result::ThemeEdition', 'theme_edition_id' );
+__PACKAGE__ -> belongs_to( theme_edition => 'OokOok::Schema::Result::ThemeEdition', 'theme_edition_id' );
 
-__PACKAGE__ -> belongs_to( layout => 'OokOok::Schema::Result::ThemeLayout', 'theme_layout_id' );
+__PACKAGE__ -> belongs_to( theme_layout => 'OokOok::Schema::Result::ThemeLayout', 'theme_layout_id' );
 
 __PACKAGE__ -> belongs_to( parent_layout => 'OokOok::Schema::Result::ThemeLayout', 'parent_layout_id' );
 
-sub owner { $_[0] -> layout }
+sub owner { $_[0] -> theme_layout }
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

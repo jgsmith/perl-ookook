@@ -16,12 +16,19 @@ has _user => (
   default => sub {
     my($c) = @_;
 
+    my $header = $c -> request -> header('X-OokOokSysAuth');
+    my $passwd = $c -> config -> {'OokOok::Plugin::Authentication'}->{system_password};
+
     if($c -> session -> {user_id}) {
-      $c -> model('DB::User') -> find({ id => $c -> session -> {user_id} });
+      return $c -> model('DB::User') -> find({ id => $c -> session -> {user_id} });
+    }
+    elsif(defined($header) && defined($passwd) && $header eq $passwd && $c -> config -> {'OokOok::Plugin::Authentication'}->{system_user_enabled}) {
+      return $c -> model('DB::User') -> find({ id => 1 });
     }
     elsif($c -> model('DB') -> schema -> is_development) {
       my $user = $c -> model('DB::User') -> find_or_create({
         uuid => 'cookeddeadbeafstasty',
+        is_admin => 1,
       });
       return $user;
     }

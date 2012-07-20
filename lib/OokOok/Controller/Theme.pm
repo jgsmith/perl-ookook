@@ -6,6 +6,9 @@ use namespace::autoclean;
 use JSON;
 
 use OokOok::Collection::Theme;
+use OokOok::Collection::ThemeEdition;
+use OokOok::Collection::ThemeLayout;
+use Carp::Always;
 
 BEGIN { 
   extends 'OokOok::Base::REST'; 
@@ -30,14 +33,38 @@ sub base :Chained('/') :PathPart('theme') :CaptureArgs(0) {
   $c -> stash -> {collection} = OokOok::Collection::Theme -> new(c => $c);
 }
 
-sub layouts :Chained('thing_base') :PathPart('layout') :Args(0) :ActionClass('REST') { 
+sub editions :Chained('resource_base') :PathPart('edition') :Args(0) :ActionClass('REST') {
+  my($self, $c) = @_;
+
+  $c -> stash -> {collection} = OokOok::Collection::ThemeEdition -> new(c => $c);
+}
+
+sub editions_GET { shift -> collection_GET(@_) }
+sub editions_POST { shift -> collection_POST(@_) }
+
+sub editions_DELETE {
+  my($self, $c) = @_;
+
+  # this will try to clear out the current working edition of changes
+  # essentially revert back to what we had when we closed the last edition
+  eval {
+    $c -> stash -> {project} -> source -> current_edition -> delete;
+  };
+
+  if($@) { print STDERR "DELETE ERROR: $@\n"; }
+
+  $self -> status_no_content($c);
+}
+
+
+sub layouts :Chained('resource_base') :PathPart('theme-layout') :Args(0) :ActionClass('REST') { 
   my($self, $c) = @_;
 
   $c -> stash -> {collection} = OokOok::Collection::ThemeLayout -> new(c => $c);
 }
 
-sub layouts_GET { shift -> collection_GET }
-sub layouts_POST { shift -> collection_POST }
+sub layouts_GET { shift -> collection_GET(@_) }
+sub layouts_POST { shift -> collection_POST(@_) }
 
 sub layouts_OPTIONS {
   my($self, $c) = @_;

@@ -13,7 +13,11 @@
     <script src="[% c.uri_for('/static/js/bootstrap.min.js') %]"></script>
     <script src="[% c.uri_for('/static/js/mithgrid.min.js') %]"></script>
     <script src="[% c.uri_for('/static/js/masonry.js') %]"></script -->
-    <script src="[% c.uri_for('/static/js/application.js') %]"></script>
+    [%- IF meta.in_admin -%]
+      <script src="[% c.uri_for('/static/js/admin.js') %]"></script>
+    [%- ELSE -%]
+      <script src="[% c.uri_for('/static/js/application.js') %]"></script>
+    [%- END -%]
     <!-- script src="[% c.uri_for('/static/js/wymeditor/jquery.wymeditor.js') %]"></script>
     <script src="[% c.uri_for('/static/js/ace/ace.js') %]"></script>
     <script src="[% c.uri_for('/static/js/ace/mode-xml.js') %]"></script -->

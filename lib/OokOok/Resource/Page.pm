@@ -31,6 +31,12 @@ prop id => (
   source => sub { $_[0] -> source -> uuid },
 );
 
+prop layout => (
+  is => 'rw',
+  type => 'Str',
+  source => sub { $_[0] -> source_version -> layout },
+);
+
 belongs_to project => "OokOok::Resource::Project", (
   required => 1, # can't be created without one
   is => 'ro',    # once created, it can't be changed
@@ -43,6 +49,7 @@ belongs_to parent_page => 'OokOok::Resource::Page', (
 );
 
 has_many page_parts => "OokOok::Resource::PagePart", (
+  link_fragment => 'page-part',
   source => sub {
     $_[0] -> source_version -> page_parts 
   },
@@ -79,6 +86,25 @@ sub get_child_page {
   }
 }  
 
+sub page_part {
+  my($self, $name) = @_;
+
+  my $pp = $self -> source_version -> page_parts -> find({ name => $name });
+  if($pp) {
+    return OokOok::Resource::PagePart -> new(
+      c => $self -> c,
+      date => $self -> date,
+      source => $pp
+    );
+  }
+}
+
+sub can_PUT {
+  my($self) = @_;
+
+  $self -> project -> can_PUT;
+}
+
 sub render {
   my($self, $context) = @_;
 
@@ -86,16 +112,16 @@ sub render {
   # ourselves
   my $layout_uuid = $self -> source_version -> layout;
   #
-  my $theme = $self -> project -> source_version -> theme_edition;
-  return '' unless $theme;
-  my $layout = $theme -> theme -> layouts( $layout_uuid );
+  my $theme = $self -> project -> theme;
+  return '<p>No Theme</p>' unless $theme;
+  my $layout = $theme -> layout( $layout_uuid );
   if($layout) {
-    $layout = $layout -> version_for_date( $theme -> closed_on );
-    if($layout) {
-      $context = $context -> localize;
-      $context -> set_resource(page => $self);
-      $layout -> render($context);
-    }
+    $context = $context -> localize;
+    $context -> set_resource(page => $self);
+    return $layout -> render($context);
+  }
+  else {
+    return '<p>No Layout</p>';
   }
 }
 

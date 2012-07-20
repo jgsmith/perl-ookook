@@ -102,13 +102,13 @@ $ ->
           badge: list.length
         }]
 
-      if model != "Board"
-        ookook.component.newItemForm.initInstance $("##{model}-new-form"),
-          application: -> app
-          model: app.model(model)
-        ookook.component.editItemForm.initInstance $("##{model}-edit-form"),
-          application: -> app
-          model: app.model(model)
+      #if model != "Board"
+      #  ookook.component.newItemForm.initInstance $("##{model}-new-form"),
+      #    application: -> app
+      #    model: app.model(model)
+      #  ookook.component.editItemForm.initInstance $("##{model}-edit-form"),
+      #    application: -> app
+      #    model: app.model(model)
 
     collections = []
     app.dataView.metroTopItems.events.onModelChange.addListener (dm, itemIds) ->
@@ -219,8 +219,19 @@ $ ->
               items = items.concat walkSitemap "#{parent}-#{i}", s.children
             i += 1
           items
-        if app.model('Project')?
-          app.model('Project').addConfig
+
+        app.onModel 'Theme', (t) ->
+          t.addConfig
+            inflateItem: (id) ->
+              pitems = []
+              pitems.push
+                id: id
+                "cmd-plus": "ThemeLayout"
+                "cmd-edit": "Theme"
+              pitems
+
+        app.onModel 'Project', (m) ->
+          m.addConfig
             inflateItem: (id) ->
               pitems = []
               item = app.dataStore.data.getItem id
@@ -267,7 +278,7 @@ $ ->
           url: '/page'
           success: (data) ->
             app.addModel 'PagePart', ookook.model.initModel
-              collection_url: '/page/{?page_id}/page_part'
+              collection_url: '/page/{?page_id}/page-part/{?page_part_id}'
               dataStore: app.dataStore.data
               restType: 'PagePart'
               parent: "{?page_id}"
@@ -320,18 +331,18 @@ $ ->
                   }
                 pitems
 
-            ookook.component.newItemForm.initInstance $("#PagePart-new-form"),
-              application: -> app
-              model: app.model("PagePart")
-            ookook.component.editItemForm.initInstance $("#PagePart-edit-form"),
-              application: -> app
-              model: app.model("PagePart")
-            ookook.component.newItemForm.initInstance $("#Page-new-form"),
-              application: -> app
-              model: app.model("Page")
-            ookook.component.editItemForm.initInstance $("#Page-edit-form"),
-              application: -> app
-              model: app.model("Page")
+            #ookook.component.newItemForm.initInstance $("#PagePart-new-form"),
+            #  application: -> app
+            #  model: app.model("PagePart")
+            #ookook.component.editItemForm.initInstance $("#PagePart-edit-form"),
+            #  application: -> app
+            #  model: app.model("PagePart")
+            #ookook.component.newItemForm.initInstance $("#Page-new-form"),
+            #  application: -> app
+            #  model: app.model("Page")
+            #ookook.component.editItemForm.initInstance $("#Page-edit-form"),
+            #  application: -> app
+            #  model: app.model("Page")
 
         ookook.util.get
           url: '/profile'

@@ -22,12 +22,26 @@ $json = GET_ok("/project", "JSON listing of projects");
 is_deeply $json->{_embedded}, [], "Empty list of projects";
 
 #
+# Create an empty theme
+#
+
+$json = POST_ok("/theme", {
+    name => 'Test Theme',
+  }, "Create theme");
+
+my $theme_uuid = $json -> {id};
+ok $theme_uuid, "We have a theme uuid";
+my $theme_date = "".DateTime->now;
+
+#
 # Create a project
 #
 
 $json = POST_ok("/project", {
     name => "Test Project",
     description => "Test project description",
+    theme => $theme_uuid,
+    theme_date => $theme_date,
   }, "create project");
 
 is $json->{name}, "Test Project", "Name returned";
@@ -83,6 +97,8 @@ is scalar(@{$json->{_embedded}}), 0, "No projects";
 $json = POST_ok("/project", {
   name => "Test Project 2",
   description => "Another test project",
+  theme => $theme_uuid,
+  theme_date => $theme_date,
 }, "create another project");
 
 is $json->{name}, "Test Project 2", "Right name";

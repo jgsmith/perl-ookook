@@ -85,6 +85,9 @@ __PACKAGE__->set_primary_key("id");
 with 'OokOok::Role::Schema::Result::HasVersions';
 
 __PACKAGE__ -> belongs_to('project', 'OokOok::Schema::Result::Project', 'project_id');
+
+sub owner { $_[0] -> project };
+
 __PACKAGE__ -> has_many('versions', 'OokOok::Schema::Result::SnippetVersion', 'snippet_id');
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

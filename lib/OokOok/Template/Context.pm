@@ -13,7 +13,7 @@ has parent => (
 );
 
 has document => (
-  isa => 'OokOok::Template::Document',
+  isa => 'Maybe[OokOok::Template::Document]',
   is => 'ro',
   predicate => 'has_document',
 );

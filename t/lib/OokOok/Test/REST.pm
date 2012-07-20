@@ -63,7 +63,7 @@ sub PUT_ok {
     HTTP::Request->new( PUT => $url, $headers, $content )
   ), "PUT: $desc");
 
-  #diag $res -> content;
+  diag $res -> content unless $res -> code < 300;
 
   eval { $json = decode_json($res -> content) };
   ok !$@, "Decode: $desc";
@@ -87,7 +87,8 @@ sub POST_ok {
     HTTP::Request->new( POST => $url, $headers, $content )
   ), "POST: $desc");
 
-  #diag( "Response content: " . $res -> content );
+  diag( "Response content: " . $res -> content );
+  diag $res -> content unless $res -> code < 300;
 
   eval { $json = decode_json($res -> content) };
   ok !$@, "Decode: $desc";

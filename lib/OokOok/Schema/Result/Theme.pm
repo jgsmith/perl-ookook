@@ -88,12 +88,12 @@ __PACKAGE__ -> has_many(
 );
 
 __PACKAGE__ -> has_many(
-  layouts => 'OokOok::Schema::Result::ThemeLayout',
+  theme_layouts => 'OokOok::Schema::Result::ThemeLayout',
   'theme_id'
 );
 
 __PACKAGE__ -> has_many(
-  styles => 'OokOok::Schema::Result::ThemeStyle',
+  theme_styles => 'OokOok::Schema::Result::ThemeStyle',
   'theme_id'
 );
 
@@ -102,16 +102,16 @@ __PACKAGE__ -> belongs_to( board => 'OokOok::Schema::Result::Board', 'board_id' 
 with 'OokOok::Role::Schema::Result::HasEditions';
 
 
-sub layout {
+sub theme_layout {
   my($self, $uuid) = @_;
 
-  $self -> layouts -> find({ uuid => $uuid });
+  $self -> theme_layouts -> find({ uuid => $uuid });
 }
 
-sub style {
+sub theme_style {
   my($self, $uuid) = @_;
 
-  $self -> styles -> find({ uuid => $uuid });
+  $self -> theme_styles -> find({ uuid => $uuid });
 }
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

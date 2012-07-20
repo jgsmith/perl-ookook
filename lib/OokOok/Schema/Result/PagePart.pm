@@ -55,6 +55,13 @@ __PACKAGE__->table("page_part");
   is_nullable: 0
   size: 64
 
+=head2 filter
+
+  data_type: 'varchar'
+  default_value: 'HTML'
+  is_nullable: 0
+  size: 32
+
 =head2 content
 
   data_type: 'text'
@@ -69,6 +76,13 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_nullable => 0 },
   "name",
   { data_type => "varchar", is_nullable => 0, size => 64 },
+  "filter",
+  {
+    data_type => "varchar",
+    default_value => "HTML",
+    is_nullable => 0,
+    size => 32,
+  },
   "content",
   { data_type => "text", is_nullable => 1 },
 );
@@ -86,8 +100,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-23 11:50:39
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:QbslHKoxTVykGFiCjOpItQ
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-19 14:43:38
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:aB+9Epeg+GIeTbO/PaR1DQ
 
 __PACKAGE__ -> belongs_to("page_version" => "OokOok::Schema::Result::PageVersion", "page_version_id");
 

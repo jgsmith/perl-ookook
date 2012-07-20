@@ -21,7 +21,6 @@ prop name => (
 prop id => (
   is => 'ro',
   type => 'Str',
-  maps_to => 'id',
   source => sub { $_[0] -> source -> uuid },
 );
 
@@ -40,8 +39,18 @@ has_many editions => 'OokOok::Resource::Edition', (
   source => sub { $_[0] -> source -> editions },
 );
 
-belongs_to theme => 'OokOok::Resource::Theme', (
-  source => sub { $_[0] -> source_version -> theme_edition },
+prop theme_date => (
+  is => 'rw',
+  required => 1,
+  type => 'Str',
+  default => sub { DateTime -> now },
+  source => sub { "".($_[0] -> source_version -> theme_date || "") },
+);
+
+has_a theme => 'OokOok::Resource::Theme', (
+  source => sub { $_[0] -> source_version -> theme },
+  date => sub { $_[0] -> source_version -> theme_date },
+  required => 1,
   is => 'rw',
   maps_to => 'theme',
   value_type => "Theme",
@@ -57,7 +66,8 @@ has_a board => 'OokOok::Resource::Board', (
 has_a page => 'OokOok::Resource::Page', (
   source => sub { 
     my $sv = $_[0] -> source_version;
-    if($sv) { $sv -> page }
+    if($sv) { return $sv -> page; }
+    return 0;
   },
   is => 'rw',
 );
@@ -69,11 +79,13 @@ sub can_PUT {
 
   # the user has to be in a rank that can modify the project itself
   # if we get here, we have a user
+  # we pull out the top rank held by the user
   my $rank = $self -> c -> model('DB::BoardRank') -> search({
-    'board.id' => $self -> source -> project -> board -> id,
+    'me.board_id' => $self -> source -> board -> id,
     'board_members.user_id' => $self -> c -> user -> id,
   }, {
-    joins => [qw/board_members board/],
+    join => [qw/board_members/],
+    order_by => 'me.position',
     rows => 1,
   }) -> first;
   return 0 unless $rank;
@@ -81,6 +93,28 @@ sub can_PUT {
   return 1 if $rank -> position == 0; # top rank can always do stuff
 
   return 0;
+}
+
+sub snippet {
+  my($self, $name) = @_;
+
+  # we want to find the right snippet_version that corresponds to our
+  # date/dev constraints
+  my $s = $self -> c -> model('DB::SnippetVersion') -> search({
+    'me.name' => $name,
+    'edition.project_id' => $self -> source -> id,
+  }, {
+     join => [qw/edition/],
+     order_by => { -desc => 'me.edition_id' },
+  }) -> first;
+
+  if($s) {
+    return OokOok::Resource::Snippet -> new(
+      c => $self -> c,
+      date => $self -> date,
+      source => $s -> snippet,
+    );
+  }
 }
 
 1;

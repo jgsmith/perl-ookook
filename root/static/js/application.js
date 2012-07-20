@@ -73,11 +73,9 @@
           orig = template;
           if (template.indexOf("{?") >= 0) {
             bits = template.split('{?');
-            for (i = _i = 0, _ref = bits.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
-              if (i % 2 === 1) {
-                mbs = bits[i].split("}");
-                bits[i] = (data[mbs[0]] || '') + mbs[1];
-              }
+            for (i = _i = 1, _ref = bits.length; 1 <= _ref ? _i < _ref : _i > _ref; i = 1 <= _ref ? ++_i : --_i) {
+              mbs = bits[i].split("}");
+              bits[i] = (data[mbs[0]] || '') + mbs[1];
             }
             template = bits.join("");
           }
@@ -170,15 +168,16 @@
           for (k in _ref1) {
             v = _ref1[k];
             if (v.is === "rw" && v.valueType !== "hash") {
-              if (((_ref2 = data[v.source]) != null ? _ref2.length : void 0) === 1) {
-                json[k] = data[v.source][0];
-              } else if (((_ref3 = data[v.source]) != null ? _ref3.length : void 0) > 1) {
-                json[k] = data[v.source];
-              } else if (data[v.source] != null) {
+              if (((_ref2 = data[v.source || k]) != null ? _ref2.length : void 0) === 1) {
+                json[k] = data[v.source || k][0];
+              } else if (((_ref3 = data[v.source || k]) != null ? _ref3.length : void 0) > 1) {
+                json[k] = data[v.source || k];
+              } else if (data[v.source || k] != null) {
                 json[k] = null;
               }
             }
           }
+          console.log("export", data, " => ", json);
           return json;
         };
         that.schema = function() {
@@ -385,20 +384,35 @@
       };
     });
     ookook.namespace("component", function(component) {
-      component.namespace("newItemForm", function(modalForm) {
+      component.namespace("modalForm", function(modalForm) {
         return modalForm.initInstance = function() {
           var args;
           args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-          return MITHGrid.initInstance.apply(MITHGrid, ['ookook.component.newItemForm'].concat(__slice.call(args), [function(that, container) {
+          return MITHGrid.initInstance.apply(MITHGrid, ['ookook.component.modalForm'].concat(__slice.call(args), [function(that, container) {
             var id, options;
             options = that.options;
             id = $(container).attr('id');
-            $(container).modal('hide');
+            $(container).modal({
+              keyboard: true,
+              show: false
+            });
             $("#" + id + "-cancel").click(function() {
               return $(container).modal('hide');
             });
-            $("#" + id + "-action").click(function() {
-              var data, _ref;
+            return $("#" + id + "-action").click(that.events.onAction.fire);
+          }]));
+        };
+      });
+      component.namespace("newItemForm", function(modalForm) {
+        return modalForm.initInstance = function() {
+          var args, _ref;
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          return (_ref = component.modalForm).initInstance.apply(_ref, ['ookook.component.newItemForm'].concat(__slice.call(args), [function(that, container) {
+            var options;
+            options = that.options;
+            that.events.onAction.addListener(function() {
+              var data, id, _ref;
+              id = $(container).attr('id');
               data = {};
               $(container).find('.modal-form-input').each(function(idx, el) {
                 var elId;
@@ -411,32 +425,53 @@
                 }
               });
               $(container).modal('hide');
+              if (options.addParentInfo != null) {
+                data = $.extend({}, true, data, options.addParentInfo(data));
+              }
               if (((_ref = options.model) != null ? _ref.create : void 0) != null) {
                 return options.model.create(data);
               }
             });
             return $(container).on('show', function() {
-              return $(container).find('.modal-form-input').val("");
+              var app;
+              app = options.application();
+              $(container).find('.modal-form-input').val("");
+              return $(container).find('select.modal-form-input').each(function(idx, el) {
+                var id, ids, item, op, selectType, types, _i, _len, _results;
+                selectType = $(el).data('select-type');
+                console.log("select type:", selectType);
+                if (selectType != null) {
+                  $(el).empty();
+                  types = MITHGrid.Data.Set.initInstance([selectType]);
+                  ids = app.dataStore.data.getSubjectsUnion(types, "restType").items();
+                  console.log("ids:", ids);
+                  _results = [];
+                  for (_i = 0, _len = ids.length; _i < _len; _i++) {
+                    id = ids[_i];
+                    item = app.dataStore.data.getItem(id);
+                    op = $("<option></option>");
+                    op.attr({
+                      value: id
+                    });
+                    op.text(item.title[0]);
+                    _results.push($(el).append(op));
+                  }
+                  return _results;
+                }
+              });
             });
           }]));
         };
       });
       return component.namespace("editItemForm", function(modalForm) {
         return modalForm.initInstance = function() {
-          var args;
+          var args, _ref;
           args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-          return MITHGrid.initInstance.apply(MITHGrid, ['ookook.component.editItemForm'].concat(__slice.call(args), [function(that, container) {
+          return (_ref = component.modalForm).initInstance.apply(_ref, ['ookook.component.editItemForm'].concat(__slice.call(args), [function(that, container) {
             var id, options;
             options = that.options;
             id = $(container).attr('id');
-            $(container).modal({
-              keyboard: true,
-              show: false
-            });
-            $("#" + id + "-cancel").click(function() {
-              return $(container).modal('hide');
-            });
-            $("#" + id + "-action").click(function() {
+            that.events.onAction.addListener(function() {
               var data;
               data = {};
               return $(container).find('.modal-form-input').each(function(idx, el) {
@@ -450,6 +485,9 @@
                 }
                 $(container).modal('hide');
                 data.id = options.application().getMetroParent();
+                if (options.addParentInfo != null) {
+                  data = $.extend({}, true, data, options.addParentInfo(data));
+                }
                 if (options.update != null) {
                   return options.update(data);
                 }
@@ -895,7 +933,8 @@
         fs.Project = t("<h2>{{ data.title[0] }}</h2>\n<p class='type'>Project</p>\n<p>{{ data.description[0] }}</p>");
         fs.Board = t("<h2>{{ data.title[0] }}</h2>\n<p class='type'>Editorial Board</p>\n[[ if(data.description != null && data.description.length > 0) { ]]\n<p>{{ data.description[0] }}</p>\n[[ } ]]");
         fs.SitemapPage = t("<h2>{{ data.title[0] }}</h2>\n<p class='type'>Sitemap Page</p>\n[[ if(data.page != null && data.page.length > 0) { ]]\n  <p>Linked to: {{ data.page[0] }}</p>\n[[ } ]]\n[[ if(data.description != null && data.description.length > 0) { ]]\n  <p>{{ data.description[0] }}</p>\n[[ } ]]");
-        return fs.Page = t("<h2>{{ data.title[0] }}</h2>\n<p class='type'>Page</p>\n<p>{{ data.description[0] }}</p>");
+        fs.Page = t("<h2>{{ data.title[0] }}</h2>\n<p class='type'>Page</p>\n<p>{{ data.description[0] }}</p>");
+        return fs.Theme = t("<h2>{{ data.title[0] }}</h2>\n<p class='type'>Theme</p>\n[[ if(data.description != null && data.description.length > 0) { ]]\n  <p>{{ data.description[0] }}</p>\n[[ } ]]");
       });
     });
     ookook.namespace("application", function(apps) {
@@ -904,7 +943,7 @@
           var args, _ref;
           args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
           return (_ref = MITHGrid.Application).initInstance.apply(_ref, ['ookook.application.top'].concat(__slice.call(args), [function(that, container) {
-            var models;
+            var modelCallbacks, models;
             that.pushState = function() {
               return window.History.pushState({
                 parent: that.getMetroParent(),
@@ -942,8 +981,29 @@
               }
             };
             models = {};
+            modelCallbacks = {};
             that.addModel = function(nom, model) {
-              return models[nom] = model;
+              var cb, _i, _len, _ref;
+              models[nom] = model;
+              if (modelCallbacks[nom] != null) {
+                _ref = modelCallbacks[nom];
+                for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                  cb = _ref[_i];
+                  cb(model);
+                }
+              }
+              return delete modelCallbacks[nom];
+            };
+            that.onModel = function(nom, cb) {
+              var _ref;
+              if (models[nom] != null) {
+                return cb(models[nom]);
+              } else {
+                if ((_ref = modelCallbacks[nom]) == null) {
+                  modelCallbacks[nom] = [];
+                }
+                return modelCallbacks[nom].push(cb);
+              }
             };
             that.model = function(nom) {
               return models[nom];
@@ -1005,7 +1065,7 @@
         };
       });
     });
-    return $(function() {
+    $(function() {
       var app;
       app = ookook.application.top.initInstance($('#browser-container'));
       ookook.application.top.instance = app;
@@ -1135,7 +1195,7 @@
           }
         });
         initCollection = function(model, nom) {
-          app.model(model).getCollection(function(list) {
+          return app.model(model).getCollection(function(list) {
             return app.dataStore.data.updateItems([
               {
                 id: "section-" + nom,
@@ -1143,20 +1203,6 @@
               }
             ]);
           });
-          if (model !== "Board") {
-            ookook.component.newItemForm.initInstance($("#" + model + "-new-form"), {
-              application: function() {
-                return app;
-              },
-              model: app.model(model)
-            });
-            return ookook.component.editItemForm.initInstance($("#" + model + "-edit-form"), {
-              application: function() {
-                return app;
-              },
-              model: app.model(model)
-            });
-          }
         };
         collections = [];
         app.dataView.metroTopItems.events.onModelChange.addListener(function(dm, itemIds) {
@@ -1313,8 +1359,22 @@
               }
               return items;
             };
-            if (app.model('Project') != null) {
-              app.model('Project').addConfig({
+            app.onModel('Theme', function(t) {
+              return t.addConfig({
+                inflateItem: function(id) {
+                  var pitems;
+                  pitems = [];
+                  pitems.push({
+                    id: id,
+                    "cmd-plus": "ThemeLayout",
+                    "cmd-edit": "Theme"
+                  });
+                  return pitems;
+                }
+              });
+            });
+            app.onModel('Project', function(m) {
+              return m.addConfig({
                 inflateItem: function(id) {
                   var item, pitems, _ref7, _ref8, _ref9;
                   pitems = [];
@@ -1362,12 +1422,12 @@
                   return pitems;
                 }
               });
-            }
+            });
             ookook.util.get({
               url: '/page',
               success: function(data) {
                 app.addModel('PagePart', ookook.model.initModel({
-                  collection_url: '/page/{?page_id}/page_part',
+                  collection_url: '/page/{?page_id}/page-part/{?page_part_id}',
                   dataStore: app.dataStore.data,
                   restType: 'PagePart',
                   parent: "{?page_id}",
@@ -1403,7 +1463,7 @@
                     return item.parent + "-part-" + item.title;
                   }
                 }));
-                app.addModel('Page', ookook.model.initModel({
+                return app.addModel('Page', ookook.model.initModel({
                   collection_url: '/project/{?project_id}/page',
                   dataStore: app.dataStore.data,
                   restType: 'Page',
@@ -1437,30 +1497,6 @@
                     return pitems;
                   }
                 }));
-                ookook.component.newItemForm.initInstance($("#PagePart-new-form"), {
-                  application: function() {
-                    return app;
-                  },
-                  model: app.model("PagePart")
-                });
-                ookook.component.editItemForm.initInstance($("#PagePart-edit-form"), {
-                  application: function() {
-                    return app;
-                  },
-                  model: app.model("PagePart")
-                });
-                ookook.component.newItemForm.initInstance($("#Page-new-form"), {
-                  application: function() {
-                    return app;
-                  },
-                  model: app.model("Page")
-                });
-                return ookook.component.editItemForm.initInstance($("#Page-edit-form"), {
-                  application: function() {
-                    return app;
-                  },
-                  model: app.model("Page")
-                });
               }
             });
             return ookook.util.get({
@@ -1515,6 +1551,94 @@
         });
       });
     });
+    return $(function() {
+      var app;
+      app = ookook.application.top.instance;
+      return app.ready(function() {
+        return ookook.namespace("modals", function(modals) {
+          modals.namespace("create", function(create) {
+            var model, _i, _len, _ref, _results;
+            _ref = ['Project', 'Theme', 'ThemeLayout'];
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              model = _ref[_i];
+              _results.push((function(model) {
+                return app.onModel(model, function(m) {
+                  return create[model] = ookook.component.newItemForm.initInstance($("#" + model + "-new-form"), {
+                    application: function() {
+                      return app;
+                    },
+                    model: m
+                  });
+                });
+              })(model));
+            }
+            return _results;
+          });
+          modals.namespace("update", function(update) {
+            var model, _i, _len, _ref, _results;
+            _ref = ['Project', 'Theme', 'ThemeLayout', 'Page', 'PagePart'];
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              model = _ref[_i];
+              _results.push((function(model) {
+                return app.onModel(model, function(m) {
+                  return update[model] = ookook.component.editItemForm.initInstance($("#" + model + "-edit-form"), {
+                    application: function() {
+                      return app;
+                    },
+                    model: m
+                  });
+                });
+              })(model));
+            }
+            return _results;
+          });
+          app.onModel('Page', function(m) {
+            return ookook.component.newItemForm.initInstance($("#Page-new-form"), {
+              application: function() {
+                return app;
+              },
+              model: m,
+              addParentInfo: function(data) {
+                var id;
+                id = app.getMetroParent();
+                if (id.substr(-6) === "-pages") {
+                  id = id.substr(0, 20);
+                  return {
+                    project_id: id
+                  };
+                } else {
+                  return {};
+                }
+              }
+            });
+          });
+          return app.onModel('PagePart', function(m) {
+            return ookook.component.newItemForm.initInstance($("#PagePart-new-form"), {
+              application: function() {
+                return app;
+              },
+              model: m,
+              addParentInfo: function(data) {
+                var id, _ref;
+                id = app.getMetroParent();
+                return {
+                  page_id: id,
+                  page_part_id: (_ref = data.name) != null ? _ref[0] : void 0
+                };
+              }
+            });
+          });
+        });
+      });
+    });
+  });
+
+  MITHGrid.defaults('ookook.component.modalForm', {
+    events: {
+      onAction: null
+    }
   });
 
   MITHGrid.defaults('ookook.application.top', {

@@ -43,6 +43,7 @@ has source_version => (
   is => 'rw',
   isa => 'Maybe[Object]',
   predicate => 'has_source_version',
+  default => sub { $_[0] -> _get_source_version( $_[0] -> source ) },
 );
 
 has collection => (
@@ -66,6 +67,7 @@ sub link {
     my $nom = $self -> meta -> {package};
     $nom =~ s{^.*::}{};
     $nom = decamelize($nom);
+    $nom =~ s{_}{-}g;
     $self -> collection -> link . "/{?${nom}_id}";
   }
   else {
@@ -83,6 +85,7 @@ sub link_for {
 
   if($meta -> has_embedded($for)) {
     my $frag = $meta -> get_embedded($for) -> {link_fragment} || PL_V($for);
+    $frag =~ s{_}{-}g;
     return $self -> link . '/' . $frag;
   }
   if($meta -> has_owner($for)) {
@@ -104,7 +107,15 @@ sub schema {
 
 sub is_development { $_[0] -> c -> model('DB') -> schema -> is_development }
 
-sub can_GET { 1 } # by default, we can read anything
+sub can_GET { 
+  my($self) = @_;
+
+  return 0 unless $self -> source;
+  return 1 unless $self -> source -> can('version_for_date');
+  return 0 unless $self -> source_version;
+  return 1;
+}
+
 sub can_PUT { $_[0] -> is_development }
 sub can_DELETE { $_[0] -> is_development }
 
@@ -164,10 +175,15 @@ sub GET {
     }
   }
 
-  for my $key ($meta -> get_owner_list) {
+  for my $key ($meta -> get_hasa_list) {
     my $o = $self -> $key;
     if($o) {
-      $json -> {_links} -> {$key} = $o -> link;
+      if($o -> can("link")) {
+        $json -> {_links} -> {$key} = $o -> link;
+      }
+      if($o -> can('id')) {
+        $json -> {$key} = $o -> id;
+      }
     }
   }
 
@@ -197,7 +213,7 @@ sub _PUT {
 
   die "Unable to PUT unless authenticated" unless $self -> c -> user;
 
-  die "Unable to PUT" unless $self -> can_PUT;
+  die "Unable to PUT" unless $self -> can_GET && $self -> can_PUT;
 
   my $embeddings = delete $json -> {_embedded};
 

@@ -54,20 +54,16 @@ sub element_page_part {
   # to go up the current sitemap until we find it.
   my $page = $context -> get_resource("page");
   if($page) { 
-    $page = $page -> source; 
-    my $page_part = $page -> page_part -> search({ name => $name }, { rows => 1}) -> first;
+    my $page_part = $page -> page_part( $name );
     while($page && !$page_part) {
-      $page = $page -> parent_page -> version_for_date($context -> date);
+      $page = $page -> parent_page;
       if($page) {
-        $page_part = $page -> page_part -> search({ name => $name}, { rows => 1}) -> first;
+        $page_part = $page -> page_part( $name );
       }
     }
 
     if($page_part) {
-      return OokOok::Resource::PagePart->new(
-        c => $context->c, 
-        source => $page_part
-      ) -> render($context);
+      return $page_part -> render($context);
     }
   }
   return "<div><!-- Page part '$name' not found. --></div>";

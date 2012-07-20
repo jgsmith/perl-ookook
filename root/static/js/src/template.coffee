@@ -35,3 +35,10 @@ ookook.namespace 'template', (template) ->
       <p class='type'>Page</p>
       <p>{{ data.description[0] }}</p>
     """
+    fs.Theme = t """
+      <h2>{{ data.title[0] }}</h2>
+      <p class='type'>Theme</p>
+      [[ if(data.description != null && data.description.length > 0) { ]]
+        <p>{{ data.description[0] }}</p>
+      [[ } ]]
+    """

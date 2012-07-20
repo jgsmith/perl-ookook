@@ -92,6 +92,7 @@ sub link {
   my $nom = $self -> resource_class;
   $nom =~ s/^.*:://;
   $nom = decamelize($nom);
+  $nom =~ s{_}{-}g;
   "".$self -> c -> uri_for('/' . $nom);
 }
 
@@ -128,14 +129,19 @@ sub GET {
   # we want to add paging capabilities so we don't send massive numbers of
   # pages when we only need the schema
 
+  my $date = $self -> date;
+  my $c = $self -> c;
+
   my $json = {
     _links => {
       self => $self -> link
     },
     _schema => $self -> schema,
     _embedded => [
+      map { $_ -> GET }
+      grep { $_ -> can_GET }
       map {
-        $rclass -> new(c => $self -> c, source => $_) -> GET
+        $rclass -> new(c => $c, source => $_, date => $date)
       } $things_q -> all
     ],
   };
@@ -180,7 +186,29 @@ sub _POST {
     }
   }
 
-  $self -> POST($json, @_);
+  my $hasa = {};
+
+  for my $h ($resource_class -> meta -> get_hasa_list) {
+    delete $json -> {$h . "_id"}; # keep someone from slipping by
+    my $hinfo = $resource_class -> meta -> get_hasa($h);
+    next if defined($hinfo->{is}) && $hinfo->{is} eq 'ro';
+    my $r = delete $json -> {$h};
+    next unless defined $r;
+    my $collection = $hinfo -> {isa} -> new(c => $self -> c) -> collection;
+    $r = $collection -> resource_for_url($r);
+    if($r) {
+      if($hinfo->{sink}) {
+        $json->{$h . "_id"} = $hinfo -> {sink} -> ($r);
+      }
+      else {
+        $json->{$h."_id"} = $r -> source -> id;
+      }
+    }
+  }
+
+  my $results = $self -> verify(POST => $json);
+
+  $self -> POST($results, @_);
 }
 
 sub POST {

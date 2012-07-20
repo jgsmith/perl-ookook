@@ -61,6 +61,11 @@ requires 'String::CamelCase';
 requires 'Workflow';
 requires 'XML::LibXML';
 
+requires 'Parse::BBCode';
+requires 'Text::Markdown';
+#requires 'Text::MultiMarkdown';
+requires 'Text::Textile';
+
 requires 'namespace::autoclean';
 
 test_requires 'Test::More' => '0.88';

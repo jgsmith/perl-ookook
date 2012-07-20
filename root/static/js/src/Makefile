@@ -8,7 +8,8 @@ BASE_FILES = util.coffee \
 	presentation.coffee \
         template.coffee \
 	application.coffee \
-	instance.coffee
+	instance.coffee \
+        modals.coffee
 
 MODULES = intro.coffee \
 	${BASE_FILES} \

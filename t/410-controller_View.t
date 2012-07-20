@@ -12,16 +12,31 @@ use lib 't/lib';
 use OokOok::Test::REST;
 use OokOok::Controller::View;
 
+my $json;
+
+#
+# Create an empty theme
+#
+
+$json = POST_ok("/theme", {
+    name => 'Test Theme',
+  }, "Create theme");
+
+my $theme_uuid = $json -> {id};
+ok $theme_uuid, "We have a theme uuid";
+my $theme_date = "".DateTime->now;
+
 #
 # Create project and populate with sitemap
 #
 
-my $json;
 my $uuid;
 
 $json = POST_ok("/project", {
   name => "Test Project",
   description => "Test project description",
+  theme => $theme_uuid,
+  theme_date => $theme_date,
 }, "create project");
 
 $uuid = $json -> {id};

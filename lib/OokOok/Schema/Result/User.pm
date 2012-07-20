@@ -62,6 +62,12 @@ __PACKAGE__->table("user");
   is_nullable: 1
   size: 255
 
+=head2 is_admin
+
+  data_type: 'integer'
+  default_value: 0
+  is_nullable: 0
+
 =head2 url
 
   data_type: 'varchar'
@@ -79,6 +85,8 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 8 },
   "name",
   { data_type => "varchar", is_nullable => 1, size => 255 },
+  "is_admin",
+  { data_type => "integer", default_value => 0, is_nullable => 0 },
   "url",
   { data_type => "varchar", is_nullable => 1, size => 255 },
 );
@@ -96,8 +104,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-01 11:24:08
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7PUIuiEUIIVzJLuFjSsEtQ
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-19 14:43:38
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:D9ac8BKTBYlrKCfcjgwGlA
 
 with 'OokOok::Role::Schema::Result::UUID';
 

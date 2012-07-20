@@ -7,12 +7,12 @@ ookook.namespace "model", (model) ->
     that = {}
     makeSubstitutions = (template, data) ->
       orig = template
+
       if template.indexOf("{?") >= 0
         bits = template.split('{?')
-        for i in [0...bits.length]
-          if i % 2 == 1
-            mbs = bits[i].split("}")
-            bits[i] = (data[mbs[0]]||'') + mbs[1]
+        for i in [1...bits.length]
+          mbs = bits[i].split("}")
+          bits[i] = (data[mbs[0]]||'') + mbs[1]
         template = bits.join("")
       template
 
@@ -79,12 +79,13 @@ ookook.namespace "model", (model) ->
       json = {}
       for k, v of config?.schema?.properties
         if v.is == "rw" and v.valueType != "hash"
-          if data[v.source]?.length == 1
-            json[k] = data[v.source][0]
-          else if data[v.source]?.length > 1
-            json[k] = data[v.source]
-          else if data[v.source]?
+          if data[v.source||k]?.length == 1
+            json[k] = data[v.source||k][0]
+          else if data[v.source||k]?.length > 1
+            json[k] = data[v.source||k]
+          else if data[v.source||k]?
             json[k] = null
+      console.log "export", data, " => ", json
       json
 
     that.schema = -> config.schema

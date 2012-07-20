@@ -1,3 +1,7 @@
+MITHGrid.defaults 'ookook.component.modalForm',
+  events:
+    onAction: null
+
 MITHGrid.defaults 'ookook.application.top',
   dataStores:
     data:

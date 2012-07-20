@@ -7,6 +7,7 @@ use OokOok::Template::Document;
 use Carp;
 
 use XML::LibXML;
+use Module::Load ();
 
 has c => (
   is => 'rw',
@@ -27,6 +28,8 @@ has _taglibs => (
 
 sub register_taglib {
   my($self, $taglib) = @_;
+
+  Module::Load::load $taglib;
 
   my $ns = $taglib -> meta -> namespace;
   if($ns) {

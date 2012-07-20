@@ -7,6 +7,16 @@ BEGIN {
   extends 'Catalyst::Controller::REST';
 }
 
+sub do_OPTIONS {
+  my($self, $c, %headers) = @_;
+  $c -> response -> status(200);
+  $c -> response -> headers -> header(%headers);
+  $c -> response -> body('');
+  $c -> response -> content_length(0);
+  $c -> response -> content_type("text/plain");
+  $c -> detach();
+}
+
 sub collection :Chained('base') :PathPart('') :Args(0) :ActionClass('REST') { 
 }
 
@@ -25,6 +35,15 @@ sub collection_POST {
   $self -> status_created($c,
     location => $manifest->link,
     entity => $manifest -> _GET(1)
+  );
+}
+
+sub collection_OPTIONS {
+  my($self, $c) = @_;
+
+  $self -> do_OPTIONS($c,
+    Allow => [qw/GET OPTIONS POST/],
+    Accept => [qw{application/json}],
   );
 }
 
@@ -76,5 +95,15 @@ sub resource_DELETE {
     );
   }
 }
+
+sub resource_OPTIONS {
+  my($self, $c) = @_;
+
+  $self -> do_OPTIONS($c,
+    Allow => [qw/GET OPTIONS PUT DELETE/],
+    Accept => [qw{application/json}],
+  );
+}
+
 
 1;

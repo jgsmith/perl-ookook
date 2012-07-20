@@ -79,9 +79,14 @@ __PACKAGE__->table("edition");
   default_value: '{}'
   is_nullable: 0
 
-=head2 theme_edition_id
+=head2 theme_id
 
   data_type: 'integer'
+  is_nullable: 1
+
+=head2 theme_date
+
+  data_type: 'datetime'
   is_nullable: 1
 
 =head2 created_on
@@ -111,8 +116,10 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "sitemap",
   { data_type => "text", default_value => "{}", is_nullable => 0 },
-  "theme_edition_id",
+  "theme_id",
   { data_type => "integer", is_nullable => 1 },
+  "theme_date",
+  { data_type => "datetime", is_nullable => 1 },
   "created_on",
   { data_type => "datetime", is_nullable => 0 },
   "closed_on",
@@ -132,8 +139,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-12 16:19:04
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:UAcCtEfHVX5BITp0LPpabw
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-15 19:13:31
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:yGhmn5uCgIcABWBDM3/IPA
 
 use JSON;
 
@@ -150,7 +157,7 @@ __PACKAGE__->has_many("snippet_versions" => "OokOok::Schema::Result::SnippetVers
   cascade_delete => 1,
 });
 
-__PACKAGE__->belongs_to("theme_edition" => "OokOok::Schema::Result::ThemeEdition", "theme_edition_id");
+__PACKAGE__->belongs_to("theme" => "OokOok::Schema::Result::Theme", "theme_id");
 
 __PACKAGE__->inflate_column('sitemap', {
   inflate => sub { JSON::decode_json shift },
