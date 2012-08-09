@@ -20,6 +20,7 @@ requires 'Catalyst::Model::DBIC::Schema';
 requires 'Catalyst::Model::File';
 
 requires 'Catalyst::Plugin::ConfigLoader';
+requires 'Catalyst::Plugin::Params::Nested';
 requires 'Catalyst::Plugin::Static::Simple';
 requires 'Catalyst::Plugin::StackTrace';
 requires 'Catalyst::Plugin::StatusMessage';
@@ -44,14 +45,17 @@ requires 'MooseX::MethodAttributes::Role';
 requires 'MooseX::MarkAsMethods' => '0.13';
 requires 'MooseX::NonMoose' => '0.16';
 requires 'MooseX::Singleton' => '0.29';
+#requires 'MooseX::Error::Exception::Class';
 
 requires 'Data::UUID';
 requires 'Data::Verifier';
 requires 'DateTime';
 requires 'DBIx::Class';
 requires 'DBIx::Class::Schema::Loader';
+requires 'Exception::Class';
 requires 'HTML::FormFu';
 requires 'HTML::FormFu::Model::DBIC';
+requires 'HTML::FillInForm';
 requires 'JSON';
 requires 'Lingua::EN::Inflect';
 requires 'LWP::Protocol::https';
@@ -65,6 +69,8 @@ requires 'Parse::BBCode';
 requires 'Text::Markdown';
 #requires 'Text::MultiMarkdown';
 requires 'Text::Textile';
+
+requires 'CSS::LESSp';
 
 requires 'namespace::autoclean';
 

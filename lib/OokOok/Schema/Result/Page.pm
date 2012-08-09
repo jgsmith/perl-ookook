@@ -100,6 +100,19 @@ __PACKAGE__ -> has_many( "children" => "OokOok::Schema::Result::PageVersion", "p
 
 with 'OokOok::Role::Schema::Result::HasVersions';
 
+after insert => sub {
+  my($self) = @_;
+
+  # make sure we have a 'body' page part
+  if(0 == $self -> current_version -> page_parts -> count) {
+    my $body = $self -> current_version -> create_related('page_parts', {
+      name => 'body',
+      content => '',
+    });
+    $body -> insert_or_update;
+  }
+};
+
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
 1;

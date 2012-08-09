@@ -24,6 +24,8 @@ use Catalyst qw/
 
     Unicode::Encoding
 
+    Params::Nested
+
     Session
     Session::Store::FastMmap
     Session::State::Cookie
@@ -63,7 +65,8 @@ __PACKAGE__->config(
     disable_component_resolution_regex_fallback => 1,
     enable_catalyst_header => 1, # Send X-Catalyst header
     encoding => 'UTF-8',
-    search_extra => [ 'OokOok::Resource', 'OokOok::Collection' ],
+    #search_extra => [ 'OokOok::Resource', 'OokOok::Collection' ],
+    default_view => 'Mason',
 );
 __PACKAGE__->config(
   'View::HTML' => {

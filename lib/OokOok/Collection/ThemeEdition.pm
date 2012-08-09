@@ -14,7 +14,8 @@ sub can_POST {
   my($self) = @_;
 
   # we need to make sure the current logged in person is owner of the project
-  1;
+  return 0 unless $self -> theme;
+  return $self -> theme -> can_PUT;
 }
 
 sub may_POST {

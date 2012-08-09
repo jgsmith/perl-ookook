@@ -1,7 +1,7 @@
 package OokOok::Template::Context;
 
 use Moose;
-use MooseX::Types::Moose qw/CodeRef/;
+use MooseX::Types::Moose qw/CodeRef ArrayRef/;
 
 use XML::LibXML;
 use namespace::autoclean;
@@ -86,6 +86,16 @@ sub get_var {
   return $val;
 }
 
+sub has_var {
+  my($self, $key) = @_;
+
+  return 1 if exists($self -> vars -> {$key});
+
+  return 0 unless $self -> parent;
+
+  return $self -> parent -> has_var($key);
+}
+
 sub process_node {
   my($self, $node) = @_;
 
@@ -114,7 +124,14 @@ sub process_node {
       my $child = $node -> firstChild;
       while($child) {
         my $r = $self -> process_node( $child );
-        $collector -> appendChild( $r ) if $r;
+        if(ref $r) {
+          if(is_ArrayRef($r)) {
+            $collector -> appendChild( $_ ) for @$r;
+          }
+          elsif($r -> isa('XML::LibXML::Node')) {
+            $collector -> appendChild( $r );
+          }
+        }
         $child = $child -> nextSibling;
       }
       return $collector;

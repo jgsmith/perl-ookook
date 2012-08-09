@@ -82,6 +82,7 @@ sub authenticate {
   my $client = Net::OAuth::Client->new(
     $consumer_key, $consumer_secret,
     %defaults,
+    debug => 1,
   );
 
   my $oauth_token = $c -> req -> method eq 'GET'
@@ -114,10 +115,15 @@ sub authenticate {
       my $response = $access_token -> get('https://api.twitter.com/1/users/show.json?user_id=' . $access_token->{user_id} . '&include_entities=true');
       if($response -> is_success) {
         my $json = JSON::decode_json($response -> decoded_content);
+        use Data::Dumper ();
+        print STDERR "Returned from twitter:", Data::Dumper -> Dump([$json]);
         $info->{user_id} = $access_token -> {user_id};
         $info->{name} = $json->{name};
         $info->{url} = $json->{url};
         $info->{lang} = $json->{lang};
+        $info->{description} = $json->{description};
+        $info->{timezone} = $json->{time_zone};
+        $info->{profile_img_url} = $json->{profile_image_url};
       }
     }
     elsif($provider_name eq 'google') {
@@ -152,6 +158,8 @@ sub authenticate {
             name => $info->{name},
             url => $info->{url},
             lang => $info->{lang},
+            description => $info->{description},
+            timezone => $info->{timezone},
           });
           $user -> insert;
         }
@@ -161,6 +169,7 @@ sub authenticate {
           oauth_user_id => $info->{user_id},
           token => $info->{token},
           token_secret => $info->{token_secret},
+          profile_img_url => $info->{profile_img_url},
         });
         $oauth_id -> insert;
       }

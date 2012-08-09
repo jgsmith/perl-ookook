@@ -21,7 +21,7 @@ sub can_POST {
   my($self) = @_;
 
   if($self -> c -> stash -> {project}) {
-    $self -> c -> stash -> {project} -> can_POST
+    $self -> c -> stash -> {project} -> can_PUT
   }
   else {
     0;

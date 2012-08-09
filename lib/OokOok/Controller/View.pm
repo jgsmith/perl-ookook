@@ -103,9 +103,14 @@ sub play_GET {
   $context -> set_resource(project => $c -> stash -> {project});
 
   $c -> stash -> {rendering} = $page -> render($context);
+  my $project_uuid = $page -> project -> source -> uuid;
+  $c -> stash -> {stylesheets} = [ map {
+    $c -> uri_for( "/s/$project_uuid/style/$_" )
+  } $page -> stylesheets ];
 
   $c -> stash -> {template} = 'view/play.tt2';
-};
+  $c -> forward( $c -> view('HTML') );
+}
 
 =head1 AUTHOR
 

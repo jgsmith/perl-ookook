@@ -4,6 +4,7 @@ use namespace::autoclean;
 
 use Lingua::EN::Inflect qw(PL_V);
 use String::CamelCase qw(decamelize);
+use OokOok::Exception;
 
 has c => (
   is => 'rw',
@@ -101,7 +102,11 @@ sub schema {
   for my $k (keys %{$schema -> {embedded}}) {
     $schema -> {embedded} -> {$k} -> {_links} -> {self} = $self -> link_for($k);
   }
-
+  for my $h ($self -> meta -> get_hasa_list) {
+    my $info = $self -> meta -> get_hasa($h);
+    $schema -> {properties} -> {$h} -> {linkListFrom} = 
+      $info->{isa} -> new(c => $self -> c) -> collection -> link;
+  }
   return $schema;
 }
 
@@ -211,9 +216,25 @@ sub DELETE {
 sub _PUT {
   my($self, $json) = @_;
 
-  die "Unable to PUT unless authenticated" unless $self -> c -> user;
+  print STDERR "$self -> _PUT\n";
 
-  die "Unable to PUT" unless $self -> can_GET && $self -> can_PUT;
+  print STDERR "user: ", $self -> c -> user, "\n";
+
+  OokOok::Exception -> forbidden(
+    message => 'Unable to PUT unless authenticated'
+  ) unless defined $self -> c -> user;
+
+  print STDERR "Got past authentication requirement\n";
+
+  print STDERR "can_GET:", $self -> can_GET, "\n";
+  print STDERR "can_PUT:", $self -> can_PUT, "\n";
+  print STDERR "got past printing out can_GET and can_PUT\n";
+
+  OokOok::Exception -> forbidden(
+    message => 'Unable to PUT'
+  ) unless $self -> can_GET && $self -> can_PUT;
+
+  print STDERR "Got past authorization requirement\n";
 
   my $embeddings = delete $json -> {_embedded};
 
@@ -225,25 +246,35 @@ sub _PUT {
   my $hasa = {};
 
   for my $h ($self -> meta -> get_hasa_list) {
+    print STDERR ">>> $h\n";
     my $hinfo = $self -> meta -> get_hasa($h);
     next if defined($hinfo->{is}) && $hinfo->{is} eq 'ro';
     my $r = delete $json -> {$h};
-    next unless defined $r;
-    my $collection = $hinfo -> {isa} -> new(c => $self -> c) -> collection;
-    $r = $collection -> resource_for_url($r);
+    if(defined $r) {
+      my $collection = $hinfo -> {isa} -> new(c => $self -> c) -> collection;
+      $r = $collection -> resource_for_url($r);
+    }
+    if(!$r && $hinfo->{required}) {
+        $r = $self -> $h;
+    }
     if($r) {
+      print STDERR "$h => $r => ", $r->source->id, "\n";
       if($hinfo->{sink}) {
+        print STDERR "Adding $h to hasa\n";
         $hasa->{$h . "_id"} = $hinfo -> {sink} -> ($r);
       }
       else {
+        print STDERR "Adding $h to hasa\n";
         $hasa->{$h."_id"} = $r -> source -> id;
       }
     }
   }
 
   for my $b ($self -> meta -> get_owner_list) {
+    my $binfo = $self -> meta -> get_owner($b);
+    next if !defined($binfo->{is}) || $binfo->{is} eq 'ro';
+    print STDERR "$b required? ", ($binfo->{required}?'y':'n'),"\n";
     if(exists $json->{$b}) {
-      my $binfo = $self -> meta -> get_owner($b);
       my $bv = delete $json -> {$b};
       if(defined($bv) && $bv ne '') {
         $bv = $binfo -> {isa} -> new(c => $self -> c) -> collection -> resource_for_url($bv);
@@ -255,14 +286,44 @@ sub _PUT {
       elsif(!$binfo -> {required}) {
         $json -> {$b . "_id"} = undef;
       }
+      else {
+        $json -> {$b . "_id"} = $self -> $b -> source -> id;
+      }
+    }
+    elsif($binfo->{required}) {
+      $json -> {$b . "_id"} = $self -> $b -> source -> id;
     }
   }
 
+  for my $k (keys %{$self -> meta -> properties}) {
+    my $p = $self -> meta -> properties -> {$k};
+    next if !$p->{required} || defined($p->{is}) && $p->{is} eq 'ro';
+    next if defined($p->{verifier});
+    if(!defined($json->{$k})) {
+      $json->{$k} = $self -> $k;
+    }
+  }
+
+  for my $h (keys %$hasa) {
+    print STDERR "Copying $h to json...\n";
+    $json -> {$h} = $hasa->{$h};
+  }
+
   my $verifier = $self -> meta -> verifier -> {PUT};
+  print STDERR "Verifier: $verifier\n";
+  print STDERR "Data in: ", Data::Dumper -> Dump([ $json ]);
   if($verifier) {
     my $results = $verifier -> verify($json);
+    print STDERR "Verifier success: ", $results -> success, "\n";
     if(!$results -> success) {
-      die "Invalid data";
+      print STDERR "Not successful!\n";
+      print STDERR Data::Dumper -> Dump([ [ $results -> missings ], [ $results -> invalids ] ]);
+      print STDERR "Throwing error\n";
+      OokOok::Exception::PUT->throw(
+        message => "Invalid or missing fields",
+        missing => [ $results -> missings ],
+        invalid => [ $results -> invalids ],
+      );
     }
     my %values = $results -> valid_values;
     delete @values{grep { !defined $values{$_} } keys %values};
@@ -270,10 +331,6 @@ sub _PUT {
   }
   else {
     $json = {};
-  }
-
-  for my $h (keys %$hasa) {
-    $json -> {$h} = $hasa->{$h};
   }
 
   $json -> {_embedded} = {};

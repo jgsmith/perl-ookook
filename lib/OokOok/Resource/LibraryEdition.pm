@@ -3,19 +3,7 @@ use Moose;
 use namespace::autoclean;
 use OokOok::Resource;
 
-sub resource_collection_class { 'OokOok::Resource::Library' }
-
-has '+collection' => (
-  lazy => 1,
-  default => sub {
-    my($self) = @_;
-
-    OokOok::Resource::Library->new(
-      c => $self -> c, 
-      source => $self -> source -> theme
-    );
-  },
-);
+use OokOok::Collection::LibraryEdition;
 
 prop name => (
   is => 'rw',
@@ -46,6 +34,8 @@ sub link {
 
   $self -> collection -> link . '/edition';
 }
+
+sub can_PUT { 0 }
 
 1;
 

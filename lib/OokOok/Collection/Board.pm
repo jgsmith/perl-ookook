@@ -10,7 +10,7 @@ sub constrain_collection {
     $q = $q -> search({
       'board_members.user_id' => $self -> c -> user -> id
     }, {
-      join => { board_ranks => 'board_members' }
+      join => ['board_members']
     });
   }
   else {

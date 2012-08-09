@@ -74,6 +74,17 @@ __PACKAGE__->table("user");
   is_nullable: 1
   size: 255
 
+=head2 timezone
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 255
+
+=head2 description
+
+  data_type: 'text'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -89,6 +100,10 @@ __PACKAGE__->add_columns(
   { data_type => "integer", default_value => 0, is_nullable => 0 },
   "url",
   { data_type => "varchar", is_nullable => 1, size => 255 },
+  "timezone",
+  { data_type => "varchar", is_nullable => 1, size => 255 },
+  "description",
+  { data_type => "text", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -104,15 +119,19 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-19 14:43:38
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:D9ac8BKTBYlrKCfcjgwGlA
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-31 19:12:33
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:J1KY2oAgrGgn+fgSxm8idA
 
 with 'OokOok::Role::Schema::Result::UUID';
 
 __PACKAGE__ -> has_many( oauth_identities => 'OokOok::Schema::Result::OauthIdentity', 'user_id' );
 
 __PACKAGE__ -> has_many( board_members => 'OokOok::Schema::Result::BoardMember', 'user_id' );
+__PACKAGE__ -> has_many( board_applicants => 'OokOok::Schema::Result::BoardApplicant', 'user_id' );
+
 __PACKAGE__ -> many_to_many( board_ranks => 'board_members', 'board_rank' );
+
+__PACKAGE__ -> has_many( emails => 'OokOok::Schema::Result::Email', 'user_id' );
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

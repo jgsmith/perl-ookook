@@ -26,12 +26,25 @@ has _taglibs => (
   default => sub { +{ } }
 );
 
+sub BUILD {
+  my($self) = @_;
+
+  for my $taglib (keys %{$self -> c -> config -> {'OokOok::Template::TagLibs'} -> {module} || {}}) {
+    $self -> register_taglib($taglib);
+  }
+}
+
 sub register_taglib {
   my($self, $taglib) = @_;
 
   Module::Load::load $taglib;
 
   my $ns = $taglib -> meta -> namespace;
+  if(!$ns) {
+    # get NS from config
+    $ns = $self -> c -> config -> {"OokOok::Template::TagLibs"} -> {module} -> {$taglib} -> {namespace};
+    $taglib -> meta -> namespace($ns); # save it for later
+  }
   if($ns) {
     $self -> _taglibs -> {$ns} = $taglib;
   }
@@ -44,7 +57,7 @@ sub parse {
   my $dom = eval { XML::LibXML -> load_xml( string => $content ) };
 
   if($@) {
-    croak "Unable to parse document";
+    croak "Unable to parse document ($@):\n$content\n\n";
   }
 
   # we need to handle taglibs

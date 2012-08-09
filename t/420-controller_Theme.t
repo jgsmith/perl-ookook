@@ -28,7 +28,7 @@ is $json->{name}, "Test Theme", "Right name";
 is $json->{description}, "Theme for testing.", "Right description";
 
 my $snippet_layout = <<EOXML;
-<r:snippet xmlns:r="http://www.ookook.org/ns/core/1.0" r:name="header" />
+<r:snippet r:name="header" />
 EOXML
 
 $json = POST_ok("/theme/$uuid/theme-layout", {
@@ -42,7 +42,7 @@ is $json->{name}, "Snippet", "Right name";
 is $json->{layout}, $snippet_layout, "Right layout";
 
 my $body_layout = <<EOXML;
-<r:page-part xmlns:r="http://www.ookook.org/ns/core/1.0" r:name="body" />
+<r:content r:part="body" />
 EOXML
 
 $json = POST_ok("/theme/$uuid/theme-layout", {

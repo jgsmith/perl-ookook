@@ -169,6 +169,8 @@ eval {
   $next_version->delete;
 };
 
+diag $@ if $@;
+
 ok !$@, "We don't get an error when we try to delete a page associated with the current unfrozen edition";
 
 # Since the delete should work, we expect a single page in the DB.

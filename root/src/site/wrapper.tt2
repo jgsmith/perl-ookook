@@ -2,44 +2,108 @@
 [%- content -%]
 [%- ELSE -%]
 <!DOCTYPE html>
-<html lang="en>
+<html lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>[% template.title %]</title>
-    <script src="[% c.uri_for('/static/js/combined.js') %]"></script>
-    <!-- script src="[% c.uri_for('/static/js/jquery.js') %]"></script>
-    <script src="[% c.uri_for('/static/js/history.js') %]"></script>
+    <script src="[% c.uri_for('/static/js/jquery.js') %]"></script>
     <script src="[% c.uri_for('/static/js/bootstrap.min.js') %]"></script>
-    <script src="[% c.uri_for('/static/js/mithgrid.min.js') %]"></script>
-    <script src="[% c.uri_for('/static/js/masonry.js') %]"></script -->
-    [%- IF meta.in_admin -%]
-      <script src="[% c.uri_for('/static/js/admin.js') %]"></script>
-    [%- ELSE -%]
-      <script src="[% c.uri_for('/static/js/application.js') %]"></script>
-    [%- END -%]
-    <!-- script src="[% c.uri_for('/static/js/wymeditor/jquery.wymeditor.js') %]"></script>
     <script src="[% c.uri_for('/static/js/ace/ace.js') %]"></script>
-    <script src="[% c.uri_for('/static/js/ace/mode-xml.js') %]"></script -->
-    <link href="[% c.uri_for('/static/css/bootstrap.min.css') %]" rel="stylesheet">
-    <link href="[% c.uri_for('/static/css/application.css') %]" rel="stylesheet">
+    <script src="[% c.uri_for('/static/js/ace/mode-xml.js') %]"></script>
+    <link href="[% c.uri_for('/static/css/bootstrap.css') %]" rel="stylesheet">
+    <link href="[% c.uri_for('/static/css/bootstrap-responsive.css') %]" rel="stylesheet">
+    <link href="[% c.uri_for('/static/css/overrides.css') %]" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+      .modal {
+      }
+    </style>
   </head>
   <body>
-    <div class="container">
-      [%- IF status_msg -%]
-        <div class="alert alert-success">
-          <a class="close" data-dismiss="alert" href="#">&times;</a>
-          [% status_msg %]
+    <div class="container-fluid">
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">OokOok</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="[% c.uri_for("/") %]">Home</a></li>
+              [% IF c.user %]
+                <li><a href="[% c.uri_for("/admin") %]">Admin</a></li>
+              [% END %]
+            </ul>
+            <ul class="nav pull-right">
+              [%- IF c.user -%]
+                <li><a href="[% c.uri_for("/admin/preferences") %]">
+                  Logged in as [%- c.user.name -%]
+                </a></li>
+                <li><a href="[% c.uri_for("/admin/oauth/logout") %]">(Logout)</a></li>
+              [%- ELSE -%]
+                <li><a href="[% c.uri_for("/admin/oauth/twitter") %]">Login with Twitter</a></li>
+              [%- END -%]
+            </ul>
+          </div>
         </div>
-      [%- END -%]
-      [%- IF error_msg -%]
-        <div class="alert alert-error">
-          <a class="close" data-dismiss="alert" href="#">&times;</a>
-          [% error_msg %]
-        </div>
-      [%- END -%]
-      [%- content -%]
+      </div>
     </div>
+    
+    [%- IF status_msg || error_msg -%]
+      <div class="row-fluid">
+        <div class="span12">
+          [%- IF status_msg -%]
+            <div class="alert alert-success" id="notice">
+              <a class="close" data-dismiss="alert" href="#">&times;</a>
+              [% status_msg %]
+            </div>
+          [%- END -%]
+          [%- IF error_msg -%]
+            <div class="alert alert-error" id="error">
+              <a class="close" data-dismiss="alert" href="#">&times;</a>
+              [% error_msg %]
+            </div>
+          [%- END -%]
+        </div>
+      </div>
+    [%- END -%]
+
+    <div class="row-fluid">
+      <div class="span12">
+        <ul class="nav nav-pills">
+          [%- FOR tab IN nav_tabs -%]
+            <li 
+              [%- FOR sub_item IN current_tab -%]
+                [%- IF tab.link == sub_item.link -%]
+                  class="active"
+                [%- END -%]
+              [%- END -%]
+            ><a href="[% c.uri_for(tab.link) %]">[% tab.label %]</a></li>
+          [%- END -%]
+        </ul>
+        [%- IF current_tab && current_tab.size > 1 -%]
+          <ul class="nav nav-tabs">
+            [%- FOR sub_item IN current_tab -%]
+              <li [%- IF c.uri_for(sub_item.link) == c.request.uri.substr(0, c.uri_for(sub_item.link).length) %]class="active"[% END %]><a href="[% c.uri_for(sub_item.link) %]">[% sub_item.label %]</a></li>
+            [%- END -%]
+          </ul>
+        [%- END -%]
+        [%- toolbar -%]
+      </div>
+    </div>
+    <div class="row-fluid">
+      <div class="span12">
+        [%- content -%]
+      </div>
+    </div>
+    </div>
+    [%- popups -%]
   </body>
 </html>
 [%- END -%]

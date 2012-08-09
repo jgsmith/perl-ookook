@@ -24,9 +24,10 @@ my $processor = OokOok::Template::Processor -> new(
 );
 
 $processor -> register_taglib('OokOok::Template::TagLibrary::Core');
+my $ns = OokOok::Template::TagLibrary::Core -> meta -> namespace;
 
 my $doc = $processor -> parse( <<EOXML );
-<foo xmlns:r="http://www.ookook.org/ns/core/1.0">
+<foo xmlns:r='$ns'>
   <bar/>
   <r:snippet r:name="bar" />
   <!-- comment -->

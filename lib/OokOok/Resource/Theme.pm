@@ -3,6 +3,10 @@ use OokOok::Resource;
 use namespace::autoclean;
 with 'OokOok::Role::Resource::HasEditions';
 
+use OokOok::Resource::LibraryTheme;
+use OokOok::Resource::ThemeAsset;
+use OokOok::Collection::ThemeAsset;
+
 has '+source' => (
   isa => 'OokOok::Model::DB::Theme',
 );
@@ -30,10 +34,32 @@ has_many theme_layouts => 'OokOok::Resource::ThemeLayout', (
   source => sub { $_[0] -> source -> theme_layouts },
 );
 
+has_many theme_assets => 'OokOok::Resource::ThemeAsset', (
+  is => 'ro',
+  source => sub { $_[0] -> source -> theme_assets },
+);
+
+has_many theme_styles => 'OokOok::Resource::ThemeStyle', (
+  is => 'ro',
+  source => sub { $_[0] -> source -> theme_styles },
+);
+
 has_many editions => 'OokOok::Resource::ThemeEdition', (
   is => 'ro',
   source => sub { $_[0] -> source -> editions },
 );
+
+sub libraries {
+  my($self) = @_;
+
+  map {
+    OokOok::Resource::LibraryTheme -> new(
+      c => $self -> c,
+      source => $_,
+      date => $self -> date
+    )
+  } $self -> source -> library_themes;
+}
 
 sub can_PUT {
   my($self) = @_;
@@ -56,5 +82,41 @@ sub layout {
     );
   }
 }
+
+sub style {
+  my($self, $uuid) = @_;
+
+  my $l = $self -> source -> theme_styles -> find({ uuid => $uuid });
+  if($l) {
+    return OokOok::Resource::ThemeStyle -> new(
+      c => $self -> c,
+      date => $self -> date,
+      source => $l
+    );
+  }
+}
+
+sub snippet {
+  my($self, $name) = @_;
+
+  # we want to find the right snippet_version that corresponds to our
+  # date/dev constraints
+  my $s = $self -> c -> model('DB::ThemeSnippetVersion') -> search({
+    'me.name' => $name,
+    'theme_edition.theme_id' => $self -> source -> id,
+  }, {
+     join => [qw/theme_edition/],
+     order_by => { -desc => 'me.theme_edition_id' },
+  }) -> first;
+
+  if($s) {
+    return OokOok::Resource::ThemeSnippet -> new(
+      c => $self -> c,
+      date => $self -> date,
+      source => $s -> snippet,
+    );
+  }
+}
+
 
 1;

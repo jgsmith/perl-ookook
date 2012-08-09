@@ -8,6 +8,7 @@ BEGIN {
 
 __PACKAGE__ -> config(
   map => {
+    'text/html' => [ 'View', 'HTML' ],
   },
   default => 'text/html',
 );

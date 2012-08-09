@@ -13,7 +13,7 @@ sub constrain_collection {
       $q = $q -> search({
         'board_members.user_id' => $self -> c -> user -> id,
       }, {
-        join => { board => { board_ranks => 'board_members' } }
+        join => { board => 'board_members' }
       });
     }
     else {
@@ -21,7 +21,7 @@ sub constrain_collection {
       $q = $q -> search({
         'board_members.user_id' => $self -> c -> user -> id,
       }, {
-        join => { board => { board_ranks => 'board_members' } }
+        join => { board => 'board_members' }
       });
     }
   }
@@ -71,10 +71,10 @@ around POST => sub {
   my $rank = $board -> create_related('board_ranks', {
     name => 'Administrator',
     position => 0,
-    is_editor => 1,
   });
-  $rank -> create_related('board_members', {
+  $board -> create_related('board_members', {
     user_id => $owner -> id,
+    rank => 0,
   });
 
   $project -> source -> update({

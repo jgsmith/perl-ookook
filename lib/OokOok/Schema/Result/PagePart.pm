@@ -164,7 +164,7 @@ override delete => sub {
   my($self) = @_;
 
   my $page_version = $self -> page_version;
-  if($page_version -> edition -> is_closed) {
+  if($page_version && $page_version -> edition && $page_version -> edition -> is_closed) {
     $page_version = $page_version -> duplicate_to_current_edition;
     return $page_version -> page_parts(
       { name => $self -> name }

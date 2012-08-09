@@ -9,7 +9,7 @@ my $ug = Data::UUID -> new;
 before insert => sub {
   my($self) = @_;
 
-  if(!$self -> uuid) {
+  if($self -> can('uuid') && !$self -> uuid) {
     my $uuid = substr($ug -> create_b64, 0, 20);
     $uuid =~ tr{+/}{-_};
     $self -> uuid($uuid);

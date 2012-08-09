@@ -60,11 +60,16 @@ __PACKAGE__->table("board_rank");
   data_type: 'integer'
   is_nullable: 0
 
-=head2 is_editor
+=head2 may_vote_on_induction
 
   data_type: 'boolean'
-  default_value: FALSE
+  default_value: 0
   is_nullable: 0
+
+=head2 permissions
+
+  data_type: 'text'
+  is_nullable: 1
 
 =cut
 
@@ -77,8 +82,10 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 255 },
   "position",
   { data_type => "integer", is_nullable => 0 },
-  "is_editor",
-  { data_type => "boolean", default_value => \"FALSE", is_nullable => 0 },
+  "may_vote_on_induction",
+  { data_type => "boolean", default_value => 0, is_nullable => 0 },
+  "permissions",
+  { data_type => "text", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -94,13 +101,25 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-01 13:25:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:F0lDZnknr6aoPg5gz7aYxw
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-08-09 11:53:06
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:u5HgeKxBs9mVnpTbVJ39kw
 
 __PACKAGE__ -> belongs_to( board => 'OokOok::Schema::Result::Board', 'board_id' );
 
-__PACKAGE__ -> has_many( board_members => 'OokOok::Schema::Result::BoardMember', 'board_rank_id' );
-__PACKAGE__ -> many_to_many( users => 'board_members', 'user' );
+__PACKAGE__ -> inflate_column( permissions => {
+  inflate => sub { eval { JSON->decode(shift||'{}') } },
+  deflate => sub { eval { JSON->encode(shift|| {} ) } },
+});
+
+sub has_permission {
+  my($self, $p) = @_;
+
+  while($p) {
+    return 1 if $self -> permissions -> {$p};
+    $p =~ s{\.[^.]*$}{};
+  }
+  return 0;
+}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

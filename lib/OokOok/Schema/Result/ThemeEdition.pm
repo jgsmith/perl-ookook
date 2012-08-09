@@ -108,12 +108,19 @@ with 'OokOok::Role::Schema::Result::Edition';
 
 __PACKAGE__ -> belongs_to("theme" => "OokOok::Schema::Result::Theme", "theme_id");
 
+sub owner { $_[0] -> theme; }
+
 __PACKAGE__ -> has_many("layout_versions" => "OokOok::Schema::Result::ThemeLayoutVersion", "theme_edition_id", {
   cascade_copy => 0,
   cascade_delete => 1,
 });
 
-sub owner { $_[0] -> theme; }
+__PACKAGE__ -> has_many("snippet_versions" => "OokOok::Schema::Result::ThemeSnippetVersion", "theme_edition_id", {
+  cascade_copy => 0,
+  cascade_delete => 1,
+});
+
+__PACKAGE__ -> has_many("component_theme_versions" => "OokOok::Schema::Result::ComponentThemeVersion", "theme_edition_id");
 
 # returns all layouts for this edition
 sub all_layouts {

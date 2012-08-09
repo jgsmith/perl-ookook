@@ -8,6 +8,7 @@ use HTTP::Request;
 use JSON;
 use YAML::Any;
 
+
 my $server_base = "http://localhost:3000";
 # get the server password from the conf/ookook_local.conf file
 #
@@ -248,6 +249,20 @@ sub build_url {
     }
   }
 
+  if($url_base =~ m{/page-part}) {
+    $json -> {_schema} = {
+      properties => {
+        content => {
+          is => 'rw',
+          valueType => 'text',
+        },
+        filter => {
+          is => 'rw',
+          valueType => 'text',
+        },
+      }
+    };
+  }
 
   if($json -> {error}) {
     print STDERR "Unable to retrieve resource schema: ", $json->{error}, "\n";
@@ -287,10 +302,11 @@ sub do_create {
   # now we want to put this up for editing - and wait for the file to be edited
   my $file = YAML::Any::Dump($data);
   $file = edit($file);
+  print "From editor:\n$file\n";
   $data = YAML::Any::Load($file);
 
   for my $p (keys %$data) {
-    delete $data->{$p} if $data->{$p} eq "___";
+    delete $data->{$p} if defined $data->{$p} && $data->{$p} eq "___";
   }
 
   if(0 < keys %$data) {
@@ -311,15 +327,32 @@ sub do_edit {
   my $json = GET($url_base);
 
   my $data = {};
+  my $ref = {};
   for my $prop (keys %{$schema->{_schema}{properties}}) {
     my $info = $schema->{_schema}{properties}{$prop};
     next if $info -> {is} && $info->{is} eq 'ro';
-    next if $info->{valueType} && $info->{valueType} eq 'link';
+    #next if $info->{valueType} && $info->{valueType} eq 'link';
+    if($info->{valueType} && $info->{valueType} eq 'link') {
+      if($info->{linkListFrom}) {
+        my $links = GET($info->{linkListFrom});
+        if(!$links->{error}) {
+          my @links = grep { defined }
+                      map { $_->{_links}->{self} } 
+                      @{$links->{_embedded}||[]}
+                      ;
+          if(@links) {
+            $ref->{_links}->{$prop} = [@links];
+          }
+        }
+      }
+    }
     $data->{$prop} = $json->{$prop};
   }
 
   my $file = YAML::Any::Dump($data);
-  my $newFile = edit($file);
+  my $refFile = YAML::Any::Dump($ref);
+  my $newFile = edit($file . "\n------------------- References -------------------\n" . $refFile);
+  $newFile =~ s{\n-{10}-+\s+References\s+-{10}-+\n.*}{}s;
   if($newFile eq $file) {
     print STDERR "No changes made\n";
     return;

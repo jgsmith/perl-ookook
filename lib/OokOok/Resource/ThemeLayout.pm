@@ -17,9 +17,14 @@ belongs_to 'theme' => 'OokOok::Resource::Theme', (
   source => sub { $_[0] -> source -> theme },
 );
 
-belongs_to 'parent_layout' => 'OokOok::Resource::ThemeLayout', (
+has_a 'parent_layout' => 'OokOok::Resource::ThemeLayout', (
   is => 'rw',
   source => sub { $_[0] -> source_version -> parent_layout },
+);
+
+has_a 'theme_style' => 'OokOok::Resource::ThemeStyle', (
+  is => 'rw',
+  source => sub { $_[0] -> source_version -> theme_style },
 );
 
 prop id => (
@@ -30,6 +35,7 @@ prop id => (
 
 prop name => (
   is => 'rw',
+  required => 1,
   type => 'Str',
   source => sub { $_[0] -> source_version -> name },
 );
@@ -37,6 +43,7 @@ prop name => (
 prop layout => (
   is => 'rw',
   type => 'Str',
+  required => 1,
   source => sub { $_[0] -> source_version -> layout },
 );
 
@@ -60,9 +67,34 @@ sub render {
     my $processor = OokOok::Template::Processor -> new(
       c => $self -> c,
     );
-    $processor -> register_taglib('OokOok::Template::TagLibrary::Core');
-    my $doc = $processor -> parse($template);
-    return $doc -> render($context);
+    # now load in taglibs and prefixes
+    my %ns;
+    for my $lib ($self -> theme -> libraries) {
+      my $prefix = $lib -> prefix;
+      my $uin = "uin:uuid:" . $lib -> id;
+      $ns{$prefix} = $uin;
+    }
+    my $div = "<div";
+    for my $p (keys %ns) {
+      $div .= " xmlns:$p='" . $ns{$p} . "'";
+    }
+    $div .= ">";
+    my $doc = $processor -> parse($div . $template . "</div>");
+    my $ret = $doc -> render($context);
+    # we want to remove the outer div
+    print STDERR "Returned doc: [$ret]\n";
+    $ret =~ s{\s*<div.*?>}{}s;
+    $ret =~ s{</div>$}{}s;
+    print STDERR "After regex doc: [$ret]\n";
+    # now worry about parent layout
+    if($self -> parent_layout) {
+      $context = $context -> localize;
+      $context -> set_var(content => $ret);
+      return $self -> parent_layout -> render($context);
+    }
+    else {
+      return $ret;
+    }
   }
   return "<p>Layout " . $self -> source_version -> name . "</p>";
 }

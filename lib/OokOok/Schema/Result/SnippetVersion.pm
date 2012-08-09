@@ -54,6 +54,12 @@ __PACKAGE__->table("snippet_version");
   data_type: 'integer'
   is_nullable: 0
 
+=head2 status
+
+  data_type: 'integer'
+  default_value: 0
+  is_nullable: 0
+
 =head2 name
 
   data_type: 'varchar'
@@ -74,6 +80,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_nullable => 0 },
   "snippet_id",
   { data_type => "integer", is_nullable => 0 },
+  "status",
+  { data_type => "integer", default_value => 0, is_nullable => 0 },
   "name",
   { data_type => "varchar", is_nullable => 1, size => 255 },
   "content",
@@ -93,8 +101,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-16 13:53:15
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Gm4m3NZJXcXSEBpnAU7KYQ
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-08-04 15:18:24
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:coC98VEAlDDXAk4/Yu/xwQ
 
 with 'OokOok::Role::Schema::Result::Version';
 

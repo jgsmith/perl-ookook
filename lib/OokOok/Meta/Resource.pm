@@ -95,6 +95,12 @@ sub _build_verifiers {
     for my $kk (qw/required/) {
       $profiles{POST}{$k}{$kk} = $p->{$kk} if defined $p->{$kk};
     }
+    if($profiles{POST}{$k}{'defined'}) {
+      $profiles{POST}{$k}{'min_length'} ||= 1;
+    }
+    if($profiles{PUT}{$k}{'defined'}) {
+      $profiles{PUT}{$k}{'min_length'} ||= 1;
+    }
   }
   for my $k (keys %{$self -> properties}) {
     my $p = $self -> properties -> {$k};
@@ -291,7 +297,7 @@ sub _build_schema {
     $schema -> {properties} -> {$prop} -> {source} = $info -> {maps_to} || $prop;
     $schema -> {properties} -> {$prop} -> {is} = $info -> {is} || 'rw';
     $schema -> {properties} -> {$prop} -> {valueType} = $info -> {value_type} || 'text';
-    if($info -> {type} eq 'Enum') {
+    if($info->{type} && $info -> {type} eq 'Enum') {
       $schema -> {properties} -> {$prop} -> {valueType} = 'text';
       $schema -> {properties} -> {$prop} -> {allowedValues} = $info -> {values};
     }

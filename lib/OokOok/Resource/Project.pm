@@ -39,6 +39,11 @@ has_many editions => 'OokOok::Resource::Edition', (
   source => sub { $_[0] -> source -> editions },
 );
 
+has_many snippets => 'OokOok::Resource::Snippet', (
+  is => 'ro',
+  source => sub { $_[0] -> source -> snippets },
+);
+
 prop theme_date => (
   is => 'rw',
   required => 1,
@@ -75,22 +80,23 @@ has_a page => 'OokOok::Resource::Page', (
 sub can_PUT {
   my($self) = @_;
 
+  print STDERR "$self -> can_PUT\n";
   return 1 if $self -> is_development;
 
+  print STDERR "Now looking up rank\n";
   # the user has to be in a rank that can modify the project itself
   # if we get here, we have a user
   # we pull out the top rank held by the user
-  my $rank = $self -> c -> model('DB::BoardRank') -> search({
-    'me.board_id' => $self -> source -> board -> id,
-    'board_members.user_id' => $self -> c -> user -> id,
-  }, {
-    join => [qw/board_members/],
-    order_by => 'me.position',
-    rows => 1,
-  }) -> first;
+  my $rank = $self -> board -> source -> board_members -> find({
+    user_id => $self -> c -> user -> id
+  });
+
+  print STDERR "can_PUT project with rank [$rank]\n";
   return 0 unless $rank;
 
-  return 1 if $rank -> position == 0; # top rank can always do stuff
+  print STDERR "rank position: ", $rank -> rank, "\n";
+
+  return 1 if $rank -> rank == 0; # top rank can always do stuff
 
   return 0;
 }

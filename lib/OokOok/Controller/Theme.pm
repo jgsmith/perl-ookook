@@ -75,6 +75,25 @@ sub layouts_OPTIONS {
   );
 }
 
+
+sub styles :Chained('resource_base') :PathPart('theme-style') :Args(0) :ActionClass('REST') { 
+  my($self, $c) = @_;
+
+  $c -> stash -> {collection} = OokOok::Collection::ThemeStyle -> new(c => $c);
+}
+
+sub styles_GET { shift -> collection_GET(@_) }
+sub styles_POST { shift -> collection_POST(@_) }
+
+sub styles_OPTIONS {
+  my($self, $c) = @_;
+
+  $self -> do_OPTIONS($c,
+    Allow => [qw/GET OPTIONS POST/],
+    Accept => [qw{application/json}],
+  );
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;

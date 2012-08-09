@@ -61,12 +61,6 @@ __PACKAGE__->table("library_edition");
   data_type: 'text'
   is_nullable: 1
 
-=head2 namespace
-
-  data_type: 'varchar'
-  is_nullable: 1
-  size: 255
-
 =head2 created_on
 
   data_type: 'datetime'
@@ -88,8 +82,6 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", default_value => "", is_nullable => 0, size => 255 },
   "description",
   { data_type => "text", is_nullable => 1 },
-  "namespace",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
   "created_on",
   { data_type => "datetime", is_nullable => 0 },
   "closed_on",
@@ -109,8 +101,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-06-24 15:31:17
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gsx+Q7zCPSNM6oXmwMPHtw
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-29 17:14:38
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:UAjj7foBBK4F4pbZ1w3VfA
 
 with 'OokOok::Role::Schema::Result::Edition';
 
@@ -119,6 +111,9 @@ __PACKAGE__ -> belongs_to("library" => "OokOok::Schema::Result::Library", "libra
 sub owner { $_[0] -> library; }
 
 __PACKAGE__ -> has_many("function_versions" => "OokOok::Schema::Result::FunctionVersion", "library_edition_id");
+
+#__PACKAGE__ -> has_many("library_theme_versions" => "OokOok::Schema::Result::LibraryThemeVersion", "library_edition_id");
+#__PACKAGE__ -> has_many("library_project_versions" => "OokOok::Schema::Result::LibraryProjectVersion", "library_edition_id");
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

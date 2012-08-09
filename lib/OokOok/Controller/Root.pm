@@ -15,7 +15,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__ -> config(
   namespace => '',
   map => {
-    'text/html' => [ 'View', 'HTML' ],
+    'text/html' => [ 'View', 'Mason' ],
   },
   default => 'text/html',
 );

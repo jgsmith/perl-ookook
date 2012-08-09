@@ -88,7 +88,7 @@ __PACKAGE__ -> belongs_to( theme => 'OokOok::Schema::Result::Theme', 'theme_id' 
 
 sub owner { $_[0] -> theme }
 
-__PACKAGE__ -> has_many( versions => 'OokOok::Schema::Result::ThemeLayoutVersion', 'theme_layout_id');
+__PACKAGE__ -> has_many( versions => 'OokOok::Schema::Result::ThemeLayoutVersion', 'theme_layout_id' );
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

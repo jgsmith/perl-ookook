@@ -68,6 +68,12 @@ sub edition_for_date {
 
 *version_for_date = \&edition_for_date;
 
+sub has_public_edition {
+  0 < $_[0] -> editions -> search(
+    { 'closed_on' => { '!=', undef } },
+  )->count
+}
+
 =head2 current_edition
 
 =cut

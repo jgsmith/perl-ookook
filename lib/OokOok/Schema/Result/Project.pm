@@ -97,6 +97,11 @@ __PACKAGE__->has_many(
   'project_id'
 );
 
+#__PACKAGE__ -> has_many(
+#  library_projects => 'OokOok::Schema::Result::LibraryProject',
+#  'project_id'
+#);
+
 __PACKAGE__ -> belongs_to( board => 'OokOok::Schema::Result::Board', 'board_id' );
 
 with 'OokOok::Role::Schema::Result::HasEditions';
@@ -115,6 +120,22 @@ after insert => sub {
   $ce -> update({
     page_id => $home_page->id
   });
+
+  # now add libraries that should be included automatically
+  my @libs = $self -> result_source->schema-> resultset('Library') -> search({
+    new_project_prefix => { '!=' => undef }
+  });
+  for my $lib (@libs) {
+    # we should filter out any libraries without a published edition
+    #my $pl = $self -> create_related('library_projects', {
+    #  library_id => $lib -> id
+    #});
+    #$pl -> insert_or_update;
+    #$pl -> current_version -> update({
+    #  prefix => $lib -> new_project_prefix
+    #});
+  }
+    
   $self;
 };
 

@@ -13,10 +13,11 @@ prop id => (
   source => sub { $_[0] -> source -> name },
 );
 
-prop title => (
+prop name => (
   required => 1,
   max_length => 64,
   type => 'Str',
+  maps_to => 'title',
   source => sub { $_[0] -> source -> name },
 );
 
@@ -73,13 +74,9 @@ sub link {
   $self -> page -> link . "/page-part/" . $self -> id;
 }
 
-sub can_PUT {
-  my($self) = @_;
-
-  # if someone can PUT to the project, then they can put to this
-  # for now...
-  $self -> page -> can_PUT
-}
+sub can_PUT    { $_[0] -> page -> can_PUT    }
+sub can_GET    { $_[0] -> page -> can_GET    }
+sub can_DELETE { $_[0] -> page -> can_DELETE }
 
 1;
 

@@ -37,7 +37,7 @@ sub render {
     ) 
   );
   
-  my $r = $rendering -> toString;
+  my $r = $rendering -> toStringHTML;
 
   #
   # we get rid of any <?xml...?> element at the beginning since we'll be
@@ -46,8 +46,8 @@ sub render {
   $r =~ s{^\s*<\?xml\b.*?\?>\s*}{};
   #
   # now get rid of namespace declarations
-  $r =~ s{\s*xmlns:.*?="[^"]*"}{}g;
-  $r =~ s{\s*xmlns:.*?='[^']*'}{}g;
+  #$r =~ s{\s*xmlns:.*?="[^"]*"}{}g;
+  #$r =~ s{\s*xmlns:.*?='[^']*'}{}g;
   $r;
 }
 

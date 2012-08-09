@@ -5,6 +5,7 @@ use namespace::autoclean;
 
 use String::CamelCase qw(decamelize);
 use Lingua::EN::Inflect qw(PL_N);
+use OokOok::Exception;
 
 has c => (
   is => 'rw',
@@ -42,6 +43,24 @@ sub resource {
   }
 }
  
+sub resources {
+  my($self, $deep) = @_;
+
+  my $date = $self -> date;
+  my $c = $self -> c;
+  my $rclass = $self -> resource_class;
+  my $things_q = $self -> c -> model($self -> resource_model);
+
+  if($self -> can("constrain_collection")) {
+    $things_q = $self -> constrain_collection($things_q, $deep);
+  }
+
+  grep { $_ -> can_GET }
+  map {
+    $rclass -> new(c => $c, source => $_, date => $date)
+  } $things_q -> all;
+}
+
 sub resource_for_url {
   my($self, $url) = @_;
 
@@ -70,11 +89,11 @@ sub verify {
   if($verifier) {
     my $results = $verifier -> verify(@_);
     if(!$results -> success) {
-      my $message = "";
-      # TODO: add list of missing or incorrect values
-      $message = "The following fields are missing or invalid: " .
-         join(", ", $results -> invalids, $results -> missings);
-      die "Unable to verify data for $method: $message";
+     OokOok::Exception::POST->throw(
+        message => "Invalid or missing fields",
+        missing => [ $results -> missings ],
+        invalid => [ $results -> invalids ],
+      );
     }
     return +{ $results -> valid_values };
   }
@@ -118,32 +137,15 @@ sub _GET {
 sub GET {
   my($self, $deep) = @_;
 
-  my $things = $self -> resource_name;
-  my $rclass = $self -> resource_class;
-  my $things_q = $self -> c -> model($self -> resource_model);
-
-  if($self -> can("constrain_collection")) {
-    $things_q = $self -> constrain_collection($things_q, $deep);
-  }
-
   # we want to add paging capabilities so we don't send massive numbers of
   # pages when we only need the schema
-
-  my $date = $self -> date;
-  my $c = $self -> c;
 
   my $json = {
     _links => {
       self => $self -> link
     },
     _schema => $self -> schema,
-    _embedded => [
-      map { $_ -> GET }
-      grep { $_ -> can_GET }
-      map {
-        $rclass -> new(c => $c, source => $_, date => $date)
-      } $things_q -> all
-    ],
+    _embedded => [ map { $_ -> GET } $self -> resources($deep) ],
   };
 
   return $json;
@@ -224,7 +226,7 @@ sub POST {
   my $new_info = {};
 
   for my $col ($self -> c -> model($self -> resource_model) -> result_source -> columns) {
-    if($json -> {$col}) {
+    if(defined $json -> {$col}) {
       $new_info -> {$col} = $json -> {$col};
     }
   }

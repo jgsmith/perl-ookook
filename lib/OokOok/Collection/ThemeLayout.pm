@@ -17,7 +17,13 @@ sub constrain_collection {
   $q;
 }
 
-sub can_POST { 1 }
+sub can_POST {
+  my($self) = @_;
+
+  return 0 unless $self -> c -> stash -> {theme};
+  return $self -> c -> stash -> {theme} -> can_PUT;
+}
+
 sub may_POST { 1 }
 
 1;

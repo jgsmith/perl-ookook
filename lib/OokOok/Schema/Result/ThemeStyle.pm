@@ -84,6 +84,15 @@ __PACKAGE__->set_primary_key("id");
 
 with 'OokOok::Role::Schema::Result::HasVersions';
 
+__PACKAGE__ -> belongs_to( theme => 'OokOok::Schema::Result::Theme', 'theme_id' );
+
+sub owner { $_[0] -> theme }
+
+__PACKAGE__ -> has_many( versions => 'OokOok::Schema::Result::ThemeStyleVersion', 'theme_style_id');
+
+__PACKAGE__ -> has_many( theme_layout_versions => 'OokOok::Schema::Result::ThemeLayoutVersion', 'theme_style_id');
+
+
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
 1;

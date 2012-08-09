@@ -3,19 +3,6 @@ use Moose;
 use namespace::autoclean;
 use OokOok::Resource;
 
-#sub resource_collection_class { 'OokOok::Resource::Project' }
-#
-#has '+collection' => (
-#  lazy => 1,
-#  default => sub {
-#    my($self) = @_;
-#
-#    OokOok::Collection::Project->new(
-#      c => $self -> c, 
-#    ) -> resource($self -> source -> project -> uuid);
-#  },
-#);
-
 # Changes are made via the project - not the edition
 prop name => (
   is => 'ro',
@@ -63,6 +50,8 @@ sub link {
 
   $self -> collection -> link . '/edition';
 }
+
+sub can_PUT { 0 }
 
 1;
 

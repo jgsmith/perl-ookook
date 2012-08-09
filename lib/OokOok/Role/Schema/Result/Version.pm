@@ -10,8 +10,10 @@ override update => sub {
   my %dirty_columns = $self -> get_dirty_columns;
 
   if($dirty_columns{$self -> edition -> result_source -> from . "_id"}) {
-    $self -> discard_changes();
-    die "Unable to update an object's edition";
+    if($self -> status <= 0) {
+      $self -> discard_changes();
+      die "Unable to update an object's edition";
+    }
   }
   if($dirty_columns{$self -> owner -> result_source -> from . "_id"}) {
     $self -> discard_changes();
@@ -50,7 +52,8 @@ sub duplicate_to_current_edition {
   }
 
   return $self -> copy({
-    $edition_id_key => $current_edition -> id
+    $edition_id_key => $current_edition -> id,
+    status => 100, # 100 - Draft, <= 0 - Published
   });
 }
 

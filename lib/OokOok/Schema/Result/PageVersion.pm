@@ -85,6 +85,12 @@ __PACKAGE__->table("page_version");
   is_nullable: 1
   size: 32
 
+=head2 status
+
+  data_type: 'integer'
+  default_value: 0
+  is_nullable: 0
+
 =head2 description
 
   data_type: 'text'
@@ -109,6 +115,8 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", default_value => "", is_nullable => 0, size => 255 },
   "primary_language",
   { data_type => "varchar", is_nullable => 1, size => 32 },
+  "status",
+  { data_type => "integer", default_value => 0, is_nullable => 0 },
   "description",
   { data_type => "text", is_nullable => 1 },
 );
@@ -126,8 +134,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-12 16:21:45
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:8jLf2ZYAwFwQUDGjMQsQJQ
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-08-04 15:18:24
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:VAWJsTvnyDCz1T/KrzHyGQ
 
 with 'OokOok::Role::Schema::Result::Version';
 

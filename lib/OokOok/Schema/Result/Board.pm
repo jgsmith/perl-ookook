@@ -56,6 +56,12 @@ __PACKAGE__->table("board");
   is_nullable: 1
   size: 255
 
+=head2 auto_induct
+
+  data_type: 'boolean'
+  default_value: 0
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -65,6 +71,8 @@ __PACKAGE__->add_columns(
   { data_type => "char", is_nullable => 1, size => 20 },
   "name",
   { data_type => "varchar", is_nullable => 1, size => 255 },
+  "auto_induct",
+  { data_type => "boolean", default_value => 0, is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -80,13 +88,14 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-01 13:25:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:LWOP9oG5XvbOGWbA+fmcAw
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-08-09 11:53:06
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:t8fLx83bewsAGGsRXZBrcw
 
 with 'OokOok::Role::Schema::Result::UUID';
 
 __PACKAGE__ -> has_many(board_ranks => 'OokOok::Schema::Result::BoardRank', 'board_id');
-__PACKAGE__ -> many_to_many(board_members => 'board_ranks', 'board_member');
+__PACKAGE__ -> has_many(board_members => 'OokOok::Schema::Result::BoardMember', 'board_id');
+__PACKAGE__ -> has_many(board_applicants => 'OokOok::Schema::Result::BoardApplicant', 'board_id');
 
 __PACKAGE__ -> has_many(projects => 'OokOok::Schema::Result::Project', 'board_id');
 

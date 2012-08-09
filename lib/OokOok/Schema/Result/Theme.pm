@@ -97,6 +97,21 @@ __PACKAGE__ -> has_many(
   'theme_id'
 );
 
+__PACKAGE__ -> has_many(
+  theme_snippets => 'OokOok::Schema::Result::ThemeSnippet',
+  'theme_id'
+);
+
+__PACKAGE__ -> has_many(
+  theme_assets => 'OokOok::Schema::Result::ThemeAsset',
+  'theme_id'
+);
+
+__PACKAGE__ -> has_many(
+  library_themes => 'OokOok::Schema::Result::LibraryTheme',
+  'theme_id'
+);
+
 __PACKAGE__ -> belongs_to( board => 'OokOok::Schema::Result::Board', 'board_id' );
 
 with 'OokOok::Role::Schema::Result::HasEditions';
@@ -113,6 +128,29 @@ sub theme_style {
 
   $self -> theme_styles -> find({ uuid => $uuid });
 }
+
+after insert => sub {
+  my($self) = @_;
+
+  my $ce = $self -> current_edition;
+
+  my @libs = $self -> result_source -> schema -> resultset('Library') -> all;
+  print STDERR "We have ", scalar(@libs), " libs\n";
+  for my $lib (@libs) {
+    next unless $lib -> new_theme_prefix && $lib -> has_public_edition;
+    print STDERR "Adding ", $lib -> new_theme_prefix, " to theme\n";
+
+    my $tl = $self -> create_related('library_themes', {
+      library_id => $lib -> id
+    });
+    $tl -> insert_or_update;
+    $tl -> current_version -> update({
+      prefix => $lib -> new_theme_prefix
+    });
+  }
+
+  $self;
+};
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

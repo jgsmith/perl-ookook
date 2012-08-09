@@ -16,7 +16,7 @@ sub close {
 
   return if $self -> is_closed;
 
-  $self -> copy({
+  my $next = $self -> copy({
    created_on => DateTime -> now,
    closed_on => undef
   });
@@ -24,6 +24,8 @@ sub close {
   $self -> update({
     closed_on => DateTime -> now
   });
+
+  return $next;
 }
 
 before delete => sub {

@@ -50,6 +50,18 @@ __PACKAGE__->table("library");
   is_nullable: 0
   size: 20
 
+=head2 new_project_prefix
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 32
+
+=head2 new_theme_prefix
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 32
+
 =head2 board_id
 
   data_type: 'integer'
@@ -62,6 +74,10 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "uuid",
   { data_type => "char", is_nullable => 0, size => 20 },
+  "new_project_prefix",
+  { data_type => "varchar", is_nullable => 1, size => 32 },
+  "new_theme_prefix",
+  { data_type => "varchar", is_nullable => 1, size => 32 },
   "board_id",
   { data_type => "integer", is_nullable => 1 },
 );
@@ -79,8 +95,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-01 13:25:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:y3bZYbknAgJgzPJfU/pNWA
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-29 17:28:23
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:W49yrKVZInXDNwdAS3UMlw
 
 __PACKAGE__->has_many(
   "editions" => 'OokOok::Schema::Result::LibraryEdition',
@@ -90,30 +106,6 @@ __PACKAGE__->has_many(
 __PACKAGE__ -> belongs_to( board => 'OokOok::Schema::Result::Board', 'board_id' );
 
 with 'OokOok::Role::Schema::Result::HasEditions';
-
-sub link {
-  my($self, $c) = @_;
-
-  return "".$c -> uri_for("/library/" . $self -> uuid);
-}
-
-sub GET {
-  my($self, $c, $deep) = @_;
-
-  my $json = {
-    _links => {
-      self => $self -> link($c),
-    },
-  };
-
-  return $json;
-}
-
-sub function_for_date {
-  my($self, $uuid, $date) = @_;
-
-  return $self -> relation_for_date("Function", $uuid, $date);
-}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

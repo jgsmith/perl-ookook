@@ -43,6 +43,25 @@ after connection => sub {
   }
 };
 
+override deploy => sub {
+  my($self) = @_;
+
+  super;
+
+  my $l = $self -> resultset('Library') -> create({
+    uuid => 'ypUv1ZbV4RGsjb63Mj8b',
+    new_project_prefix => 'r',
+    new_theme_prefix => 'r',
+  });
+
+  $l -> insert;
+  $l -> current_edition -> update({
+    name => 'Core',
+    description => 'Core tags',
+  });
+  $l -> current_edition -> close;
+};
+
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable(inline_constructor => 0);
 1;

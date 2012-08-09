@@ -54,29 +54,10 @@ __PACKAGE__->table("edition");
   data_type: 'integer'
   is_nullable: 1
 
-=head2 primary_language
+=head2 default_status
 
-  data_type: 'varchar'
-  default_value: 'en'
-  is_nullable: 0
-  size: 32
-
-=head2 name
-
-  data_type: 'varchar'
-  default_value: (empty string)
-  is_nullable: 0
-  size: 255
-
-=head2 description
-
-  data_type: 'text'
-  is_nullable: 1
-
-=head2 sitemap
-
-  data_type: 'text'
-  default_value: '{}'
+  data_type: 'integer'
+  default_value: 0
   is_nullable: 0
 
 =head2 theme_id
@@ -99,6 +80,25 @@ __PACKAGE__->table("edition");
   data_type: 'datetime'
   is_nullable: 1
 
+=head2 primary_language
+
+  data_type: 'varchar'
+  default_value: 'en'
+  is_nullable: 0
+  size: 32
+
+=head2 name
+
+  data_type: 'varchar'
+  default_value: (empty string)
+  is_nullable: 0
+  size: 255
+
+=head2 description
+
+  data_type: 'text'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -108,14 +108,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_nullable => 0 },
   "page_id",
   { data_type => "integer", is_nullable => 1 },
-  "primary_language",
-  { data_type => "varchar", default_value => "en", is_nullable => 0, size => 32 },
-  "name",
-  { data_type => "varchar", default_value => "", is_nullable => 0, size => 255 },
-  "description",
-  { data_type => "text", is_nullable => 1 },
-  "sitemap",
-  { data_type => "text", default_value => "{}", is_nullable => 0 },
+  "default_status",
+  { data_type => "integer", default_value => 0, is_nullable => 0 },
   "theme_id",
   { data_type => "integer", is_nullable => 1 },
   "theme_date",
@@ -124,6 +118,12 @@ __PACKAGE__->add_columns(
   { data_type => "datetime", is_nullable => 0 },
   "closed_on",
   { data_type => "datetime", is_nullable => 1 },
+  "primary_language",
+  { data_type => "varchar", default_value => "en", is_nullable => 0, size => 32 },
+  "name",
+  { data_type => "varchar", default_value => "", is_nullable => 0, size => 255 },
+  "description",
+  { data_type => "text", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -139,8 +139,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-15 19:13:31
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:yGhmn5uCgIcABWBDM3/IPA
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-08-04 15:18:58
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:VYek3QbYw4v8tkGKzLa3pQ
 
 use JSON;
 
@@ -159,14 +159,32 @@ __PACKAGE__->has_many("snippet_versions" => "OokOok::Schema::Result::SnippetVers
 
 __PACKAGE__->belongs_to("theme" => "OokOok::Schema::Result::Theme", "theme_id");
 
-__PACKAGE__->inflate_column('sitemap', {
-  inflate => sub { JSON::decode_json shift },
-  deflate => sub { JSON::encode_json shift },
-});
-
 with 'OokOok::Role::Schema::Result::Edition';
 
 sub owner { $_[0] -> project; }
+
+around close => sub {
+  my $orig = shift;
+  my $self = shift;
+
+  my $next = $self->$orig(@_);
+  return unless $next;
+
+  # any pages or snippets that aren't published should be moved to the next
+  # edition
+  $self -> page_versions -> search({
+    status => { '>' => 0 }
+  }) -> update_all({
+    edition_id => $next -> id
+  });
+  $self -> snippet_versions -> search({
+    status => { '>' => 0 }
+  }) -> update_all({
+    edition_id => $next -> id
+  });
+
+  return $next;
+};
 
 after delete => sub {
   my($self) = @_;

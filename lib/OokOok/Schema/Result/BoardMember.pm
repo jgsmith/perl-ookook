@@ -49,9 +49,15 @@ __PACKAGE__->table("board_member");
   data_type: 'integer'
   is_nullable: 0
 
-=head2 board_rank_id
+=head2 board_id
 
   data_type: 'integer'
+  is_nullable: 0
+
+=head2 rank
+
+  data_type: 'integer'
+  default_value: 0
   is_nullable: 0
 
 =cut
@@ -61,8 +67,10 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "user_id",
   { data_type => "integer", is_nullable => 0 },
-  "board_rank_id",
+  "board_id",
   { data_type => "integer", is_nullable => 0 },
+  "rank",
+  { data_type => "integer", default_value => 0, is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -78,11 +86,15 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-07-01 13:25:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:TweTaNsWbSD2HcnKqNWjAg
+# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-08-04 15:18:24
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:39f31dBqJPozZrger99rwA
 
 __PACKAGE__ -> belongs_to( user => 'OokOok::Schema::Result::User', 'user_id' );
-__PACKAGE__ -> belongs_to( board_rank => 'OokOok::Schema::Result::BoardRank', 'board_rank_id' );
+__PACKAGE__ -> belongs_to( board => 'OokOok::Schema::Result::Board', 'board_id' );
+
+sub board_rank {
+  $_[0] -> board -> board_ranks -> find({ position => $_[0] -> rank });
+}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
