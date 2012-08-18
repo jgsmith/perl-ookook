@@ -32,8 +32,9 @@
               <% $.navLink("/", "Home") %>
 %             if($c -> user) {
                 <% $.navLink("/admin/project", "Projects") %>
-%               if($c -> user -> is_admin) {
+%               if($c -> user -> may_design) {
                   <% $.navLink("/admin/theme", "Themes") %>
+                  <% $.navLink("/admin/typeface", "Typefaces") %>
 %               }
                 <% $.navLink("/admin/board", "Boards") %>
 %             }

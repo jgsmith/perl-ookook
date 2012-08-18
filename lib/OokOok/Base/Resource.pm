@@ -195,6 +195,11 @@ sub GET {
   return $json;
 }
 
+sub GET_oai_pmh {
+  my($self, $xmlRoot, $metaFormat, $deep) = @_;
+
+}
+
 sub _DELETE {
   my($self) = @_;
 

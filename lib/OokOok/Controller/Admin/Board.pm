@@ -112,4 +112,15 @@ sub board_applicants :Chained("board_base") :PathPart('applicant') :Args(0) {
   $c -> stash -> {template} = "/admin/board/membership/applicant";
 }
 
+sub board_ranks :Chained("board_base") :PathPart('rank') :Args(0) {
+  my($self, $c) = @_;
+
+  $c -> stash -> {ranks} = [
+    sort {
+      $a -> position <=> $b -> position
+    } @{$c -> stash -> {board} -> board_ranks || []}
+  ];
+  $c -> stash -> {template} = "/admin/board/settings/rank";
+}
+
 1;

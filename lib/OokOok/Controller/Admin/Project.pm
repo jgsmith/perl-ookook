@@ -33,7 +33,7 @@ sub project_new :Chained('base') :PathPart('new') :Args(0) {
     my $collection = OokOok::Collection::Project -> new(c => $c);
     my $params = $c -> request -> params;
     $params->{theme_date} = "".DateTime->now;
-    my $project = $self -> _POST( $c, $collection, $params );
+    my $project = $self -> POST( $c, $collection, $params );
     if($project) {
       $c -> response -> redirect($c->uri_for("/admin/project/" . $project -> id));
     }

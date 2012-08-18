@@ -1,7 +1,12 @@
-package OokOok::Role::Schema::Result::UUID;
+package OokOok::Base::Result;
 
-use Moose::Role;
+use Moose;
+use MooseX::NonMoose;
+use MooseX::MarkAsMethods autoclean => 1;
+extends 'DBIx::Class::Core';
+
 use namespace::autoclean;
+
 use Data::UUID;
 
 my $ug = Data::UUID -> new;
@@ -17,4 +22,3 @@ before insert => sub {
 };
 
 1;
-

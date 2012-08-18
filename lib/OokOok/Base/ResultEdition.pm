@@ -1,15 +1,16 @@
-package OokOok::Role::Schema::Result::Edition;
+package OokOok::Base::ResultEdition;
 
+use Moose;
+extends 'OokOok::Base::Result';
+
+use namespace::autoclean;
 use DateTime;
-use Moose::Role;
-
-#requires 'owner';
 
 before insert => sub {
-  $_[0] -> created_on(DateTime->now);
+  $_[0] -> created_on(DateTime -> now);
 };
 
-sub is_closed { defined $_[0] -> closed_on; }
+sub is_closed { defined $_[0] -> closed_on }
 
 sub close {
   my($self) = @_;
@@ -17,8 +18,8 @@ sub close {
   return if $self -> is_closed;
 
   my $next = $self -> copy({
-   created_on => DateTime -> now,
-   closed_on => undef
+    created_on => DateTime -> now,
+    closed_on => undef
   });
 
   $self -> update({
@@ -46,13 +47,16 @@ after delete => sub {
     });
   }
   else {
-    $self -> owner -> create_related("editions", {});
+    $self -> owner -> create_related(
+      $self -> owner -> edition_relation,
+      {}
+    );
   }
 };
 
 before update => sub {
   if($_[0] -> is_closed) {
-    $_[0] -> discard_changes();
+    $_[0] -> discard_changes;
     die "Unable to modify a closed edition";
   }
 };

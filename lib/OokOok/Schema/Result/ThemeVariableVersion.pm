@@ -1,14 +1,20 @@
 use utf8;
-package OokOok::Schema::Result::ThemeAssetVersion;
+package OokOok::Schema::Result::ThemeVariableVersion;
 
 =head1 NAME
 
-OokOok::Schema::Result::ThemeAssetVersion
+OokOok::Schema::Result::ThemeVariableVersion
 
 =cut
 
 use OokOok::ResultVersion;
 use namespace::autoclean;
+
+prop unused => (
+  data_type => 'boolean',
+  default_value => 0,
+  is_nullable => 0,
+);
 
 prop status => (
   data_type => 'integer',
@@ -16,28 +22,18 @@ prop status => (
   is_nullable => 0,
 );
 
-prop size => (
-  data_type => 'integer',
-  is_nullable => 1,
-);
-
-prop filename => (
-  data_type => 'char',
-  is_nullable => 0,
-  size => 20,
-  unique => 1,
-);
-
 prop name => (
   data_type => 'varchar',
   is_nullable => 0,
+  default_value => '',
   size => 255,
 );
 
 prop type => (
   data_type => 'varchar',
-  is_nullable => 1,
-  size => 64,
+  default_value => 'text',
+  is_nullable => 0,
+  size => 255,
 );
 
 1;

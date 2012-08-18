@@ -12,6 +12,6 @@
 %     }
 %   }}
 % }}
-<a href="<% $c->uri_for("/admin/project/new") %>" class="btn btn-large btn-primary">
+<a href="<% $c->uri_for("/admin/project/new") %>" class="btn btn-primary">
   New Project
 </a>

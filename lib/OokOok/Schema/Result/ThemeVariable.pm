@@ -1,9 +1,9 @@
 use utf8;
-package OokOok::Schema::Result::ThemeAsset;
+package OokOok::Schema::Result::ThemeVariable;
 
 =head1 NAME
 
-OokOok::Schema::Result::ThemeAsset
+OokOok::Schema::Result::ThemeVariable
 
 =cut
 

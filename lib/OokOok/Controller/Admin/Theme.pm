@@ -7,6 +7,9 @@ BEGIN {
   extends 'OokOok::Base::Admin';
 }
 
+use OokOok::Collection::Theme;
+use OokOok::Collection::ThemeVariable;
+
 sub base :Chained('/') :PathPart('admin/theme') :CaptureArgs(0) { }
 
 sub index :Chained('base') :PathPart('') :Args(0) {
@@ -117,6 +120,13 @@ sub theme_styles :Chained('theme_base') :PathPart('style') :Args(0) {
 
   $c -> stash -> {styles} = [ OokOok::Collection::ThemeStyle -> new(c => $c) -> resources ];
   $c -> stash -> {template} = "/admin/theme/content/style";
+}
+
+sub theme_variables :Chained('theme_base') :PathPart('variable') :Args(0) {
+  my($self, $c) = @_;
+
+  $c -> stash -> {theme_variables} = [ OokOok::Collection::ThemeVariable -> new(c => $c) -> resources ];
+  $c -> stash -> {template} = "/admin/theme/content/variable";
 }
 
 sub theme_layout_new :Chained('theme_base') :PathPart('layout/new') :Args(0) {

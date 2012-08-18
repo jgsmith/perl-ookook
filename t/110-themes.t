@@ -49,7 +49,6 @@ $layout_version -> update({
   layout => <<'EOXML',
 <div></div>
 EOXML
-  configuration => '{}'
 });
 
 

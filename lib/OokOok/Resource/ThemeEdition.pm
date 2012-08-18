@@ -3,20 +3,6 @@ use Moose;
 use namespace::autoclean;
 use OokOok::Resource;
 
-#sub resource_collection_class { 'OokOok::Resource::Theme' }
-#
-#has '+collection' => (
-#  lazy => 1,
-#  default => sub {
-#    my($self) = @_;
-#
-#    OokOok::Resource::Theme->new(
-#      c => $self -> c, 
-#      source => $self -> source -> theme
-#    );
-#  },
-#);
-
 prop name => (
   is => 'rw',
   deep => 1,

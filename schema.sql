@@ -286,7 +286,9 @@ CREATE TABLE theme_variable_version (
   unused BOOLEAN NOT NULL DEFAULT 0, -- used to mark as not used in an edition
   status INTEGER NOT NULL DEFAULT 0, -- published?
   name    VARCHAR(255) NOT NULL DEFAULT '',
-  type    VARCHAR(255) NOT NULL DEFAULT 'text'
+  type    VARCHAR(255) NOT NULL DEFAULT 'text',
+  default_value VARCHAR(255),
+  description TEXT
 );
 
 CREATE TABLE theme_layout (
@@ -304,7 +306,7 @@ CREATE TABLE theme_layout_version (
   internal_layout BOOLEAN NOT NULL DEFAULT 0,
   status INTEGER NOT NULL DEFAULT 0, -- published?
   name    VARCHAR(255) NOT NULL DEFAULT '',
-  layout TEXT NOT NULL DEFAULT '<div><page-part name="body"/></div>',
+  layout TEXT NOT NULL DEFAULT '',
   configuration TEXT NOT NULL DEFAULT '{}'
 );
 

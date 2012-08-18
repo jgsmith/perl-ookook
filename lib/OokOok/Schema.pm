@@ -8,8 +8,15 @@ use Moose;
 use MooseX::MarkAsMethods autoclean => 1;
 extends 'DBIx::Class::Schema';
 
+our $VERSION = 1;
+
 __PACKAGE__->load_namespaces;
 
+for my $class (__PACKAGE__ -> sources) {
+  "OokOok::Schema::Result::$class" -> meta -> make_immutable(
+    inline_constructor => 0
+  );
+}
 
 # Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-21 15:39:15
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:sUKIshFTrsfsCwi3JdVYpw

@@ -1,9 +1,9 @@
-package OokOok::Role::Schema::Result::HasVersions;
+package OokOok::Base::VersionedResult;
 
-use Moose::Role;
+use Moose;
+extends 'OokOok::Base::Result';
 
-with 'OokOok::Role::Schema::Result::UUID';
-
+use namespace::autoclean;
 
 around insert => sub {
   my $orig = shift;
@@ -12,7 +12,7 @@ around insert => sub {
   my $new = $self -> $orig(@_);
 
   $new -> create_related('versions', {
-    edition => $new -> owner -> current_edition,
+    edition => $self -> owner -> current_edition,
   });
   $new;
 };
@@ -24,28 +24,26 @@ override update => sub {
 
   my %dirty_columns = $self -> get_dirty_columns;
 
-  if($dirty_columns{$self -> owner -> result_source -> from . "_id"}) {
-    $self -> discard_changes();
+  if($dirty_columns{$self -> owner -> result_source -> from."_id"}) {
+    $self -> discard_changes;
     die "Unable to update a versioned object's owner";
   }
-  if($dirty_columns{"uuid"}) {
-    $self -> discard_changes();
+  if($dirty_columns{'uuid'}) {
+    $self -> discard_changes;
     die "Unable to update the uuid of a versioned object";
   }
 
   if(!keys %dirty_columns) {
-    return $self; # nothing to update
+    return $self;
   }
 
   super;
 };
 
 sub current_version {
-  my($self) = @_;
-
-  $self -> versions -> search({},
+  $_[0] -> versions -> search({},
     { order_by => { -desc => 'id' }, rows => 1 }
-  ) -> first;
+  ) -> first
 }
 
 sub version_for_date {
@@ -57,13 +55,13 @@ sub version_for_date {
     $date = $self -> result_source -> schema -> storage -> datetime_parser -> format_datetime($date);
   }
 
-  my $join = $self -> owner -> editions -> result_source -> from;
+  my $join = "edition"; #$self -> owner -> editions -> result_source -> from;
 
-  $self -> search_related('versions',
-    { 
-      $join.".closed_on" => { '<=' =>  $date},
+  $self -> search_related( versions =>
+    {
+      $join.".closed_on" => { '<=' => $date },
     },
-    { 
+    {
       join => [$join],
       order_by => { -desc => 'me.id' }
     }
@@ -71,5 +69,3 @@ sub version_for_date {
 }
 
 1;
-
-__END__

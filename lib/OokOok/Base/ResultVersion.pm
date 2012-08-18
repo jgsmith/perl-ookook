@@ -1,6 +1,9 @@
-package OokOok::Role::Schema::Result::Version;
+package OokOok::Base::ResultVersion;
 
-use Moose::Role;
+use Moose;
+extends 'OokOok::Base::Result';
+
+use namespace::autoclean;
 
 override update => sub {
   my($self, $columns) = @_;
@@ -64,5 +67,3 @@ before delete => sub {
 };
 
 1;
-
-__END__

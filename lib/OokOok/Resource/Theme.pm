@@ -39,6 +39,11 @@ has_many theme_assets => 'OokOok::Resource::ThemeAsset', (
   source => sub { $_[0] -> source -> theme_assets },
 );
 
+has_many theme_variables => 'OokOok::Resource::ThemeVariable', (
+  is => 'ro',
+  source => sub { $_[0] -> source -> theme_variables },
+);
+
 has_many theme_styles => 'OokOok::Resource::ThemeStyle', (
   is => 'ro',
   source => sub { $_[0] -> source -> theme_styles },

@@ -1,4 +1,3 @@
-</%augment>
 % $.IndexTable(1) {{
 %   $.IndexHead {{
       <% $.IndexHeadName("Theme") %>
@@ -13,6 +12,6 @@
 %     }
 %   }}
 % }}
-<a href="<% $c->uri_for("/admin/theme/new") %>" class="btn btn-large btn-primary">
+<a href="<% $c->uri_for("/admin/theme/new") %>" class="btn btn-primary">
   New Theme
 </a>

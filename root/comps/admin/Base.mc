@@ -22,11 +22,16 @@ $.invalid => sub { [] }
 <%method navigation>
   <div class="row-fluid">
     <div class="span12">
+      <span class="navbar">
+        <% $.branding %>
+      </span>
       <% $.nav_tabs() %>
       <% $.sub_nav_tabs() %>
     </div>
   </div>
 </%method>
+
+<%method branding></%method>
 
 <%method nav_tabs>
   <ul class="nav nav-pills">
@@ -110,10 +115,10 @@ $.invalid => sub { [] }
 
 <%method IndexItemAction ($disabled, $href, $icon, $title)>
 % if($disabled) {
-  <span class="btn disabled">
+  <span class="btn disabled btn-small">
 % }
 % else {
-  <a href="<% $c->uri_for($href) %>" class="btn">
+  <a href="<% $c->uri_for($href) %>" class="btn btn-small">
 % }
 % if($icon) {
   <i class="icon icon-<% $icon %>"></i>
