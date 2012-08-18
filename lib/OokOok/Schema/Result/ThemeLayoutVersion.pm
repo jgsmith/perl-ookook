@@ -10,6 +10,8 @@ OokOok::Schema::Result::ThemeLayoutVersion
 use OokOok::ResultVersion;
 use namespace::autoclean;
 
+is_publishable;
+
 prop parent_layout_id => (
   data_type => 'integer',
   is_nullable => 1,
@@ -26,12 +28,6 @@ __PACKAGE__ -> belongs_to( theme_style => 'OokOok::Schema::Result::ThemeStyle', 
 
 prop internal_layout => (
   data_type => 'boolean',
-  default_value => 0,
-  is_nullable => 0,
-);
-
-prop status => (
-  data_type => 'integer',
   default_value => 0,
   is_nullable => 0,
 );

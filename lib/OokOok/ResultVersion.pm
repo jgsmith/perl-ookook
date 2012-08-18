@@ -12,7 +12,7 @@ use OokOok::Meta::ResultVersion;
 
 Moose::Exporter->setup_import_methods(
   with_meta => [
-    'prop', 'owns_many',
+    'prop', 'owns_many', 'is_publishable',
   ],
   as_is => [ ],
   also => 'Moose',
@@ -55,6 +55,18 @@ sub init_meta {
   $package -> set_primary_key('id');
 
   $meta;
+}
+
+sub is_publishable {
+  my($meta) = @_;
+
+  prop($meta, 
+    status => (
+      data_type => 'integer',
+      default_value => 0,
+      is_nullable => 0,
+    )
+  );
 }
 
 sub prop {

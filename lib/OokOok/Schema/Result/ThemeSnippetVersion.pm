@@ -10,11 +10,7 @@ OokOok::Schema::Result::ThemeSnippetVersion
 use OokOok::ResultVersion;
 use namespace::autoclean;
 
-prop status => (
-  data_type => 'integer',
-  default_value => 0,
-  is_nullable => 0,
-);
+is_publishable;
 
 prop name => (
   data_type => 'varchar',

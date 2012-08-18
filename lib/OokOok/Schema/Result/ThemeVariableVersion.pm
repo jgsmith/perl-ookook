@@ -10,14 +10,10 @@ OokOok::Schema::Result::ThemeVariableVersion
 use OokOok::ResultVersion;
 use namespace::autoclean;
 
+is_publishable;
+
 prop unused => (
   data_type => 'boolean',
-  default_value => 0,
-  is_nullable => 0,
-);
-
-prop status => (
-  data_type => 'integer',
   default_value => 0,
   is_nullable => 0,
 );

@@ -10,11 +10,7 @@ OokOok::Schema::Result::ThemeAssetVersion
 use OokOok::ResultVersion;
 use namespace::autoclean;
 
-prop status => (
-  data_type => 'integer',
-  default_value => 0,
-  is_nullable => 0,
-);
+is_publishable;
 
 prop size => (
   data_type => 'integer',

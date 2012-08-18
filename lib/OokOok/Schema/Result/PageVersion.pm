@@ -10,6 +10,8 @@ OokOok::Schema::Result::PageVersion
 use OokOok::ResultVersion;
 use namespace::autoclean;
 
+is_publishable;
+
 prop layout => (
   data_type => 'char',
   is_nullable => 1,
@@ -41,12 +43,6 @@ prop primary_language => (
   data_type => 'varchar',
   is_nullable => 1,
   size => 32,
-);
-
-prop status => (
-  data_type => 'integer',
-  default_value => 0,
-  is_nullable => 0,
 );
 
 prop description => (

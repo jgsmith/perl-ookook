@@ -10,13 +10,7 @@ OokOok::Schema::Result::AssetVersion
 use OokOok::ResultVersion;
 use namespace::autoclean;
 
-# need a way to connect to the proper edition for this version
-
-prop status => (
-  data_type => 'integer',
-  default_value => 0,
-  is_nullable => 0,
-);
+is_publishable;
 
 prop size => (
   data_type => 'integer',
