@@ -203,9 +203,18 @@ sub GET_oai_pmh {
 sub _DELETE {
   my($self) = @_;
 
-  die "Unable to DELETE unless authenticated" unless $self -> c -> user;
+  print STDERR "In _DELETE\n";
+  OokOok::Exception -> forbidden(
+    message => "Unable to DELETE unless authenticated"
+  ) unless $self -> c -> user;
 
-  die "Unable to DELETE" unless $self -> can_DELETE;
+  print STDERR "  user is authenticated\n";
+
+  OokOok::Exception -> forbidden(
+    message =>  "Unable to DELETE"
+  ) unless $self -> can_DELETE;
+
+  print STDERR "  user can delete\n";
 
   $self -> DELETE
 }
@@ -213,7 +222,11 @@ sub _DELETE {
 sub DELETE { 
   my($self) = @_;
 
-  if(!$self -> has_source) { die "Unable to DELETE without source"; }
+  OokOok::Exception::DELETE -> gone(
+    message => 'Unable to DELETE without source'
+  ) unless $self -> has_source;
+
+  print STDERR "  passing delete request on to resource source\n";
 
   $self -> source -> delete; 
 }
@@ -221,25 +234,13 @@ sub DELETE {
 sub _PUT {
   my($self, $json) = @_;
 
-  print STDERR "$self -> _PUT\n";
-
-  print STDERR "user: ", $self -> c -> user, "\n";
-
   OokOok::Exception -> forbidden(
     message => 'Unable to PUT unless authenticated'
   ) unless defined $self -> c -> user;
 
-  print STDERR "Got past authentication requirement\n";
-
-  print STDERR "can_GET:", $self -> can_GET, "\n";
-  print STDERR "can_PUT:", $self -> can_PUT, "\n";
-  print STDERR "got past printing out can_GET and can_PUT\n";
-
   OokOok::Exception -> forbidden(
     message => 'Unable to PUT'
   ) unless $self -> can_GET && $self -> can_PUT;
-
-  print STDERR "Got past authorization requirement\n";
 
   my $embeddings = delete $json -> {_embedded};
 
@@ -251,9 +252,9 @@ sub _PUT {
   my $hasa = {};
 
   for my $h ($self -> meta -> get_hasa_list) {
-    print STDERR ">>> $h\n";
     my $hinfo = $self -> meta -> get_hasa($h);
     next if defined($hinfo->{is}) && $hinfo->{is} eq 'ro';
+    my $h_exists = exists $json->{$h};
     my $r = delete $json -> {$h};
     if(defined $r) {
       my $collection = $hinfo -> {isa} -> new(c => $self -> c) -> collection;
@@ -263,13 +264,10 @@ sub _PUT {
         $r = $self -> $h;
     }
     if($r) {
-      print STDERR "$h => $r => ", $r->source->id, "\n";
       if($hinfo->{sink}) {
-        print STDERR "Adding $h to hasa\n";
         $hasa->{$h . "_id"} = $hinfo -> {sink} -> ($r);
       }
       else {
-        print STDERR "Adding $h to hasa\n";
         $hasa->{$h."_id"} = $r -> source -> id;
       }
     }
@@ -278,7 +276,6 @@ sub _PUT {
   for my $b ($self -> meta -> get_owner_list) {
     my $binfo = $self -> meta -> get_owner($b);
     next if !defined($binfo->{is}) || $binfo->{is} eq 'ro';
-    print STDERR "$b required? ", ($binfo->{required}?'y':'n'),"\n";
     if(exists $json->{$b}) {
       my $bv = delete $json -> {$b};
       if(defined($bv) && $bv ne '') {
@@ -310,20 +307,13 @@ sub _PUT {
   }
 
   for my $h (keys %$hasa) {
-    print STDERR "Copying $h to json...\n";
     $json -> {$h} = $hasa->{$h};
   }
 
   my $verifier = $self -> meta -> verifier -> {PUT};
-  print STDERR "Verifier: $verifier\n";
-  print STDERR "Data in: ", Data::Dumper -> Dump([ $json ]);
   if($verifier) {
     my $results = $verifier -> verify($json);
-    print STDERR "Verifier success: ", $results -> success, "\n";
     if(!$results -> success) {
-      print STDERR "Not successful!\n";
-      print STDERR Data::Dumper -> Dump([ [ $results -> missings ], [ $results -> invalids ] ]);
-      print STDERR "Throwing error\n";
       OokOok::Exception::PUT->throw(
         message => "Invalid or missing fields",
         missing => [ $results -> missings ],
@@ -331,7 +321,7 @@ sub _PUT {
       );
     }
     my %values = $results -> valid_values;
-    delete @values{grep { !defined $values{$_} } keys %values};
+    delete @values{grep { !exists $json->{$_} } keys %values};
     $json = \%values;
   }
   else {
@@ -354,7 +344,7 @@ sub PUT {
     my $row = $self -> source_version;
     my $new_info = {};
     for my $col ($row -> result_source -> columns) {
-      if($json -> {$col}) {
+      if(exists $json -> {$col}) {
         $new_info -> {$col} = $json -> {$col};
       }
     }

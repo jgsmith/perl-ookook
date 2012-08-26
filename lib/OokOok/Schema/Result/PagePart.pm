@@ -44,6 +44,8 @@ override update => sub {
 
   if($self -> page_version -> edition -> is_closed) {
     # the following will die if we can't duplicate
+    $self -> discard_changes();
+    print STDERR "Duplicating page to current edition\n";
     my $page_version = $self -> page_version -> duplicate_to_current_edition;
     my $new;
     if($changes{name}) {
@@ -57,6 +59,7 @@ override update => sub {
         { name => $self -> name }
       ) -> first;
     }
+    print STDERR "Updating new page copy page part (", $self -> name, ")\n";
     return $new -> update(\%changes);
   }
   else {

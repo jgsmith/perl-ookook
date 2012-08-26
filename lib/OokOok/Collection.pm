@@ -72,7 +72,6 @@ sub init_meta {
   $class = decamelize($class);
   $class = join("_", split(/\s/, PL_N(join(" ", split(/_/, $class)))));
 
-  #print STDERR "default for resource_name: [$class]\n";
   $meta -> resource_name($class);
 
   return $meta;

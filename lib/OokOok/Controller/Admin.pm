@@ -1,23 +1,18 @@
-package OokOok::Controller::Admin;
+use CatalystX::Declare;
 
-use Moose;
-use namespace::autoclean;
+controller OokOok::Controller::Admin {
 
-BEGIN {
-  extends 'Catalyst::Controller';
-}
-
-sub index :Path :Args(0) {
-  my($self, $c) = @_;
-
-  if($c -> user) {
-    $c -> response -> redirect($c -> uri_for("/admin/project"));
+  final action index as '' {
+    if($ctx -> user) {
+      $ctx -> response -> redirect($ctx -> uri_for("/admin/project"));
+    }
+    else {
+      $ctx -> stash -> {template} = 'admin/login';
+    }
   }
-  else {
-    $c -> stash -> {template} = 'admin/login';
-  }
-}
 
-sub end : ActionClass('RenderView') { }
+  final action end (@rest) is private isa RenderView;
+
+}
 
 1;

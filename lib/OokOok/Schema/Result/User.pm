@@ -39,7 +39,7 @@ prop timezone => (
 prop is_admin => (
   data_type => 'boolean',
   is_nullable => 0,
-  default => 0,
+  default_value => 0,
 );
 
 prop description => (

@@ -1,7 +1,7 @@
 package OokOok;
 use Moose;
 use namespace::autoclean;
-use Carp::Always;
+#use Carp::Always;
 
 use Catalyst::Runtime 5.80;
 
@@ -17,6 +17,7 @@ use Catalyst::Runtime 5.80;
 # Static::Simple: will serve static files from the application's root
 #                 directory
 
+    #-Debug
 use Catalyst qw/
     -Debug
     ConfigLoader

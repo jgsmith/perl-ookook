@@ -42,10 +42,10 @@ sub process_node {
       }
       elsif($einfo->{attributes}->{$ns}->{$a} eq 'Bool') {
         if(defined($value) && $value =~ m{^\s*(yes|true|on|1)\s*$}i) {
-          $context -> set_var( $a, 1 );
+          $attributes->{$a} = 1;
         }
         else {
-          $attributes->{$a} = $value;
+          $attributes->{$a} = 0;
         }
       }
     }

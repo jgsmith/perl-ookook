@@ -1,1 +1,1 @@
-<% $.form("New Layout", "Create Layout") %>
+<% $.form("New Page", "Create Page") %>

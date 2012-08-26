@@ -10,3 +10,4 @@ $.board_id => sub { shift -> board -> id }
   <% $.navLink("/admin/board/".$.board_id."/member", "Membership", "/admin/board/membership") %>
   <% $.navLink("/admin/board/".$.board_id."/settings", "Settings", "/admin/board/settings") %>
 </%augment>
+<%method branding><% $.board->name %> Board</%method>

@@ -1,282 +1,221 @@
-package OokOok::Controller::Admin::Theme;
+use CatalystX::Declare;
 
-use Moose;
-use namespace::autoclean;
+controller OokOok::Controller::Admin::Theme
+   extends OokOok::Base::Admin
+{
+  use OokOok::Collection::Theme;
+  use OokOok::Collection::ThemeVariable;
 
-BEGIN {
-  extends 'OokOok::Base::Admin';
-}
+  action base under '/' as 'admin/theme';
 
-use OokOok::Collection::Theme;
-use OokOok::Collection::ThemeVariable;
+  under base {
 
-sub base :Chained('/') :PathPart('admin/theme') :CaptureArgs(0) { }
+    action theme_base (Str $uuid) as '' {
+      my $resource = OokOok::Collection::Theme->new(c => $ctx) 
+                                              ->resource($uuid);
+      if(!$resource) {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+      $ctx -> stash -> {theme} = $resource;
+    }
 
-sub index :Chained('base') :PathPart('') :Args(0) {
-  my($self, $c) = @_;
+  }
 
-  $c -> stash -> {themes} = [
-    OokOok::Collection::Theme -> new(c => $c) -> resources
-  ];
-  $c -> stash -> {template} = "/admin/top/themes";
-}
+  under theme_base {
+    action theme_style_base (Str $uuid) as 'style' {
+      my $theme = $ctx -> stash -> {theme};
+      my $style = $theme -> style($uuid);
+      if(!$style) {
+        return $ctx -> response -> redirect(
+          $ctx -> uri_for("/admin/theme/" . $theme->id . "/style")
+        );
+      }
 
-sub theme_new :Chained('base') :PathPart('new') :Args(0) {
-  my($self, $c) = @_;
+      $ctx -> stash -> {theme_style} = $style;
+    }
 
-  if($c -> request -> method eq 'POST') {
-    # get and validate data
-    my $collection = OokOok::Collection::Theme -> new(c => $c);
-    my $theme;
-    eval {
-      $theme = $collection -> _POST(
-        $c -> request -> params
+    action theme_layout_base (Str $uuid) as 'layout' {
+      my $theme = $ctx -> stash -> {theme};
+      my $layout = $theme -> layout($uuid);
+      if(!$layout) {
+        return $ctx -> response -> redirect(
+          $ctx -> uri_for("/admin/theme/" . $theme->id . "/layout")
+        );
+      }
+
+      $ctx -> stash -> {theme_layout} = $layout;
+    }
+
+  }
+
+  under base {
+
+    final action index as '' {
+      $ctx -> stash -> {themes} = [
+        OokOok::Collection::Theme -> new(c => $ctx) -> resources
+      ];
+      $ctx -> stash -> {template} = "/admin/top/themes";
+    }
+
+    final action theme_new as 'new' {
+      if($ctx -> request -> method eq 'POST') {
+        # get and validate data
+        my $collection = OokOok::Collection::Theme -> new(c => $ctx);
+        my $theme = $self -> POST( $ctx, $collection, $ctx -> request -> params );
+        if($theme) {
+          $ctx -> response -> redirect(
+            $ctx->uri_for("/admin/theme/" . $theme -> id)
+          );
+        }
+      }
+      $ctx -> stash -> {template} = "/admin/top/themes/new";
+    }
+
+  }
+
+  under theme_base {  
+    final action theme_view as '' {
+      my $uuid = $ctx -> stash -> {theme} -> id;
+      $ctx -> response -> redirect(
+        $ctx -> uri_for("/admin/theme/$uuid/layout")
       );
-    };
-    my $e = $@;
-    $c -> stash -> {form_data} = $c -> request -> params;
-    if($e && blessed($e) && $e -> isa('OokOok::Exception::PUT')) {
-      $c -> stash -> {error_msg} = $e -> message;
-      $c -> stash -> {missing} = $e -> missing;
-      $c -> stash -> {invalid} = $e -> invalid;
     }
-    elsif($theme) {
-      $c -> response -> redirect($c->uri_for("/admin/theme/" . $theme -> id));
+
+    final action theme_settings as 'settings' {
+      $ctx -> stash -> {template} = '/admin/theme/settings/settings';
     }
-  }
-  $c -> stash -> {template} = "/admin/top/themes/new";
-}
 
-sub theme_base :Chained('base') :PathPart('') :CaptureArgs(1) {
-  my($self, $c, $uuid) = @_;
-
-  my $resource = OokOok::Collection::Theme->new(c => $c) ->
-                 resource($uuid);
-
-  if(!$resource) {
-    $c -> detach(qw/Controller::Root default/);
-  }
-
-  $c -> stash -> {resource} = $resource;
-  $c -> stash -> {theme} = $resource;
-}
-
-sub theme_view :Chained('theme_base') :PathPart('') :Args(0) {
-  my($self, $c) = @_;
-  my $uuid = $c -> stash -> {theme} -> id;
-  $c -> response -> redirect($c -> uri_for("/admin/theme/$uuid/layout"));
-}
-
-sub theme_settings :Chained('theme_base') :PathPart('settings') :Args(0) {
-  my($self, $c) = @_;
-
-  $c -> stash -> {template} = '/admin/theme/settings/settings';
-}
-
-sub theme_components :Chained('theme_base') :PathPart('components') :Args(0) {
-  my($self, $c) = @_;
-}
-
-sub theme_editions :Chained('theme_base') :PathPart('editions') :Args(0) {
-  my($self, $c) = @_;
-
-  $c -> stash -> {editions} = $c -> stash -> {theme} -> editions;
-  $c -> stash -> {template} = '/admin/theme/settings/editions';
-}
-
-sub theme_editions_new :Chained('theme_base') :PathPart('editions/new') :Args(0) {
-  my($self, $c) = @_;
-
-  if($c -> request -> method eq 'POST') {
-    my $theme = $c -> stash -> {theme};
-    # really do the new edition
-    my $edition_collection = OokOok::Collection::ThemeEdition -> new(c => $c);
-    $edition_collection -> _POST({});
-    $c -> response -> redirect(
-      $c -> uri_for("/admin/theme/" . $theme->id . "/editions")
-    );
-  }
-  $c -> stash -> {template} = '/admin/theme/settings/editions/new';
-}
-
-sub theme_assets :Chained('theme_base') :PathPart('asset') :Args(0) {
-  my($self, $c) = @_;
-
-  $c -> stash -> {assets} = [ OokOok::Collection::ThemeAsset -> new(c => $c) -> resources ];
-
-  $c -> stash -> {template} = "/admin/theme/content/asset";
-}
-
-sub theme_layouts :Chained('theme_base') :PathPart('layout') :Args(0) {
-  my($self, $c) = @_;
-
-  $c -> stash -> {layouts} = [ OokOok::Collection::ThemeLayout -> new(c => $c) -> resources ];
-
-  $c -> stash -> {template} = "/admin/theme/content/layout";
-}
-
-sub theme_styles :Chained('theme_base') :PathPart('style') :Args(0) {
-  my($self, $c) = @_;
-
-  $c -> stash -> {styles} = [ OokOok::Collection::ThemeStyle -> new(c => $c) -> resources ];
-  $c -> stash -> {template} = "/admin/theme/content/style";
-}
-
-sub theme_variables :Chained('theme_base') :PathPart('variable') :Args(0) {
-  my($self, $c) = @_;
-
-  $c -> stash -> {theme_variables} = [ OokOok::Collection::ThemeVariable -> new(c => $c) -> resources ];
-  $c -> stash -> {template} = "/admin/theme/content/variable";
-}
-
-sub theme_layout_new :Chained('theme_base') :PathPart('layout/new') :Args(0) {
-  my($self, $c) = @_;
-
-  if($c -> request -> method eq 'POST') {
-    # get and validate data
-    my $theme = $c -> stash -> {theme};
-    my $collection = OokOok::Collection::ThemeLayout -> new(
-      c => $c
-    );
-    my $layout;
-    eval {
-      $layout = $collection -> _POST(
-        $c -> request -> params
-      );
-    };
-    my $e = $@;
-    if($e && blessed($e) && $e -> isa('OokOok::Exception::PUT')) {
-      $c -> stash -> {form_data} = $c -> request -> params;
-      $c -> stash -> {error_msg} = $e -> message;
-      $c -> stash -> {missing} = $e -> missing;
-      $c -> stash -> {invalid} = $e -> invalid;
+    final action theme_editions as 'editions' {
+      $ctx -> stash -> {editions} = $ctx -> stash -> {theme} -> editions;
+      $ctx -> stash -> {template} = '/admin/theme/settings/editions';
     }
-    else {
-      $c -> response -> redirect($c->uri_for("/admin/theme/" . $theme -> id . "/layout"));
+
+    final action theme_editions_new as 'editions/new' {
+      if($ctx -> request -> method eq 'POST') {
+        my $theme = $ctx -> stash -> {theme};
+        # really do the new edition
+        my $edition_collection = OokOok::Collection::ThemeEdition -> new(c => $ctx);
+        $edition_collection -> _POST({});
+        $ctx -> response -> redirect(
+          $ctx -> uri_for("/admin/theme/" . $theme->id . "/editions")
+        );
+      }
+      $ctx -> stash -> {template} = '/admin/theme/settings/editions/new';
+    }
+
+    final action theme_assets as 'asset' {
+      $ctx -> stash -> {assets} = [ 
+        OokOok::Collection::ThemeAsset -> new(c => $ctx) -> resources 
+      ];
+
+      $ctx -> stash -> {template} = "/admin/theme/content/asset";
+    }
+
+    final action theme_layouts as 'layout' {
+      $ctx -> stash -> {layouts} = [ 
+        OokOok::Collection::ThemeLayout -> new(c => $ctx) -> resources 
+      ];
+
+      $ctx -> stash -> {template} = "/admin/theme/content/layout";
+    }
+
+    final action theme_styles as 'style' {
+      $ctx -> stash -> {styles} = [ 
+        OokOok::Collection::ThemeStyle -> new(c => $ctx) -> resources 
+      ];
+
+      $ctx -> stash -> {template} = "/admin/theme/content/style";
+    }
+
+    final action theme_variables as 'variable' {
+      $ctx -> stash -> {theme_variables} = [ 
+        OokOok::Collection::ThemeVariable -> new(c => $ctx) -> resources 
+      ];
+
+      $ctx -> stash -> {template} = "/admin/theme/content/variable";
+    }
+
+    final action theme_layout_new as 'layout/new' {
+      if($ctx -> request -> method eq 'POST') {
+        # get and validate data
+        my $theme = $ctx -> stash -> {theme};
+        my $collection = OokOok::Collection::ThemeLayout -> new(
+          c => $ctx
+        );
+        my $layout = $self -> POST($ctx, $collection, $ctx -> request -> params);
+        if($layout) {
+          $ctx -> response -> redirect($ctx->uri_for("/admin/theme/" . $theme -> id . "/layout"));
+        }
+      }
+      $ctx -> stash -> {template} = "/admin/theme/content/layout/new";
+    }
+
+    final action theme_style_new as 'style/new' {
+      if($ctx -> request -> method eq 'POST') {
+        # get and validate data
+        my $theme = $ctx -> stash -> {theme};
+        my $collection = OokOok::Collection::ThemeStyle -> new(
+          c => $ctx
+        );
+        my $style = $self -> POST($ctx, $collection, $ctx -> request -> params);
+        if($style) {
+          $ctx -> response -> redirect(
+            $ctx->uri_for("/admin/theme/" . $theme -> id . "/style")
+          );
+        }
+      }
+      $ctx -> stash -> {template} = "/admin/theme/content/style/new";
     }
   }
-  $c -> stash -> {template} = "/admin/theme/content/layout/new";
+
+  under theme_layout_base {
+    final action theme_layout_edit as 'edit' {
+      if($ctx -> request -> method eq 'POST') {
+        my $layout = $ctx -> stash -> {theme_layout};
+        $self -> PUT($ctx, $layout, $ctx -> request -> params);
+        my $theme = $ctx -> stash -> {theme};
+        $ctx -> response -> redirect(
+          $ctx->uri_for("/admin/theme/" . $theme -> id . "/layout")
+        );
+      }
+      else {
+        my $layout = $ctx -> stash -> {theme_layout};
+        $ctx -> stash -> {form_data} = {
+          name => $layout -> name,
+          layout => $layout -> layout,
+        };
+        if($layout -> theme_style) {
+          $ctx -> stash -> {form_data} -> {theme_style}
+            = $layout -> theme_style -> id;
+        }
+        if($layout -> parent_layout) {
+          $ctx -> stash -> {form_data} -> {parent_layout} 
+             = $layout -> parent_layout -> id;
+        }
+      }
+      $ctx -> stash -> {template} = "/admin/theme/content/layout/edit";
+    }
+  }
+
+  under theme_style_base {
+
+    final action theme_style_edit as 'edit' {
+      if($ctx -> request -> method eq 'POST') {
+        my $style = $ctx -> stash -> {theme_style};
+        $self -> PUT($ctx, $style, $ctx -> request -> params);
+        my $theme = $ctx -> stash -> {theme};
+        $ctx -> response -> redirect(
+          $ctx->uri_for("/admin/theme/" . $theme -> id . "/style")
+        );
+      }
+      else {
+        my $style = $ctx -> stash -> {theme_style};
+        $ctx -> stash -> {form_data} = {
+          name => $style -> name,
+          styles => $style -> styles,
+        };
+      }
+      $ctx -> stash -> {template} = "/admin/theme/content/style/edit";
+    }
+  }
 }
-
-sub theme_style_base :Chained('theme_base') :PathPart('style') :CaptureArgs(1) {
-  my($self, $c, $uuid) = @_;
-
-  my $theme = $c -> stash -> {theme};
-  my $style = $theme -> style($uuid);
-  if(!$style) {
-    return $c -> response -> redirect($c -> uri_for("/admin/theme/" . $theme->id . "/style"));
-  }
-
-  $c -> stash -> {theme_style} = $style;
-}
-
-sub theme_layout_base :Chained('theme_base') :PathPart('layout') :CaptureArgs(1) {
-  my($self, $c, $uuid) = @_;
-
-  my $theme = $c -> stash -> {theme};
-  my $layout = $theme -> layout($uuid);
-  if(!$layout) {
-    return $c -> response -> redirect($c -> uri_for("/admin/theme/" . $theme->id . "/layout"));
-  }
-
-  $c -> stash -> {theme_layout} = $layout;
-}
-
-sub theme_layout_edit :Chained('theme_layout_base') :PathPart('edit') :Args(0) {
-  my($self, $c) = @_;
-
-  if($c -> request -> method eq 'POST') {
-    my $layout = $c -> stash -> {theme_layout};
-    eval {
-      $layout -> _PUT($c -> request -> params);
-    };
-    my $e = $@;
-    if($e && blessed($e) && $e -> isa('OokOok::Exception::PUT')) {
-      $c -> stash -> {form_data} = $c -> request -> params;
-      $c -> stash -> {error_msg} = $e -> message;
-      $c -> stash -> {missing} = $e -> missing;
-      $c -> stash -> {invalid} = $e -> invalid;
-    }
-    else {
-      my $theme = $c -> stash -> {theme};
-      $c -> response -> redirect($c->uri_for("/admin/theme/" . $theme -> id . "/layout"));
-    }
-  }
-  else {
-    my $layout = $c -> stash -> {theme_layout};
-    $c -> stash -> {form_data} = {
-      name => $layout -> name,
-      layout => $layout -> layout,
-    };
-    if($layout -> theme_style) {
-      $c -> stash -> {form_data} -> {theme_style}
-        = $layout -> theme_style -> id;
-    }
-    if($layout -> parent_layout) {
-      $c -> stash -> {form_data} -> {parent_layout} 
-         = $layout -> parent_layout -> id;
-    }
-  }
-  $c -> stash -> {template} = "/admin/theme/content/layout/edit";
-}
-
-sub theme_style_new :Chained('theme_base') :PathPart('style/new') :Args(0) {
-  my($self, $c) = @_;
-
-  if($c -> request -> method eq 'POST') {
-    # get and validate data
-    my $theme = $c -> stash -> {theme};
-    my $collection = OokOok::Collection::ThemeStyle -> new(
-      c => $c
-    );
-    my $style;
-    eval {
-      $style = $collection -> _POST(
-        $c -> request -> params
-      );
-    };
-    my $e = $@;
-    if($e && blessed($e) && $e -> isa('OokOok::Exception::PUT')) {
-      $c -> stash -> {form_data} = $c -> request -> params;
-      $c -> stash -> {error_msg} = $e -> message;
-      $c -> stash -> {missing} = $e -> missing;
-      $c -> stash -> {invalid} = $e -> invalid;
-    }
-    else {
-      $c -> response -> redirect($c->uri_for("/admin/theme/" . $theme -> id . "/style"));
-    }
-  }
-  $c -> stash -> {template} = "/admin/theme/content/style/new";
-}
-
-sub theme_style_edit :Chained('theme_style_base') :PathPart('edit') :Args(0) {
-  my($self, $c) = @_;
-
-  if($c -> request -> method eq 'POST') {
-    my $style = $c -> stash -> {theme_style};
-    eval {
-      $style -> _PUT($c -> request -> params);
-    };
-    my $e = $@;
-    if($e && blessed($e) && $e -> isa('OokOok::Exception::PUT')) {
-      $c -> stash -> {form_data} = $c -> request -> params;
-      $c -> stash -> {error_msg} = $e -> message;
-      $c -> stash -> {missing} = $e -> missing;
-      $c -> stash -> {invalid} = $e -> invalid;
-    }
-    else {
-      my $theme = $c -> stash -> {theme};
-      $c -> response -> redirect($c->uri_for("/admin/theme/" . $theme -> id . "/style"));
-    }
-  }
-  else {
-    my $style = $c -> stash -> {theme_style};
-    $c -> stash -> {form_data} = {
-      name => $style -> name,
-      styles => $style -> styles,
-    };
-  }
-  $c -> stash -> {template} = "/admin/theme/content/style/edit";
-}
-
-1;

@@ -55,6 +55,7 @@ sub render {
   if($formatter && !$@) {
     $content = $formatter -> format($content);
   }
+  return $content;
 
   # handle taglib registration based on page type and such
   #my $doc = $proc -> parse($content);

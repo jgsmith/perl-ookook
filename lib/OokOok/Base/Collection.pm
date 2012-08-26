@@ -194,6 +194,7 @@ sub _POST {
     delete $json -> {$h . "_id"}; # keep someone from slipping by
     my $hinfo = $resource_class -> meta -> get_hasa($h);
     next if defined($hinfo->{is}) && $hinfo->{is} eq 'ro';
+    my $r_exsits = exists($json -> {$h});
     my $r = delete $json -> {$h};
     next unless defined $r;
     my $collection = $hinfo -> {isa} -> new(c => $self -> c) -> collection;
@@ -209,6 +210,7 @@ sub _POST {
   }
 
   my $results = $self -> verify(POST => $json);
+  delete @$results{grep { !exists $json->{$_} } keys %$results};
 
   $self -> POST($results, @_);
 }
@@ -226,7 +228,7 @@ sub POST {
   my $new_info = {};
 
   for my $col ($self -> c -> model($self -> resource_model) -> result_source -> columns) {
-    if(defined $json -> {$col}) {
+    if(exists $json -> {$col}) {
       $new_info -> {$col} = $json -> {$col};
     }
   }

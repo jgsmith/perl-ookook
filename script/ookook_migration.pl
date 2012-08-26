@@ -8,4 +8,5 @@ use DBIx::Class::Migration::Script;
 DBIx::Class::Migration::Script -> run_with_options(
   schema => OokOok->model('DB')->schema,
   databases => ['PostgreSQL'],
+  dsn => 'DBD:Pg:dbname=ookook_dev',
 );

@@ -12,6 +12,25 @@ $.form_data => sub { +{} }
     <div class="control-group offset1 span11<% $.formClasses('content') %>">
       <textarea class="span12 large" id="style_styles" placeholder="Snippet content..." name="content"><% $.form_data->{content} | H %></textarea>
     </div>
+    <div class="control-group<% $.formClasses('filter') %>">
+      <label class="control-label">Filter:</label>
+      <div class="controls">
+        <select name="filter">
+%         for my $opt (qw/HTML Markdown BBCode/) {
+            <option value="<% $opt %>" <% $.ifEqual($opt, $.form_data->{filter}, ' selected') %>><% $opt %></option>
+%         }
+        </select>
+      </div>
+    </div>
+    <div class="control-group<% $.formClasses('status') %>">
+      <label class="control-label" for="snippet_status">Status:</label>
+      <div class="controls">
+        <select name="status" id="snippet_status">
+          <option value="100"<% $.ifEqual(100,$.form_data->{status},' selected') %>>Draft</option>
+          <option value="0"<% $.ifEqual(0,$.form_data->{status},' selected') %>>Approved</option>
+        </select>
+      </div>
+    </div>
   </fieldset>
   <div class="form-actions">
     <input accesskey="S" class="btn btn-primary" name="commit" type="submit" value="<% $button %>">

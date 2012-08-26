@@ -82,10 +82,10 @@ sub render {
     my $doc = $processor -> parse($div . $template . "</div>");
     my $ret = $doc -> render($context);
     # we want to remove the outer div
-    print STDERR "Returned doc: [$ret]\n";
+    #print STDERR "Returned doc: [$ret]\n";
     $ret =~ s{\s*<div.*?>}{}s;
     $ret =~ s{</div>$}{}s;
-    print STDERR "After regex doc: [$ret]\n";
+    #print STDERR "After regex doc: [$ret]\n";
     # now worry about parent layout
     if($self -> parent_layout) {
       $context = $context -> localize;

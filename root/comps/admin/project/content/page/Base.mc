@@ -48,7 +48,7 @@ $.form_data => sub { +{} }
             <label class="control-label">Filter:</label>
             <div class="controls">
               <select name="part[<% $count %>][filter]">
-%               for my $opt (qw/HTML Markdown Textile/) {
+%               for my $opt (qw/HTML Markdown BBCode/) {
                   <option value="<% $opt %>" <% $.ifEqual($opt, $part->{filter}, ' selected') %>><% $opt %></option>
 %               }
               </select>
@@ -71,6 +71,15 @@ $.form_data => sub { +{} }
 %           next unless defined $layout;
             <option value="<% $layout->id %>"<% $.ifEqual($layout->id,$.form_data->{theme_layout},' selected') %>><% $layout->name | H %></option>
 %         }
+        </select>
+      </div>
+    </div>
+    <div class="control-group<% $.formClasses('status') %>">
+      <label class="control-label" for="page_status">Status:</label>
+      <div class="controls">
+        <select name="status" id="page_status">
+          <option value="100"<% $.ifEqual(100,$.form_data->{status},' selected') %>>Draft</option>
+          <option value="0"<% $.ifEqual(0,$.form_data->{status},' selected') %>>Approved</option>
         </select>
       </div>
     </div>

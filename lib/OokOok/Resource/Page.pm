@@ -37,6 +37,12 @@ prop layout => (
   source => sub { $_[0] -> source_version -> layout },
 );
 
+prop status => (
+  is => 'rw',
+  type => 'Int',
+  source => sub { $_[0] -> source_version -> status },
+);
+
 #prop status => (
 #  is => 'rw',
 #  type => "Str',
@@ -65,7 +71,20 @@ has_many page_parts => "OokOok::Resource::PagePart", (
 sub child_pages {
   my($self) = @_;
 
-  return;
+  # we want all of the pages which have a version in the current edition
+  # (or most recent edition) pointing to the id of this page
+  my %seen;
+  my @children = 
+    grep {
+      $_ -> source_version -> parent_page -> id == $self -> source -> id
+      && !$seen{$_ -> source -> id}++
+    }
+    map {
+      $self -> new( 
+        source => $_ -> owner, date => $self -> date, c => $self -> c 
+      )
+    } $self -> source -> children;
+  return @children;
 }  
 
 sub get_child_page {
@@ -83,7 +102,7 @@ sub get_child_page {
     $q = $q -> search({
       "edition.closed_on" => { "<=", $self -> c -> stash -> {date} }
     }, {
-      joins => [qw/edition/]
+      join => [qw/edition/]
     });
   }
   
@@ -115,10 +134,7 @@ sub page_part {
 sub can_PUT {
   my($self) = @_;
 
-  print STDERR "calling project -> can_PUT\n";
-  my $r = $self -> project -> can_PUT;
-  print STDERR "  got back: [$r]\n";
-  $r;
+  $self -> project -> can_PUT;
 }
 
 sub can_DELETE {
@@ -130,15 +146,16 @@ sub can_DELETE {
 sub stylesheets {
   my($self) = @_;
 
-  my $theme = $self -> project -> theme;
-  return unless $theme;
-  my $layout_uuid = $self -> source_version -> layout;
-  my $layout = $theme -> layout( $layout_uuid );
+  #my $theme = $self -> project -> theme;
+  #return unless $theme;
+  #my $layout_uuid = $self -> source_version -> layout;
+  #my $layout = $theme -> layout( $layout_uuid );
+  my $layout = $self -> get_layout;
   my @stylesheets;
   while($layout) {
-    my $s = $layout -> source_version -> theme_style;
+    my $s = $layout -> theme_style;
     if($s) {
-      push @stylesheets, $s -> uuid;
+      push @stylesheets, $s -> id;
     }
     $layout = $layout -> parent_layout;
   }
@@ -155,11 +172,17 @@ sub get_layout {
   my $layout;
   if($layout_uuid) {
     $layout = $theme -> layout($layout_uuid);
+    if($layout) {
+      print "Layout: ",  $layout -> id, "\n";
+      return $layout;
+    }
+    if($self -> parent_page) {
+      return $self -> parent_page -> get_layout;
+    }
   }
-  if($layout || !$self -> parent_page) {
-    return $layout;
+  elsif($self -> parent_page) {
+    return $self -> parent_page -> get_layout;
   }
-  return $self -> parent_page -> get_layout;
 }
 
 sub render {

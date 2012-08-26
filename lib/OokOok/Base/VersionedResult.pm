@@ -5,6 +5,22 @@ extends 'OokOok::Base::Result';
 
 use namespace::autoclean;
 
+override delete => sub {
+  my($self) = @_;
+
+  # we want to reset the current version if we have prior versions
+  my $cv = $self -> current_version;
+  if($cv -> edition -> is_closed) {
+    return 0;
+  }
+
+  return 0 unless $cv -> delete;
+  if($self -> versions -> count == 0) {
+    return super;
+  }
+  return 1;
+};
+
 around insert => sub {
   my $orig = shift;
   my $self = shift;

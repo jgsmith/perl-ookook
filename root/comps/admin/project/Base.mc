@@ -10,3 +10,4 @@ $.project_id => sub { shift -> project -> id }
   <% $.navLink("/admin/project/".$.project_id."/page", "Content", "/admin/project/content") %>
   <% $.navLink("/admin/project/".$.project_id."/settings", "Settings", "/admin/project/settings") %>
 </%augment>
+<%method branding><% $.project->name %> Project</%method>

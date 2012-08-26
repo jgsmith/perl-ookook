@@ -1,0 +1,41 @@
+textarea {
+  /*border: 1px solid #cdc295; */
+  font-family: Monaco, "Courier New", Courier, monospace;
+  font-size: 95%;
+}
+
+textarea.large {
+  height: 280px;
+}
+
+/*
+.navbar {
+  margin-top: 0px;
+  padding-top: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
+}
+*/
+
+.navbar .nav > li.active > a {
+  opacity: 0.5;
+  border-right: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+}
+
+div.navbar.navbar-fixed-top div.navbar-inner {
+  /* border-top: 1px solid #9c0001; */
+  /* border-bottom: 1px solid #9c0001; */
+}
+
+ul.nav.nav-pills {
+  /* border: 1px solid #9c0001; */
+}
+/*
+ul.nav.nav-pills li.active a {
+  border-radius: 5px;
+  border: none;
+  background-color: #9c0001;
+  color: #fdfdfa;
+}
+*/

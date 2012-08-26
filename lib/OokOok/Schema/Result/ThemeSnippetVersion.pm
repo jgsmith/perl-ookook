@@ -25,4 +25,11 @@ prop content => (
   default_value => '',
 );
 
+prop filter => (
+  data_type => 'varchar',
+  is_nullable => 0,
+  default_value => "HTML",
+  size => 64,
+);
+
 1;

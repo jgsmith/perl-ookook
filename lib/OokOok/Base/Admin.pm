@@ -32,12 +32,18 @@ sub doMethod :Private {
   my $e = $@;
 
   if($e) {
-    if(blessed($e) && $e -> isa('OokOok::Exception::PUT')) {
-      $c -> stash -> {form_data} = $c -> request -> params;
-      $c -> stash -> {error_msg} = $e -> message;
-      $c -> stash -> {missing} = $e -> missing;
-      $c -> stash -> {invalid} = $e -> invalid;
-      return;
+    if(blessed($e)) {
+      if($e -> isa('OokOok::Exception::PUT')) {
+        $c -> stash -> {form_data} = $c -> request -> params;
+        $c -> stash -> {error_msg} = $e -> message;
+        $c -> stash -> {missing} = $e -> missing;
+        $c -> stash -> {invalid} = $e -> invalid;
+        return;
+      }
+      if($e -> isa('OokOok::Exception')) {
+        $c -> stash -> {error_msg} = $e -> message;
+        return;
+      }
     }
     else {
       die $e; # rethrow
@@ -48,5 +54,6 @@ sub doMethod :Private {
 
 sub PUT :Private { shift -> doMethod("_PUT", @_) }
 sub POST :Private { shift -> doMethod("_POST", @_) }
+sub DELETE :Private { shift -> doMethod("_DELETE", @_) }
 
 1;

@@ -40,18 +40,25 @@ override update => sub {
 sub duplicate_to_current_edition {
   my($self, $current_edition) = @_;
 
+  print STDERR "Calling duplicate_to_current_edition from ", join(", ", caller), "\n";
+
   my $edition_id_key = $self -> edition -> result_source -> from . "_id";
   my $owner_id_key = $self -> owner -> result_source -> from . "_id";
 
   $current_edition ||= $self -> edition -> owner -> current_edition;
   if($current_edition -> is_closed) {
-    $self -> discard_changes();
+    $self -> discard_changes;
     die "Current instance is closed. Unable to duplicate object for changes";
   }
 
-  if($self -> result_source -> resultset -> search({ $edition_id_key => $current_edition -> id, $owner_id_key => $self -> owner -> id })->count > 0) {
-    $self -> discard_changes();
-    die "Current instance already has the object";
+  my $new_copy = $self -> result_source -> resultset -> search({ 
+    $edition_id_key => $current_edition -> id, 
+    $owner_id_key => $self -> owner -> id 
+  })->first;
+
+  if($new_copy) {
+    $self -> discard_changes;
+    return $new_copy;
   }
 
   return $self -> copy({

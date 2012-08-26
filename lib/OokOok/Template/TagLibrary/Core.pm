@@ -76,7 +76,7 @@ sub element_snippet {
 
   my $divClass = "snippet-$name";
 
-  return "<div><!-- Snippet '$name' not found. --></div>";
+  return "<!-- Snippet '$name' not found. -->";
 }
 
 sub element_content {
@@ -112,7 +112,7 @@ sub element_content {
       return $page_part -> render($context);
     }
   }
-  return "<div><!-- Page part '$name' not found. --></div>";
+  return "<!-- Page part '$name' not found. -->";
 }
 
 sub has_content_q {

@@ -1,100 +1,76 @@
-package OokOok::Controller::Project;
+use CatalystX::Declare;
 
-use Moose;
-use namespace::autoclean;
+controller OokOok::Controller::Project
+   extends OokOok::Base::REST
+{
 
-use OokOok::Collection::Project;
-use OokOok::Collection::Edition;
-use OokOok::Collection::Page;
-use OokOok::Collection::Snippet;
+  use OokOok::Collection::Project;
+  use OokOok::Collection::Edition;
+  use OokOok::Collection::Page;
+  use OokOok::Collection::Snippet;
 
-use JSON;
+  use JSON;
 
-BEGIN { 
-  extends 'OokOok::Base::REST'; 
-}
+  $CLASS -> config(
+    map => {
+    },
+    default => 'text/html',
+  );
 
-__PACKAGE__ -> config(
-  map => {
-  },
-  default => 'text/html',
-);
+  #
+  # base establishes the root slug for the project management
+  # routes
+  #
 
-#
-# base establishes the root slug for the project management
-# routes
-#
+  action base under '/' as 'project' {
+    if($ctx -> stash -> {development} || $ctx -> stash -> {date}) {
+      $ctx -> detach(qw/Controller::Root default/);
+    }
 
-sub base :Chained('/') :PathPart('project') :CaptureArgs(0) { 
-  my($self, $c) = @_;
+    $ctx -> stash -> {development} = 1; # for use by resources/collections
 
-  if($c -> stash -> {development} || $c -> stash -> {date}) {
-    $c -> detach(qw/Controller::Root default/);
+    $ctx -> stash -> {collection} = OokOok::Collection::Project -> new(c => $ctx);
   }
 
-  $c -> stash -> {development} = 1; # for use by resources/collections
+  ###
+  ### Project-specific information/resources
+  ###
 
-  $c -> stash -> {collection} = OokOok::Collection::Project -> new(c => $c);
+  under resource_base {
+    final action pages as 'page' isa REST {
+      $ctx -> stash -> {collection} = 
+        OokOok::Collection::Page -> new(c => $ctx);
+    }
+
+    final action snippets as 'snippet' isa REST {
+      $ctx -> stash -> {collection} = 
+        OokOok::Collection::Snippet -> new(c => $ctx);
+    }
+
+    final action editions as 'edition' isa REST {
+      $ctx -> stash -> {collection} = 
+        OokOok::Collection::Edition -> new(c => $ctx);
+    }
+
+    final action pages_GET is private { shift -> collection_GET(@_) }
+    final action pages_POST is private { shift -> collection_POST(@_) }
+
+    final action snippets_GET is private { shift -> collection_GET(@_) }
+    final action snippets_POST is private { shift -> collection_POST(@_) }
+
+    final action editions_GET is private { shift -> collection_GET(@_) }
+    final action editions_POST is private { shift -> collection_POST(@_) }
+
+    final action editions_DELETE is private {
+      # this will try to clear out the current working edition of changes
+      # essentially revert back to what we had when we closed the last edition
+      eval {
+        $ctx -> stash -> {project} -> source -> current_edition -> delete;
+      };
+  
+      if($@) { print STDERR "DELETE ERROR: $@\n"; }
+  
+      $self -> status_no_content($ctx);
+    }
+  }
 }
-
-###
-### Project-specific information/resources
-###
-
-sub pages :Chained('resource_base') :PathPart('page') :Args(0) :ActionClass('REST') { 
-  my($self, $c) = @_;
-
-  $c -> stash -> {collection} = OokOok::Collection::Page -> new(c => $c);
-}
-
-sub pages_GET { shift -> collection_GET(@_) }
-sub pages_POST { shift -> collection_POST(@_) }
-
-
-sub snippets :Chained('resource_base') :PathPart('snippet') :Args(0) :ActionClass('REST') {
-  my($self, $c) = @_;
-
-  $c -> stash -> {collection} = OokOok::Collection::Snippet -> new(c => $c);
-}
-
-sub snippets_GET { shift -> collection_GET(@_) }
-sub snippets_POST { shift -> collection_POST(@_) }
-
-
-sub editions :Chained('resource_base') :PathPart('edition') :Args(0) :ActionClass('REST') { 
-  my($self, $c) = @_;
-
-  $c -> stash -> {collection} = OokOok::Collection::Edition -> new(c => $c);
-}
-
-sub editions_GET { shift -> collection_GET(@_) }
-sub editions_POST { shift -> collection_POST(@_) }
-
-sub editions_DELETE {
-  my($self, $c) = @_;
-
-  # this will try to clear out the current working edition of changes
-  # essentially revert back to what we had when we closed the last edition
-  eval {
-    $c -> stash -> {project} -> source -> current_edition -> delete;
-  };
-
-  if($@) { print STDERR "DELETE ERROR: $@\n"; }
-
-  $self -> status_no_content($c);
-}
-
-=head1 AUTHOR
-
-James Smith,,,
-
-=head1 LICENSE
-
-This library is free software. You can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=cut
-
-__PACKAGE__->meta->make_immutable;
-
-1;

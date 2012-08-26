@@ -20,7 +20,7 @@ prop layout => (
 
 prop slug => (
   data_type => 'varchar',
-  is_nullable => 0,
+  is_nullable => 1,
   default_value => '',
   size => 255,
 );

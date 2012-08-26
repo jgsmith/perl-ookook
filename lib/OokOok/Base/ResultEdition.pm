@@ -12,6 +12,8 @@ before insert => sub {
 
 sub is_closed { defined $_[0] -> closed_on }
 
+# closing an edition indicates that the edition's associated data
+# cannot be modified - it's frozen, but not published (yet)
 sub close {
   my($self) = @_;
 
@@ -22,11 +24,38 @@ sub close {
     closed_on => undef
   });
 
+
   $self -> update({
     closed_on => DateTime -> now
   });
 
   return $next;
+}
+
+# a closed edition that has no succeeding closed edition that is published
+# may be published. The currently published edition will be marked as no longer
+# published
+sub publish {
+  my($self) = @_;
+
+  return unless $self -> is_closed;
+
+  # now check succeeding editions
+  return if 0 < $self -> source -> select( {
+    'me.closed_on' => { '!=' => undef, '>' => $self -> closed_on },
+    'me.published_for' => { '!=' => undef },
+  } ) -> count;
+
+  my $timecut = DateTime->now -> add(seconds => 1) -> iso8601;
+  my $current = $self -> source -> select( {
+    'me.published_for' => { '@>' => $timecut },
+  } );
+  $current -> update({
+    published_for => [ $current->published_for->[0], $timecut ],
+  });
+  $self -> update({
+    published_for => [ $timecut, ],
+  });
 }
 
 before delete => sub {

@@ -108,9 +108,9 @@ sub snippet {
   # date/dev constraints
   my $s = $self -> c -> model('DB::ThemeSnippetVersion') -> search({
     'me.name' => $name,
-    'theme_edition.theme_id' => $self -> source -> id,
+    'edition.theme_id' => $self -> source -> id,
   }, {
-     join => [qw/theme_edition/],
+     join => [qw/edition/],
      order_by => { -desc => 'me.theme_edition_id' },
   }) -> first;
 

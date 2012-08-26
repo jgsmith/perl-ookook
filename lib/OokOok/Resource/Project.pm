@@ -69,11 +69,7 @@ has_a board => 'OokOok::Resource::Board', (
 );
 
 has_a page => 'OokOok::Resource::Page', (
-  source => sub { 
-    my $sv = $_[0] -> source_version;
-    if($sv) { return $sv -> page; }
-    return 0;
-  },
+  source => sub { $_[0] -> source_version -> page },
   is => 'rw',
 );
 

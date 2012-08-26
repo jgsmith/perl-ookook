@@ -44,10 +44,20 @@
                 <li><a href="<% $c->uri_for("/admin/preferences") %>">
                   Logged in as <% $c->user->name %>
                 </a></li>
-                <li><a href="<% $c->uri_for("/admin/oauth/logout") %>">(Logout)</a></li>
+                <li><form class="form-inline" method="POST" 
+                      style="margin: 0px;"
+                      action="<% $c->uri_for("/admin/oauth/logout") %>">
+                      <button type="submit" class="btn">Logout</button>
+                    </form>
+                </li>
 %             } else
 %             {
-                <li><a href="<% $c->uri_for("/admin/oauth/twitter") %>">Login with Twitter</a></li>
+                <li><form class="form-inline" method="POST" 
+                      style="margin: 0px;"
+                      action="<% $c->uri_for("/admin/oauth/twitter") %>">
+                      <button type="submit" class="btn">Login with Twitter</button>
+                    </form>
+                </li>
 %             }
             </ul>
           </div>

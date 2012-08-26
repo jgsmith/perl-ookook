@@ -7,10 +7,10 @@ __PACKAGE__->config(
     schema_class => 'OokOok::Schema',
     
     connect_info => {
-        dsn => 'dbi:SQLite:ookook.db',
-        user => '',
-        password => '',
-        on_connect_do => q{PRAGMA foreign_keys = ON},
+        #dsn => 'dbi:SQLite:ookook.db',
+        #user => '',
+        #password => '',
+        #on_connect_do => q{PRAGMA foreign_keys = ON},
     }
 );
 

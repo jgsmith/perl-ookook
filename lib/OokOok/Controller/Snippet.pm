@@ -4,7 +4,7 @@ use Moose;
 use namespace::autoclean;
 
 use OokOok::Collection::Snippet;
-use OokOok::Resource::Snippet;
+#use OokOok::Resource::Snippet;
 
 BEGIN {
   extends 'OokOok::Base::REST';

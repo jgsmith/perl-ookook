@@ -16,6 +16,13 @@ sub forbidden   { shift -> throw( @_, status => 403 ) }
 sub not_found   { shift -> throw( @_, status => 404 ) }
 sub gone        { shift -> throw( @_, status => 410 ) }
 
+package OokOok::Exception::DELETE;
+
+use Moose;
+extends 'OokOok::Exception';
+use namespace::autoclean;
+
+
 package OokOok::Exception::PUT;
 
 use Moose;
@@ -41,6 +48,7 @@ package OokOok::Exception::POST;
 use Moose;
 extends 'OokOok::Exception::PUT';
 use namespace::autoclean;
+
 
 package OokOok::Exception::OAIPMH;
 

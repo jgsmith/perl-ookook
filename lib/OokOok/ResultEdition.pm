@@ -65,6 +65,10 @@ sub init_meta {
       data_type => 'datetime',
       is_nullable => 0,
     },
+    published_for => {
+      data_type => 'tsrange', # timestamp range without time zone -- all UTC
+      is_nullable => 1, # null indicates unpublished
+    },
     closed_on => {
       data_type => 'datetime',
       is_nullable => 1,
@@ -72,6 +76,18 @@ sub init_meta {
   );
 
   $package -> set_primary_key('id');
+
+  $package -> inflate_column(published_for => {
+    inflate => sub {
+      my $v = shift;
+      $v =~ m{^[\[\(](.*)\s*,\s*(.*)[\]\)]};
+      [ map { DateTime::Format::ISO8601 -> parse_datetime($_) } ($1, $2) ]; 
+    },
+    deflate => sub {
+      my $v = shift;
+      "[" . join(", ", map { ref($_) ? $_ -> iso8601 : $_ } @$v) . ")"
+    },
+  });
 
   $meta;
 }

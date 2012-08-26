@@ -1,255 +1,347 @@
-package OokOok::Controller::Admin::Project;
+use CatalystX::Declare;
 
-use Moose;
-use namespace::autoclean;
+controller OokOok::Controller::Admin::Project
+   extends OokOok::Base::Admin
+{
+  use DateTime;
 
-use DateTime;
+  use OokOok::Collection::Project;
+  use OokOok::Collection::Theme;
+  #use OokOok::Resource::Project;
+  use OokOok::Resource::Theme;
 
-use OokOok::Collection::Project;
-use OokOok::Collection::Theme;
-use OokOok::Resource::Project;
-use OokOok::Resource::Theme;
+  action base under '/' as 'admin/project';
 
-BEGIN {
-  extends 'OokOok::Base::Admin';
-}
+  under base {
 
-sub base :Chained('/') :PathPart('admin/project') :CaptureArgs(0) { }
-
-sub index :Chained('base') :PathPart('') :Args(0) {
-  my($self, $c) = @_;
-
-  $c -> stash -> {projects} = [
-    OokOok::Collection::Project -> new(c => $c) -> resources
-  ];
-  $c -> stash -> {template} = "/admin/top/projects";
-}
-
-sub project_new :Chained('base') :PathPart('new') :Args(0) {
-  my($self, $c) = @_;
-
-  if($c -> request -> method eq 'POST') {
-    # get and validate data
-    my $collection = OokOok::Collection::Project -> new(c => $c);
-    my $params = $c -> request -> params;
-    $params->{theme_date} = "".DateTime->now;
-    my $project = $self -> POST( $c, $collection, $params );
-    if($project) {
-      $c -> response -> redirect($c->uri_for("/admin/project/" . $project -> id));
+    action project_base (Str $uuid) as '' {
+      my $resource = OokOok::Collection::Project->new(c => $ctx) ->
+                     resource($uuid);
+      if(!$resource) {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+      $ctx -> stash -> {project} = $resource;
     }
+
   }
-  $c -> stash -> {themes} = [ grep { $_ -> source -> has_public_edition } OokOok::Collection::Theme -> new(c => $c) -> resources ];
-  $c -> stash -> {template} = "/admin/top/projects/new";
-}
 
-sub project_base :Chained('base') :PathPart('') :CaptureArgs(1) {
-  my($self, $c, $uuid) = @_;
+  under project_base {
 
-  my $resource = OokOok::Collection::Project->new(c => $c) ->
-                 resource($uuid);
-  if(!$resource) {
-    $c -> detach(qw/Controller::Root default/);
-  }
-  $c -> stash -> {resource} = $resource;
-  $c -> stash -> {project} = $resource;
-}
+    action project_page_base (Str $uuid) as 'page' {
+      my $page = OokOok::Collection::Page -> new(c => $ctx) -> resource($uuid);
+      if(!$page) {
+        my $project = $ctx -> stash -> {project};
+        return $ctx -> response -> redirect(
+          $ctx -> uri_for("/admin/project/" . $project->id . "/page")
+        );
+      }
 
-sub project_view :Chained('project_base') :PathPart('') :Args(0) {
-  my($self, $c) = @_;
-
-  my $uuid = $c -> stash -> {resource} -> id;
-  $c -> response -> redirect($c -> uri_for("/admin/project/$uuid/page"));
-}
-
-sub project_settings :Chained('project_base') :PathPart('settings') :Args(0) {
-  my($self, $c) = @_;
-
-  $c -> stash -> {template} = "/admin/project/settings/settings";
-}
-
-sub project_edit :Chained('project_base') :PathPart('settings/edit') :Args(0) {
-  my($self, $c) = @_;
-
-  my $project = $c -> stash -> {project};
-
-  $c -> stash -> {themes} = [ 
-    grep { $_ -> source -> has_public_edition } 
-         OokOok::Collection::Theme -> new(c => $c)
-                                   -> resources 
-  ];
-  if($c -> request -> method eq 'POST') {
-    my $info = $c -> request -> params;
-    if($c -> request -> params -> {update_theme_date}) {
-      $info -> {theme_date} = "".DateTime -> now;
+      print STDERR "Getting page for $uuid: ", $page -> id, "\n";
+      $ctx -> stash -> {page} = $page;
     }
-    my $res = $self -> PUT($c, $project, $info);
-    if($res) {
-      $c -> response -> redirect( $c -> uri_for( "/admin/project/" . $project -> id . "/settings" ) );
+
+    action project_snippet_base (Str $uuid) as 'snippet' {
+      my $snippet = OokOok::Collection::Snippet -> new(c => $ctx) -> resource($uuid);
+      if(!$snippet) {
+        my $project = $ctx -> stash -> {project};
+        return $ctx -> response -> redirect(
+          $ctx -> uri_for("/admin/project/" . $project->id . "/snippet")
+        );
+      }
+
+      $ctx -> stash -> {snippet} = $snippet;
     }
+
   }
-  else {
-    $c -> stash -> {form_data} = {
-      name => $project -> name,
-      description => $project -> description,
-      theme => $project -> theme -> id,
-    };
+
+  under base {
+
+    final action index as '' {
+      $ctx -> stash -> {projects} = [
+        OokOok::Collection::Project -> new(c => $ctx) -> resources
+      ];
+      $ctx -> stash -> {template} = "/admin/top/projects";
+    }
+
+    final action project_new as 'new' {
+      if($ctx -> request -> method eq 'POST') {
+        # get and validate data
+        my $collection = OokOok::Collection::Project -> new(c => $ctx);
+        my $params = $ctx -> request -> params;
+        $params->{theme_date} = DateTime->now -> iso8601;
+print STDERR "POSTing a project:", Data::Dumper -> Dump([$params]), "\n";
+        my $project = $self -> POST( $ctx, $collection, $params );
+        if($project) {
+          $ctx -> response -> redirect($ctx->uri_for("/admin/project/" . $project -> id));
+        }
+      }
+      $ctx -> stash -> {themes} = [ 
+        grep { $_ -> source -> has_public_edition } 
+             OokOok::Collection::Theme -> new(c => $ctx) -> resources 
+      ];
+      $ctx -> stash -> {template} = "/admin/top/projects/new";
+    }
+
   }
-  $c -> stash -> {template} = "/admin/project/settings/settings/edit";
-}
 
-sub project_editions :Chained('project_base') :PathPart('editions') :Args(0) {
-  my($self, $c) = @_;
-
-  $c -> stash -> {editions} = $c -> stash -> {project} -> editions;
-  $c -> stash -> {template} = "/admin/project/settings/editions";
-}
-
-sub project_editions_new :Chained('project_base') :PathPart('editions/new') :Args(0) {
-  my($self, $c) = @_;
-
-  if($c -> request -> method eq 'POST') {
-    my $project = $c -> stash -> {project};
-    my $edition_collection = OokOok::Collection::Edition -> new(c => $c);
-    $edition_collection -> _POST({});
-    $c -> response -> redirect(
-      $c -> uri_for("/admin/project/" . $project->id . "/editions")
-    );
-  }
-  $c -> stash -> {template} = "/admin/project/settings/editions/new";
-}
-
-sub project_snippets :Chained("project_base") :PathPart('snippet') :Args(0) {
-  my($self, $c) = @_;
-
-  $c -> stash -> {snippets} = $c -> stash -> {project} -> snippets;
-  $c -> stash -> {template} = "/admin/project/content/snippet";
-}
-
-sub project_snippet_new :Chained('project_base') :PathPart('snippet/new') :Args(0) {
-  my($self, $c) = @_;
-
-  my $project = $c -> stash -> {project};
-
-  if($c -> request -> method eq 'POST') {
-    my $collection = OokOok::Collection::Snippet -> new(
-      c => $c
-    );
-    my $snippet;
-    eval {
-      $snippet = $collection -> _POST(
-        $c -> request -> params
+  under project_base {
+    final action project_view as '' {
+      my $uuid = $ctx -> stash -> {project} -> id;
+      $ctx -> response -> redirect(
+        $ctx -> uri_for("/admin/project/$uuid/page")
       );
-    };
-    if($@) {
-      $c -> stash -> {error_msg} = "Unable to create snippet ($@).";
     }
-    else {
-      $c -> response -> redirect($c -> uri_for("/admin/project/" . $project->id . "/snippet"));
+
+    final action project_settings as 'settings' {
+      $ctx -> stash -> {template} = "/admin/project/settings/settings";
     }
-  }
-  $c -> stash -> {template} = "/admin/project/content/snippet/new";
-}
 
-sub project_pages :Chained("project_base") :PathPart('page') :Args(0) {
-  my($self, $c) = @_;
+    final action project_edit as 'settings/edit' {
+      my $project = $ctx -> stash -> {project};
 
-  $c -> stash -> {template} = "/admin/project/content/page";
-}
-  
-sub project_page_new :Chained('project_base') :PathPart('page/new') :Args(0) {
-  my($self, $c) = @_;
-
-  my $project = $c -> stash -> {project};
-
-  if($c -> request -> method eq 'POST') {
-    my $collection = OokOok::Collection::Page -> new(
-      c => $c
-    );
-    my $page = $self -> POST($c, $collection, $c -> request -> params);
-    if($page) {
-      $c -> response -> redirect($c -> uri_for("/admin/project/" . $project->id . "/page"));
-    }
-  }
-  $c -> stash -> {theme} = $project -> theme;
-  $c -> stash -> {theme_layouts} = [ grep { defined($_ -> source_version) } OokOok::Collection::ThemeLayout -> new(c => $c) -> resources ];
-  $c -> stash -> {template} = "/admin/project/content/page/new";
-}
-
-sub project_page_base :Chained('project_base') :PathPart('page') :CaptureArgs(1) {
-  my($self, $c, $uuid) = @_;
-
-  my $project = $c -> stash -> {project};
-  my $page = $project -> page($uuid);
-  if(!$page) {
-    return $c -> response -> redirect($c -> uri_for("/admin/project/" . $project->id . "/page"));
-  }
-
-  $c -> stash -> {page} = $page;
-}
-
-sub project_page_edit :Chained('project_page_base') :PathPart('edit') :Args(0) {
-  my($self, $c) = @_;
-
-  my $page = $c -> stash -> {page};
-  if($c -> request -> method eq 'POST') {
-    my $params = $c -> request -> params;
-    my $page_info = {
-      title => $params -> {title},
-      slug  => $params -> {slug},
-      layout => $params -> {theme_layout},
-    };
-
-    my $res = $self -> PUT($c, $page, $page_info);
-      # now update page parts
-      
-    if($res) {
-      my %page_part_names;
-      for my $pp (@{$params->{part} || []}) {
-        next unless defined $pp;
-        next if $pp->{name} =~ /^\s*$/;
-        $page_part_names{$pp->{name}} = 1;
-        my $ppr = $page -> page_part($pp->{name});
-        if(!$ppr) { # we can create it
-          my $pp_source = $page -> source_version -> create_related('page_parts', { name => $pp->{name} });
-          $pp_source -> insert;
-          $ppr = OokOok::Resource::PagePart->new(
-            c => $c,
-            date => $page -> date,
-            source => $pp_source
+      $ctx -> stash -> {themes} = [ 
+        grep { $_ -> source -> has_public_edition } 
+             OokOok::Collection::Theme -> new(c => $ctx)
+                                       -> resources 
+      ];
+      if($ctx -> request -> method eq 'POST') {
+        my $info = $ctx -> request -> params;
+        if($ctx -> request -> params -> {update_theme_date}) {
+          $info -> {theme_date} = DateTime -> now -> iso8601;
+        }
+        my $res = $self -> PUT($ctx, $project, $info);
+        if($res) {
+          $ctx -> response -> redirect( 
+            $ctx -> uri_for( "/admin/project/" . $project -> id . "/settings" )
           );
         }
-        $self -> PUT($c, $ppr, {
-          content => $pp->{content},
-          filter => $pp->{filter},
-        });
       }
-      for my $pp (@{$page -> page_parts || []}) {
-        if(!$page_part_names{$pp->name}) {
-          $pp -> _DELETE;
+      else {
+        $ctx -> stash -> {form_data} = {
+          name => $project -> name,
+          description => $project -> description,
+          theme => $project -> theme -> id,
+        };
+      }
+      $ctx -> stash -> {template} = "/admin/project/settings/settings/edit";
+    }
+
+    final action project_editions as 'editions' {
+      $ctx -> stash -> {editions} = $ctx -> stash -> {project} -> editions;
+      $ctx -> stash -> {template} = "/admin/project/settings/editions";
+    }
+
+    final action project_editions_new as 'editions/new' {
+      if($ctx -> request -> method eq 'POST') {
+        my $project = $ctx -> stash -> {project};
+        my $edition_collection = OokOok::Collection::Edition -> new(c => $ctx);
+        $edition_collection -> _POST({});
+        $ctx -> response -> redirect(
+          $ctx -> uri_for("/admin/project/" . $project->id . "/editions")
+        );
+      }
+      $ctx -> stash -> {template} = "/admin/project/settings/editions/new";
+    }
+
+    final action project_snippets as 'snippet' {
+      $ctx -> stash -> {snippets} = $ctx -> stash -> {project} -> snippets;
+      $ctx -> stash -> {template} = "/admin/project/content/snippet";
+    }
+
+    final action project_snippet_new as 'snippet/new' {
+      my $project = $ctx -> stash -> {project};
+
+      if($ctx -> request -> method eq 'POST') {
+        my $collection = OokOok::Collection::Snippet -> new(
+          c => $ctx
+        );
+        my $snippet;
+        eval {
+          $snippet = $collection -> _POST(
+            $ctx -> request -> params
+          );
+        };
+        if($@) {
+          $ctx -> stash -> {error_msg} = "Unable to create snippet ($@).";
+        }
+        else {
+          $ctx -> response -> redirect(
+            $ctx -> uri_for("/admin/project/" . $project->id . "/snippet")
+          );
         }
       }
+      $ctx -> stash -> {template} = "/admin/project/content/snippet/new";
+    }
 
-      my $project = $c -> stash -> {project};
-      $c -> response -> redirect($c -> uri_for("/admin/project/" . $project->id . "/page"));
+    final action project_pages as 'page' {
+      $ctx -> stash -> {template} = "/admin/project/content/page";
+    }
+  
+    final action project_page_new as 'page/new' {
+      my $project = $ctx -> stash -> {project};
+
+      if($ctx -> request -> method eq 'POST') {
+        my $collection = OokOok::Collection::Page -> new(
+          c => $ctx
+        );
+        my $page = $self -> POST($ctx, $collection, $ctx -> request -> params);
+        if($page) {
+          my %page_part_names;
+          for my $pp (@{$ctx -> request -> params -> {part} || []}) {
+            next unless defined $pp;
+            next if $pp->{name} =~ /^\s*$/;
+            $page_part_names{$pp->{name}} = 1;
+            my $ppr = $page -> page_part($pp->{name});
+            if(!$ppr) { # we can create it
+              my $pp_source = $page -> source_version -> create_related('page_parts', { name => $pp->{name} });
+              $pp_source -> insert;
+              $ppr = OokOok::Resource::PagePart->new(
+                c => $ctx,
+                date => $page -> date,
+                source => $pp_source
+              );
+            }
+            $self -> PUT($ctx, $ppr, {
+              content => $pp->{content},
+              filter => $pp->{filter},
+            });
+          }
+          $ctx -> response -> redirect($ctx -> uri_for("/admin/project/" . $project->id . "/page"));
+        }
+      }
+      else {
+        my $form_data = {
+          part => [{
+            name => 'body',
+            content => '',
+            filter => undef,
+          }],
+        };
+        $ctx -> stash -> {form_data} = $form_data;
+      }
+      $ctx -> stash -> {theme} = $project -> theme;
+      $ctx -> stash -> {theme_layouts} = [ grep { defined($_ -> source_version) } OokOok::Collection::ThemeLayout -> new(c => $ctx) -> resources ];
+      $ctx -> stash -> {template} = "/admin/project/content/page/new";
+    }
+
+  }
+
+  under project_snippet_base {
+    final action project_snippet_edit as 'edit' {
+      my $snippet = $ctx -> stash -> {snippet};
+      if($ctx -> request -> method eq 'POST') {
+        my $res = $self -> PUT($ctx, $snippet, $ctx -> request -> params);
+        if($res) {
+          my $project = $ctx -> stash -> {project};
+          $ctx -> response -> redirect($ctx -> uri_for("/admin/project/" . $project->id . "/snippet"));
+        }
+      }
+      else {
+        $ctx -> stash -> {form_data} = {
+          name => $snippet -> name,
+          content => $snippet -> content,
+          filter => $snippet -> filter,
+          status => $snippet -> status,
+        };
+      }
+      $ctx -> stash -> {template} = "/admin/project/content/snippet/edit";
+    }
+
+    final action project_snippet_discard as 'discard' {
+      if($ctx -> request -> method eq 'POST') {
+        my $snippet = $ctx -> stash -> {snippet};
+        my $res = $self -> DELETE($ctx, $snippet);
+        if($res) {
+          my $project = $ctx -> stash -> {project};
+          $ctx -> response -> redirect($ctx -> uri_for("/admin/project/" . $project->id . "/snippet"));
+        }
+      }
+      $ctx -> stash -> {template} = "/admin/project/content/snippet/discard";
     }
   }
-  else {
-    my $form_data = {
-      title => $page -> title,
-      slug => $page -> slug,
-      theme_layout => $page -> layout,
-      part => [],
-    };
-    for my $part (@{$page -> page_parts||[]}) {
-      push @{$form_data->{part}}, {
-        name => $part -> name,
-        content => $part -> content,
-        filter => $part -> filter,
-      };
+          
+
+  under project_page_base {
+    final action project_page_child as 'child' {
+      $ctx -> stash -> {parent_page} = $ctx -> stash -> {page};
+      $self -> project_page_new($ctx);
     }
-    $c -> stash -> {form_data} = $form_data;
+
+    final action project_page_edit as 'edit' {
+      my $page = $ctx -> stash -> {page};
+      if($ctx -> request -> method eq 'POST') {
+        my $params = $ctx -> request -> params;
+        my $page_info = {
+          title => $params -> {title},
+          slug  => $params -> {slug},
+          layout => $params -> {theme_layout},
+          status => $params -> {status},
+        };
+    
+        my $res = $self -> PUT($ctx, $page, $page_info);
+          # now update page parts
+          
+        if($res) {
+          my %page_part_names;
+          for my $pp (@{$params->{part} || []}) {
+            next unless defined $pp;
+            next if $pp->{name} =~ /^\s*$/;
+            $page_part_names{$pp->{name}} = 1;
+            my $ppr = $page -> page_part($pp->{name});
+            if(!$ppr) { # we can create it
+              my $pp_source = $page -> source_version -> create_related('page_parts', { name => $pp->{name} });
+              $pp_source -> insert;
+              $ppr = OokOok::Resource::PagePart->new(
+                c => $ctx,
+                date => $page -> date,
+                source => $pp_source
+              );
+            }
+            $self -> PUT($ctx, $ppr, {
+              content => $pp->{content},
+              filter => $pp->{filter},
+            });
+          }
+          for my $pp (@{$page -> page_parts || []}) {
+            if(!$page_part_names{$pp->name}) {
+              $pp -> _DELETE;
+            }
+          }
+
+          my $project = $ctx -> stash -> {project};
+          $ctx -> response -> redirect($ctx -> uri_for("/admin/project/" . $project->id . "/page"));
+        }
+      }
+      else {
+        my $form_data = {
+          title => $page -> title,
+          slug => $page -> slug,
+          theme_layout => $page -> layout,
+          part => [],
+          status => $page -> status,
+        };
+        for my $part (@{$page -> page_parts||[]}) {
+          push @{$form_data->{part}}, {
+            name => $part -> name,
+            content => $part -> content,
+            filter => $part -> filter,
+          };
+        }
+        $ctx -> stash -> {form_data} = $form_data;
+      }
+      $ctx -> stash -> {template} = "/admin/project/content/page/edit";
+    }
+
+    final action project_page_discard as 'discard' {
+      if($ctx -> request -> method eq 'POST') {
+        my $page = $ctx -> stash -> {page};
+        my $res = $self -> DELETE($ctx, $page);
+        if($res) {
+          my $project = $ctx -> stash -> {project};
+          $ctx -> response -> redirect($ctx -> uri_for("/admin/project/" . $project->id . "/page"));
+        }
+      }
+      $ctx -> stash -> {template} = "/admin/project/content/page/discard";
+    }
   }
-  $c -> stash -> {template} = "/admin/project/content/page/edit";
 }
-
-1;

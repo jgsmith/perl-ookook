@@ -3,6 +3,8 @@ use OokOok::Resource;
 
 use namespace::autoclean;
 
+use Moose::Util::TypeConstraints qw(enum);
+
 has '+source' => (
   isa => 'OokOok::Model::DB::Snippet',
 );
@@ -18,6 +20,19 @@ prop content => (
   is => 'rw',
   type => 'Str',
   source => sub { $_[0] -> source_version -> content },
+);
+
+prop filter => (
+  type => enum([qw/HTML Markdown BBCode/]), #'Str',
+  values => [qw/HTML Markdown BBCode/],
+  default => 'HTML',
+  source => sub { $_[0] -> source_version -> filter },
+);
+
+prop status => (
+  is => 'rw',
+  type => 'Int',
+  source => sub { $_[0] -> source_version -> status },
 );
 
 prop id => (
@@ -38,20 +53,34 @@ sub can_PUT {
   $self -> project -> can_PUT;
 }
 
+sub can_DELETE {
+  my($self) = @_;
+
+  $self -> project -> can_PUT;
+}
+
 sub render {
   my($self, $context) = @_;
 
-  my $proc = OokOok::Template::Processor -> new(
-    c => $self -> c,
-  );
+  # first, we filter the content
+  my $content = $self -> content;
+  my $filter = $self -> filter;
 
-  my $doc = $proc -> parse( $self -> content );
+  my $formatter = eval {
+    "OokOok::Formatter::$filter" -> new
+  };
+  if($formatter && !$@) {
+    $content = $formatter -> format($content);
+  }
+
+  return $content;
+
   my $name = $self -> name;
   $name =~ s{[^-A-Za-z0-9_]+}{-}g;
   $name =~ s{-+}{-}g;
   return "<div class='snippet snippet-$name'>" .
-    $doc -> render($context) .
-    "</div>";
+           $content .
+         "</div>";
 }
 
 1;

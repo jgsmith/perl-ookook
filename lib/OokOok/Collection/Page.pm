@@ -17,4 +17,11 @@ sub constrain_collection {
   $q;
 }
 
+sub can_POST {
+  my($self) = @_;
+
+  $self -> c -> stash -> {project} &&
+  $self -> c -> stash -> {project} -> can_PUT;
+}
+
 1;

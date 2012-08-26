@@ -26,8 +26,8 @@ $.snippets => sub { [] }
 %         $.IndexItemActions {{
            <% $.IndexItemAction(
                 $snippet->source_version->edition->is_closed,
+                "/admin/project/".$.project_id."/snippet/$snippet_id/discard", 
                 "minus-sign", 
-                "", 
                 "Discard Changes"
               ) %>
 %         }}

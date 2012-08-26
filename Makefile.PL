@@ -18,6 +18,7 @@ requires 'Catalyst::Controller::HTML::FormFu';
 
 requires 'Catalyst::Model::DBIC::Schema';
 requires 'Catalyst::Model::File';
+requires 'Catalyst::Model::Adaptor';
 
 requires 'Catalyst::Plugin::ConfigLoader';
 requires 'Catalyst::Plugin::Params::Nested';
@@ -34,6 +35,7 @@ requires 'Catalyst::View::TT';
 requires 'Catalyst::View::Thumbnail';
 
 requires 'CatalystX::RoleApplicator';
+requires 'CatalystX::Declare';
 
 requires 'Catalyst::Authentication::Store::DBIx::Class';
 
@@ -52,6 +54,7 @@ requires 'Data::Verifier';
 requires 'DateTime';
 requires 'DBIx::Class';
 requires 'DBIx::Class::Schema::Loader';
+requires 'ElasticSearch';
 requires 'Exception::Class';
 requires 'HTML::FormFu';
 requires 'HTML::FormFu::Model::DBIC';
