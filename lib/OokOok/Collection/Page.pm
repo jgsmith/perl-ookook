@@ -4,6 +4,7 @@ use OokOok::Collection;
 use namespace::autoclean;
 
 use OokOok::Resource::Page;
+use OokOok::Collection::PagePart;
 
 sub constrain_collection {
   my($self, $q, $deep) = @_;

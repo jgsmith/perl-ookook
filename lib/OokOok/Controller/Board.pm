@@ -1,25 +1,17 @@
-package OokOok::Controller::Board;
+use CatalystX::Declare;
 
-use Moose;
-use namespace::autoclean;
+controller OokOok::Controller::Board
+   extends OokOok::Base::REST
+{
 
-use OokOok::Collection::Board;
-use OokOok::Resource::Board;
+  $CLASS -> config(
+    map => {
+    },
+    default => 'text/html',
+  );
 
-BEGIN {
-  extends 'OokOok::Base::REST';
+  under '/' {
+    action base as 'board';
+  }
+
 }
-
-__PACKAGE__ -> config(
-  map => {
-  },
-  default => 'text/html',
-);
-
-sub base :Chained('/') :PathPart('board') :CaptureArgs(0) {
-  my($self, $c) = @_;
-
-  $c -> stash -> {collection} = OokOok::Collection::Board -> new(c => $c);
-}
-
-1;

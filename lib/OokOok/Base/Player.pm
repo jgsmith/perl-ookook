@@ -1,24 +1,21 @@
-package OokOok::Base::Player;
+use CatalystX::Declare;
 
-use Moose;
-BEGIN {
-  extends 'Catalyst::Controller::REST';
-}
-use namespace::autoclean;
+controller OokOok::Base::Player
+   extends Catalyst::Controller::REST
+{
 
-sub play_base :Chained('base') :PathPart('') :CaptureArgs(1) {
-  my($self, $c, $uuid) = @_;
+  under base {
+    action play_base ($uuid) as '' {
+      my $resource = $ctx -> stash -> {collection} -> resource($uuid);
 
-  my $resource = $c -> stash -> {collection} -> resource($uuid);
+      if(!$resource) {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
 
-  if(!$resource) {
-    $c -> detach(qw/Controller::Root default/);
+      $ctx -> stash -> {resource} = $resource;
+      $ctx -> stash -> {$resource -> resource_name} = $resource;
+    }
   }
 
-  $c -> stash -> {resource} = $resource;
-  $c -> stash -> {$resource -> resource_name} = $resource;
+  final action end (@args) isa RenderView;
 }
-
-sub end : ActionClass('RenderView') {}
-
-1;

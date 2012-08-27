@@ -1,6 +1,7 @@
 package OokOok::Resource::User;
 
 use OokOok::Resource;
+use OokOok::Collection::User;
 
 use namespace::autoclean;
 

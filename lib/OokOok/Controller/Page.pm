@@ -1,90 +1,71 @@
-package OokOok::Controller::Page;
+use CatalystX::Declare;
 
-use Moose;
-use namespace::autoclean;
+controller OokOok::Controller::Page
+   extends OokOok::Base::REST
+{
 
-use OokOok::Collection::Page;
-use OokOok::Collection::PagePart;
-use OokOok::Resource::Page;
-use OokOok::Resource::PagePart;
+  $CLASS -> config(
+    map => {
+    },
+    default => 'text/html',
+  );
 
-BEGIN {
-  extends 'OokOok::Base::REST';
-}
-
-__PACKAGE__ -> config(
-  map => {
-  },
-  default => 'text/html',
-);
-
-sub base :Chained('/') :PathPart('page') :CaptureArgs(0) {
-  my($self, $c) = @_;
-
-  if($c -> stash -> {development} || $c -> stash -> {date}) {
-    $c -> detach(qw/Controller::Root default/);
+  under '/' {
+    action base as 'page';
   }
 
-  $c -> stash -> {development} = 1; # for use by resources/collections
+  under resource_base {
+    final action page_parts as "page-part" isa REST;
 
-  $c -> stash -> {collection} = OokOok::Collection::Page -> new(c => $c);
-}
-
-sub page_parts :Chained('resource_base') :PathPart('page-part') :Args(0) :ActionClass('REST') { }
-
-sub page_parts_GET {
-  my($self, $c) = @_;
-
-  my $data = $c -> stash -> {page} -> _GET(1);
-  $self -> status_ok($c,
-    entity => {
-      _embedded => $data -> {_embedded} -> {page_parts},
-      _links => {
-        self => $data -> {_links} -> {page_parts},
-      },
-    }
-  );
-}
-
-sub page_part :Chained('resource_base') :PathPart('page-part') :Args(1) :ActionClass('REST') {
-  my($self, $c, $part_name) = @_;
-
-  my $page = $c -> stash -> {page} -> source -> current_version;
-  my $page_part = $page -> page_parts -> search({
-    name => $part_name
-  }) -> first;
-
-  if(!$page_part) {
-    if($c -> request -> method eq 'POST') { # creating
-      $page_part = $c -> model("DB::PagePart") -> new({
-        page_version_id => $page -> id,
+    action page_part_base  (Str $part_name) as "page-part" {
+      my $page = $ctx -> stash -> {page} -> source -> current_version;
+      my $page_part = $page -> page_parts -> search({
         name => $part_name
-      });
-    }
-    else { # doesn't exist
-      $self -> status_not_found($c,
-        message => "Resource not found."
-      );
-      $c -> detach;
+      }) -> first;
+
+      if(!$page_part) {
+        if($ctx -> request -> method eq 'POST') { # creating
+          $page_part = $ctx -> model("DB::PagePart") -> new({
+            page_version_id => $page -> id,
+            name => $part_name
+          });
+        }
+        else { # doesn't exist
+          $self -> status_not_found($ctx,
+            message => "Resource not found."
+          );
+          $ctx -> detach;
+        }
+      }
+      $ctx -> stash -> {resource} = OokOok::Resource::PagePart->new(c => $ctx, source => $page_part);
     }
   }
-  $c -> stash -> {resource} = OokOok::Resource::PagePart->new(c => $c, source => $page_part);
+
+  under page_part_base {
+    final action page_part as '' isa REST;
+  }
+
+  method page_parts_GET ($ctx) {
+    my $data = $ctx -> stash -> {page} -> _GET(1);
+    $self -> status_ok($ctx,
+      entity => {
+        _embedded => $data -> {_embedded} -> {page_parts},
+        _links => {
+          self => $data -> {_links} -> {page_parts},
+        },
+      }
+    );
+  }
+
+  method page_part_PUT ($ctx) { $self -> resource_PUT($ctx); }
+  method page_part_GET ($ctx) { $self -> resource_GET($ctx); }
+  method page_part_DELETE ($ctx) { $self -> resource_DELETE($ctx); }
+
+  method page_part_POST ($ctx) {
+    my $resource = $ctx -> stash -> {resource} -> _PUT($ctx -> req -> data);
+    $self -> status_created($ctx,
+      location => $resource -> link,
+      entity => $resource -> _GET(1)
+    );
+  }
 }
-
-sub page_part_PUT { shift -> resource_PUT(@_) }
-sub page_part_GET { shift -> resource_GET(@_) }
-sub page_part_DELETE { shift -> resource_DELETE(@_) }
-
-sub page_part_POST {
-  my($self, $c) = @_;
-
-  my $resource = $c -> stash -> {resource} -> _PUT($c -> req -> data);
-  $self -> status_created($c,
-    location => $resource -> link,
-    entity => $resource -> _GET(1)
-  );
-}
-
-1;
-
-__END__

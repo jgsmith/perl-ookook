@@ -1,109 +1,110 @@
-package OokOok::Base::REST;
+use CatalystX::Declare;
 
-use Moose;
-use namespace::autoclean;
+controller OokOok::Base::REST
+   extends Catalyst::Controller::REST
+{
 
-BEGIN {
-  extends 'Catalyst::Controller::REST';
-}
+  use Module::Load ();
 
-sub do_OPTIONS {
-  my($self, $c, %headers) = @_;
-  $c -> response -> status(200);
-  $c -> response -> headers -> header(%headers);
-  $c -> response -> body('');
-  $c -> response -> content_length(0);
-  $c -> response -> content_type("text/plain");
-  $c -> detach();
-}
-
-sub collection :Chained('base') :PathPart('') :Args(0) :ActionClass('REST') { 
-}
-
-sub collection_GET {
-  my($self, $c) = @_;
-
-  $self -> status_ok($c,
-    entity => $c -> stash -> {collection} -> _GET(1)
-  );
-}
-
-sub collection_POST {
-  my($self, $c) = @_;
-
-  my $manifest = $c -> stash -> {collection} -> _POST($c -> req -> data);
-  $self -> status_created($c,
-    location => $manifest->link,
-    entity => $manifest -> _GET(1)
-  );
-}
-
-sub collection_OPTIONS {
-  my($self, $c) = @_;
-
-  $self -> do_OPTIONS($c,
-    Allow => [qw/GET OPTIONS POST/],
-    Accept => [qw{application/json}],
-  );
-}
-
-sub resource_base :Chained('base') :PathPart('') :CaptureArgs(1) {
-  my($self, $c, $id) = @_;
-
-  my $resource = $c -> stash -> {collection} -> resource($id);
-  if(!$resource) {
-    $self -> status_not_found($c,
-      message => "Resource not found."
-    );
-    $c -> detach;
+  method do_OPTIONS ($ctx, %headers) {
+    $ctx -> response -> status(200);
+    $ctx -> response -> headers -> header(%headers);
+    $ctx -> response -> body('');
+    $ctx -> response -> content_length(0);
+    $ctx -> response -> content_type("text/plain");
+    $ctx -> detach();
   }
 
-  $c -> stash -> {resource} = $resource;
-  my $rnom = $resource -> resource_name;
-  $c -> stash -> {$rnom} = $resource;
-}
+  # namespace should be set in the inheriting controller
+  action base_config as '' under base {
+    if($ctx -> stash -> {development} || $ctx -> stash -> {date}) {
+      $ctx -> detach(qw/Controller::Root default/);
+    }
 
-sub resource :Chained('resource_base') :PathPart('') :Args(0) :ActionClass('REST') { }
+    $ctx -> stash -> {development} = 1;
+    my $collection_class = $self -> config -> {'collection_class'};
+    if(!$collection_class) {
+      $collection_class = ref $self || $self;
+      $collection_class =~ s{::Controller::(.*::)?}{::Collection::};
+    }
 
-sub resource_GET {
-  my($self, $c) = @_;
+    Module::Load::load($collection_class);
 
-  $self -> status_ok($c,
-    entity => $c -> stash -> {resource} -> _GET(1)
-  );
-}
-
-sub resource_PUT {
-  my($self, $c) = @_;
-
-  use Data::Dumper ();
-  my $resource = $c -> stash -> {resource} -> _PUT($c -> req -> data);
-  $self -> status_ok($c,
-    entity => $resource -> _GET(1)
-  );
-}
-
-sub resource_DELETE {
-  my($self, $c) = @_;
-
-  if($c -> stash -> {resource} -> _DELETE) {
-    $self -> status_no_content($c);
+    $ctx -> stash -> {collection} = $collection_class -> new(c => $ctx);
   }
-  else {
-    $self -> status_forbidden($c,
-      message => "Unable to delete resource."
+
+  under base_config {
+    final action collection as '' isa REST;
+
+    action resource_base ($id) as '' {
+      my $resource = $ctx -> stash -> {collection} -> resource($id);
+      if(!$resource) {
+        $self -> status_not_found($ctx,
+          message => "Resource not found."
+        );
+        $ctx -> detach;
+      }
+    
+      $ctx -> stash -> {resource} = $resource;
+      my $rnom = $resource -> resource_name;
+      $ctx -> stash -> {$rnom} = $resource;
+    }
+  }
+
+  under resource_base {
+    final action resource as '' isa REST;
+  }
+
+  method collection_GET ($ctx) {
+    $self -> status_ok($ctx,
+      entity => $ctx -> stash -> {collection} -> _GET(1)
     );
   }
+
+  method collection_POST ($ctx) {
+    my $manifest = $ctx -> stash -> {collection} -> _POST($ctx -> req -> data);
+    $self -> status_created($ctx,
+      location => $manifest->link,
+      entity => $manifest -> _GET(1)
+    );
+  }
+
+  method collection_OPTIONS ($ctx) {
+    $self -> do_OPTIONS($ctx,
+      Allow => [qw/GET OPTIONS POST/],
+      Accept => [qw{application/json}],
+    );
+  }
+
+  method resource_GET ($ctx) {
+    $self -> status_ok($ctx,
+      entity => $ctx -> stash -> {resource} -> _GET(1)
+    );
+  }
+
+  method resource_PUT ($ctx) {
+    use Data::Dumper ();
+    my $resource = $ctx -> stash -> {resource} -> _PUT($ctx -> req -> data);
+    $self -> status_ok($ctx,
+      entity => $resource -> _GET(1)
+    );
+  }
+
+  method resource_DELETE ($ctx) {
+    if($ctx -> stash -> {resource} -> _DELETE) {
+      $self -> status_no_content($ctx);
+    }
+    else {
+      $self -> status_forbidden($ctx,
+        message => "Unable to delete resource."
+      );
+    }
+  }
+
+  method resource_OPTIONS ($ctx) {
+    $self -> do_OPTIONS($ctx,
+      Allow => [qw/GET OPTIONS PUT DELETE/],
+      Accept => [qw{application/json}],
+    );
+  }
 }
-
-sub resource_OPTIONS {
-  my($self, $c) = @_;
-
-  $self -> do_OPTIONS($c,
-    Allow => [qw/GET OPTIONS PUT DELETE/],
-    Accept => [qw{application/json}],
-  );
-}
-
-
-1;

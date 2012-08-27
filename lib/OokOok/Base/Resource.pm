@@ -169,12 +169,14 @@ sub GET {
     $json -> {_links} -> {$key} = $self -> link_for($key);
     if($hm && @{$hm}) {
       for my $i (@{$hm}) {
-        my $info = $i -> GET;
         if($deep) {
+          my $info = $i -> GET;
           push @{$json -> {_embedded}->{$key}}, $info;
         }
         else {
-          push @{$json -> {_embedded}->{$key}}, +{ _links => $info->{_links}};
+          push @{$json -> {_embedded}->{$key}}, +{ _links => {
+            self => $i -> link
+          }};
         }
       }
     }

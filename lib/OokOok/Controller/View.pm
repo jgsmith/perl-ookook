@@ -21,23 +21,22 @@ controller OokOok::Controller::View
 
   under play_base {
     final action play (@path) as '' isa REST {
-      #my @path = @{$ctx -> request -> arguments};
-
       my $date = $ctx -> stash -> {date};
 
       # now we walk the sitemap to find the right page
       my $page = $ctx -> stash -> {project} -> page;
       my($slug, $last_page);
 
-      #$last_page = $page;
       while($page && @path) {
         $slug = shift @path;
         $last_page = $page;
         $page = $page -> get_child_page($slug);
-        #print STDERR " [$slug] => ", ($page ? $page->id : ''), "\n";
-        if(!$page) { unshift @path, $slug; $page = $last_page; }
+        if(!$page) { 
+          unshift @path, $slug; 
+          $page = $last_page; 
+          last;
+        }
       }
-      #$page = $last_page;
 
       # we expect as many entries in the stashed path as are in the @path
       # for now, we shouldn't have anything left in @path -- we don't have
@@ -48,28 +47,26 @@ controller OokOok::Controller::View
         $ctx -> detach;
       }
 
-      #print STDERR "Rendering page for ", $page -> id, "\n";
-
       $ctx -> stash -> {page} = $page;
     }
+  }
 
-    final action play_GET (@path) is private {
-      my $context = OokOok::Template::Context -> new(
-        c => $ctx
-      );
+  method play_GET ($ctx, @path) {
+    my $context = OokOok::Template::Context -> new(
+      c => $ctx
+    );
 
-      my $page = $ctx -> stash -> {page};
-      $context -> set_resource(page => $page);
-      $context -> set_resource(project => $ctx -> stash -> {project});
+    my $page = $ctx -> stash -> {page};
+    $context -> set_resource(page => $page);
+    $context -> set_resource(project => $ctx -> stash -> {project});
 
-      $ctx -> stash -> {rendering} = $page -> render($context);
-      my $project_uuid = $page -> project -> source -> uuid;
-      $ctx -> stash -> {stylesheets} = [ map {
-        $ctx -> uri_for( "/s/$project_uuid/style/$_" )
-      } $page -> stylesheets ];
+    $ctx -> stash -> {rendering} = $page -> render($context);
+    my $project_uuid = $page -> project -> source -> uuid;
+    $ctx -> stash -> {stylesheets} = [ map {
+      $ctx -> uri_for( "/s/$project_uuid/style/$_" )
+    } $page -> stylesheets ];
 
-      $ctx -> stash -> {template} = 'view/play.tt2';
-      $ctx -> forward( $ctx -> view('HTML') );
-    }
+    $ctx -> stash -> {template} = 'view/play.tt2';
+    $ctx -> forward( $ctx -> view('HTML') );
   }
 }

@@ -1,19 +1,14 @@
-package OokOok::Collection::Board;
+package OokOok::Collection::User;
 
 use OokOok::Collection;
 use namespace::autoclean;
-
-use OokOok::Collection::BoardRank;
-use OokOok::Collection::BoardMember;
 
 sub constrain_collection {
   my($self, $q, $deep) = @_;
 
   if($self -> c -> user) {
     $q = $q -> search({
-      'board_members.user_id' => $self -> c -> user -> id
-    }, {
-      join => ['board_members']
+      'me.id' => $self -> c -> user -> id
     });
   }
   else {
@@ -26,3 +21,4 @@ sub constrain_collection {
 }
 
 1;
+

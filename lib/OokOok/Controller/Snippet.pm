@@ -1,34 +1,16 @@
-package OokOok::Controller::Snippet;
+use CatalystX::Declare;
 
-use Moose;
-use namespace::autoclean;
+controller OokOok::Controller::Snippet
+   extends OokOok::Base::REST
+{
 
-use OokOok::Collection::Snippet;
-#use OokOok::Resource::Snippet;
+  $CLASS -> config(
+    map => {
+    },
+    default => 'text/html',
+  );
 
-BEGIN {
-  extends 'OokOok::Base::REST';
-}
-
-__PACKAGE__ -> config(
-  map => {
-  },
-  default => 'text/html',
-);
-
-sub base :Chained('/') :PathPart('snippet') :CaptureArgs(0) {
-  my($self, $c) = @_;
-
-  if($c -> stash -> {development} || $c -> stash -> {date}) {
-    $c -> detach(qw/Controller::Root default/);
+  under '/' {
+    action base as 'snippet';
   }
-
-  $c -> stash -> {development} = 1; # for use by resources/collections
-
-  $c -> stash -> {collection} = OokOok::Collection::Snippet -> new(c => $c);
 }
-
-1;
-
-__END__
-

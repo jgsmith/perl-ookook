@@ -47,12 +47,14 @@ sub GET {
 
   return {
     _links => {
-      $self -> link
+      self => $self -> link
     },
     _embedded => [
       map {
         OokOok::Resource::Edition->new(c => $self -> c, source => $_) -> GET
-     } grep { defined } $self -> project -> source -> editions
+     } grep { 
+        defined
+     } $self -> project -> source -> editions
     ]
   };
 }

@@ -1,59 +1,49 @@
-package OokOok::Base::Admin;
+use CatalystX::Declare;
 
-use Moose;
-BEGIN {
-  extends 'Catalyst::Controller';
-}
+controller OokOok::Base::Admin {
 
-use namespace::autoclean;
+  final action begin is private {
+    if(!$ctx -> user) {
+      # redirect to admin top-level page
+      $ctx -> session -> {redirect} = $ctx -> request -> uri;
+      $ctx -> response -> redirect($ctx -> uri_for("/admin/oauth/twitter"));
+      $ctx -> detach;
+    }
 
-sub begin : Private {
-  my($self, $c) = @_;
-
-  if(!$c -> user) {
-    # redirect to admin top-level page
-    $c -> session -> {redirect} = $c -> request -> uri;
-    $c -> response -> redirect($c -> uri_for("/admin/oauth/twitter"));
-    $c -> detach;
+    $ctx -> stash -> {development} = 1;
   }
 
-  $c -> stash -> {development} = 1;
-}
+  final action end (@args) isa RenderView;
 
-sub end : ActionClass('RenderView') { }
+  final action doMethod ($method, $resource, $params) is private {
+    my $thing = eval {
+      $resource -> $method($params);
+    };
 
-sub doMethod :Private {
-  my($self, $method, $c, $resource, $params) = @_;
+    my $e = $@;
 
-  my $thing = eval {
-    $resource -> $method($params);
-  };
-
-  my $e = $@;
-
-  if($e) {
-    if(blessed($e)) {
-      if($e -> isa('OokOok::Exception::PUT')) {
-        $c -> stash -> {form_data} = $c -> request -> params;
-        $c -> stash -> {error_msg} = $e -> message;
-        $c -> stash -> {missing} = $e -> missing;
-        $c -> stash -> {invalid} = $e -> invalid;
-        return;
+    if($e) {
+      if(blessed($e)) {
+        if($e -> isa('OokOok::Exception::PUT')) {
+          $ctx -> stash -> {form_data} = $ctx -> request -> params;
+          $ctx -> stash -> {error_msg} = $e -> message;
+          $ctx -> stash -> {missing} = $e -> missing;
+          $ctx -> stash -> {invalid} = $e -> invalid;
+          return;
+        }
+        if($e -> isa('OokOok::Exception')) {
+          $ctx -> stash -> {error_msg} = $e -> message;
+          return;
+        }
       }
-      if($e -> isa('OokOok::Exception')) {
-        $c -> stash -> {error_msg} = $e -> message;
-        return;
+      else {
+        die $e; # rethrow
       }
     }
-    else {
-      die $e; # rethrow
-    }
+    return $thing;
   }
-  return $thing;
+
+  final action PUT (@args) is private { $self -> doMethod($ctx, "_PUT", @args) }
+  final action POST (@args) is private { $self -> doMethod($ctx, "_POST", @args) }
+  final action DELETE (@args) is private { $self -> doMethod($ctx, "_DELETE", @args) }
 }
-
-sub PUT :Private { shift -> doMethod("_PUT", @_) }
-sub POST :Private { shift -> doMethod("_POST", @_) }
-sub DELETE :Private { shift -> doMethod("_DELETE", @_) }
-
-1;

@@ -7,7 +7,7 @@ controller OokOok::Controller::Admin {
       $ctx -> response -> redirect($ctx -> uri_for("/admin/project"));
     }
     else {
-      $ctx -> stash -> {template} = 'admin/login';
+      $ctx -> response -> redirect($ctx -> uri_for("/"));
     }
   }
 

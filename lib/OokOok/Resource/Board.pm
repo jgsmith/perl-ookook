@@ -3,8 +3,8 @@ package OokOok::Resource::Board;
 use OokOok::Resource;
 use namespace::autoclean;
 
-#use OokOok::Resource::BoardRank;
-#use OokOok::Resource::BoardMember;
+use OokOok::Resource::BoardRank;
+use OokOok::Resource::BoardMember;
 
 has '+source' => (
   isa => 'OokOok::Model::DB::Board'

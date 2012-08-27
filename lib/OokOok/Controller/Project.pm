@@ -22,14 +22,8 @@ controller OokOok::Controller::Project
   # routes
   #
 
-  action base under '/' as 'project' {
-    if($ctx -> stash -> {development} || $ctx -> stash -> {date}) {
-      $ctx -> detach(qw/Controller::Root default/);
-    }
-
-    $ctx -> stash -> {development} = 1; # for use by resources/collections
-
-    $ctx -> stash -> {collection} = OokOok::Collection::Project -> new(c => $ctx);
+  under '/' {
+    action base as 'project';
   }
 
   ###
@@ -51,26 +45,26 @@ controller OokOok::Controller::Project
       $ctx -> stash -> {collection} = 
         OokOok::Collection::Edition -> new(c => $ctx);
     }
+  }
 
-    final action pages_GET is private { shift -> collection_GET(@_) }
-    final action pages_POST is private { shift -> collection_POST(@_) }
+  method pages_GET ($ctx) { $self -> collection_GET($ctx) }
+  method pages_POST ($ctx) { $self -> collection_POST($ctx) }
 
-    final action snippets_GET is private { shift -> collection_GET(@_) }
-    final action snippets_POST is private { shift -> collection_POST(@_) }
+  method snippets_GET ($ctx) { $self -> collection_GET($ctx) }
+  method snippets_POST ($ctx) { $self -> collection_POST($ctx) }
 
-    final action editions_GET is private { shift -> collection_GET(@_) }
-    final action editions_POST is private { shift -> collection_POST(@_) }
+  method editions_GET ($ctx) { $self -> collection_GET($ctx) }
+  method editions_POST ($ctx) { $self -> collection_POST($ctx) }
 
-    final action editions_DELETE is private {
-      # this will try to clear out the current working edition of changes
-      # essentially revert back to what we had when we closed the last edition
-      eval {
-        $ctx -> stash -> {project} -> source -> current_edition -> delete;
-      };
-  
-      if($@) { print STDERR "DELETE ERROR: $@\n"; }
-  
-      $self -> status_no_content($ctx);
-    }
+  method editions_DELETE ($ctx) {
+    # this will try to clear out the current working edition of changes
+    # essentially revert back to what we had when we closed the last edition
+    eval {
+      $ctx -> stash -> {project} -> source -> current_edition -> delete;
+    };
+
+    if($@) { print STDERR "DELETE ERROR: $@\n"; }
+
+    $self -> status_no_content($ctx);
   }
 }

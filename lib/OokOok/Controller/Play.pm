@@ -1,214 +1,145 @@
-package OokOok::Controller::Play;
-use Moose;
-use namespace::autoclean;
+use CatalystX::Declare;
 
-BEGIN { 
-  extends 'OokOok::Base::Player';
-}
-
-__PACKAGE__ -> config(
-  map => {
-    'text/html' => [ 'View', 'HTML' ],
-  },
-  default => 'text/html',
-);
-
-=head1 NAME
-
-OokOok::Controller::Play - Catalyst Controller
-
-=head1 DESCRIPTION
-
-Provides access to library functions via a REST interface.
-
-=head1 METHODS
-
-=cut
-
-
-=head2 index
-
-=cut
-
-sub base :Chained('/') :PathPart('p') :CaptureArgs(0) { 
-  my($self, $c) = @_;
-
-  $c -> stash -> {collection} = OokOok::Collection::Library -> new(
-    c => $c
+controller OokOok::Controller::Play
+   extends OokOok::Base::Player
+{
+  $CLASS -> config(
+    map => {
+      'text/html' => [ 'View', 'HTML' ],
+    },
+    default => 'text/html',
   );
-}
 
-# paths: /p/.../$library/(function|...)/(function-uuid)/(mode)/
-#        /p/.../$library/session/(session-uuid)
-#
-# how do we pipeline?
-#
-
-sub session_base :Chained('play_base') :PathPart('session') :CaptureArgs(1) {
-  my($self, $c, $uuid) = @_;
-
-  my $session = $c -> model("DB::FunctionSession") -> find({ uuid => $uuid });
-  if(!$session || $session -> function -> library_edition -> library != $c -> stash -> {library}) {
-    $c -> detach(qw/Controller::Root default/);
+  under '/' {
+    action base as 'p' {
+      $ctx -> stash -> {collection} = OokOok::Collection::Library -> new(
+        c => $ctx
+      );
+    }
   }
-  $c -> stash -> {function_session} = $session;
-}
 
-sub session :Chained('session_base') :PathPart('') :Args(0) :ActionClass('REST') { }
+  under play_base {
+    action session_base ($uuid) as 'session' {
+      my $session = $ctx -> model("DB::FunctionSession") 
+                         -> find({ uuid => $uuid });
+      if(!$session || $session -> function -> library_edition -> library != $ctx -> stash -> {library}) {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+      $ctx -> stash -> {function_session} = $session;
+    }
 
-# provide status information. If finished, provide link to results.
-# if mapping, results should be available asap. If reducing, then after
-# final input data is provided.
-#
-# {
-#   count => # of results
-#   urls => { ... } patterns for forming result urls
-#   status => 'Running'|'Finished'|'Error'
-#   errors => ... (if stats = 'Error')
-# }
-#
-sub session_GET {
-  my($self, $c) = @_;
-
-  my $session = $c -> stash -> {function_session};
-
-  my $json = {};
-
-  if($session -> has_errors) {
-    $json -> {status} = 'Error';
-    $json -> {errors} = $session -> errors;
+    final action function ($uuid) as 'function' isa REST {
+      my $function = $ctx -> stash -> {library_edition} -> function($uuid);
+      if(!$function) {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+      $ctx -> stash -> {function} = $function;
+    }
   }
-  else {
-    if($session -> is_finished) {
-      $json -> {status} = 'Finished';
+
+  under session_base {
+    final action session as '' isa REST;
+    final action results as 'result' isa REST;
+  }
+
+  under session {
+    final action result ($index) as 'result' isa REST {
+      if($index =~ m{^\d+$}) {
+        $ctx -> stash -> {result_index_start} = $index;
+        $ctx -> stash -> {result_index_end} = $index;
+      }
+      elsif($index =~ m{^(\d+)-(\d+)$}) {
+        $ctx -> stash -> {result_index_start} = $1;
+        $ctx -> stash -> {result_index_end} = $2;
+      }
+      else {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+    }
+  }
+
+  method session_GET ($ctx) {
+    my $session = $ctx -> stash -> {function_session};
+
+    my $json = {};
+
+    if($session -> has_errors) {
+      $json -> {status} = 'Error';
+      $json -> {errors} = $session -> errors;
     }
     else {
-      $json -> {status} = 'Running';
+      if($session -> is_finished) {
+        $json -> {status} = 'Finished';
+      }
+      else {
+        $json -> {status} = 'Running';
+      }
+      $json -> {count} = $session -> results -> count;
+      $json -> {urls} = {
+        result_pattern => $ctx -> req -> uri . '/result/{index}',
+        result_set_pattern => $ctx -> req -> uri . '/result/{first}-{last}',
+        all_results => $ctx -> req -> uri . '/result',
+      };
     }
-    $json -> {count} = $session -> results -> count;
-    $json -> {urls} = {
-        result_pattern => $c -> req -> uri . '/result/{index}',
-        result_set_pattern => $c -> req -> uri . '/result/{first}-{last}',
-        all_results => $c -> req -> uri . '/result',
-    };
+    $self -> status_ok($ctx,
+      entity => $json
+    );
   }
-  $self -> status_ok($c,
-    entity => $json
-  );
-}
 
-# feed data to process
-sub session_POST {
-  my($self, $c) = @_;
+  # feed data to process
+  method session_POST ($ctx) {
+    my $session = $ctx -> stash -> {function_session};
 
-  my $session = $c -> stash -> {function_session};
+    my $json = $ctx -> req -> data;
+    my $status;
 
-  my $json = $c -> req -> data;
-  my $status;
-
-  if($json -> {params}) {
-    $session -> add_params($json);
+    if($json -> {params}) {
+      $session -> add_params($json);
+    }
+    elsif($json -> {done}) {
+      $session -> finish;
+    }
+    $self -> status_accepted($ctx,
+      location => $ctx -> req -> uri,
+      entity => {
+        status => "queued",
+      },
+    );
   }
-  elsif($json -> {done}) {
-    $session -> finish;
+
+  # remove process - closes everything and deletes any results - only use
+  # if finished with the process and you've retrieved your results
+  method session_DELETE ($ctx) {
+    my $session = $ctx -> stash -> {function_session};
+
+    $session -> clean_up; # finishes and then deletes itself
+    $self -> status_accepted($ctx,
+      entity => {
+        status => "queued",
+      },
+    );
   }
-  $self -> status_accepted($c,
-    location => $c -> req -> uri,
-    entity => {
-      status => "queued",
-    },
-  );
-}
 
-# remove process - closes everything and deletes any results - only use
-# if finished with the process and you've retrieved your results
-sub session_DELETE {
-  my($self, $c) = @_;
-
-  my $session = $c -> stash -> {function_session};
-
-  $session -> clean_up; # finishes and then deletes itself
-  $self -> status_accepted($c,
-    entity => {
-      status => "queued",
-    },
-  );
-}
-
-sub session_OPTIONS {
-}
-
-# returns all of the results
-sub results :Chained('session_base') :PathPart('result') :Args(0) :ActionClass('REST') { }
-
-sub results_GET {
-  my($self, $c) = @_;
-
-}
-
-# returns the specified result
-sub result :Chained('session') :PathPart('result') :CaptureArgs(1) :ActionClass('REST') {
-  my($self, $c, $index) = @_;
-
-  if($index =~ m{^\d+$}) {
-    $c -> stash -> {result_index_start} = $index;
-    $c -> stash -> {result_index_end} = $index;
+  method session_OPTIONS ($ctx) {
   }
-  elsif($index =~ m{^(\d+)-(\d+)$}) {
-    $c -> stash -> {result_index_start} = $1;
-    $c -> stash -> {result_index_end} = $2;
-  }
-  else {
-    $c -> detach(qw/Controller::Root default/);
-  }
-}
 
-sub result_GET {
-  my($self, $c) = @_;
+  # returns all of the results
 
-}
-
-sub result_OPTIONS {
-  my($self, $c) = @_;
-}
-
-sub function :Chained('play_base') :PathPart('function') :Args(1) :ActionClass('REST') {
-  my($self, $c, $uuid) = @_;
-
-  my $function = $c -> stash -> {library_edition} -> function($uuid);
-  if(!$function) {
-    $c -> detach(qw/Controller::Root default/);
-  }
-  $c -> stash -> {function} = $function;
-}
-
-sub function_POST {
-}
-
-sub function_OPTIONS {
-}
-
-sub library :Chained('play_base') :PathPart('') :Args(0) :ActionClass('REST') { }
-
-# explain the library functions, URLs, etc.
-sub library_GET {
+  method results_GET ($ctx) {
   
+  }
+
+  method result_GET ($ctx) {
+
+  }
+
+  method result_OPTIONS ($ctx) {
+
+  }
+
+  method function_POST {
+  }
+
+  method function_OPTIONS {
+  }
 }
-
-sub library_OPTIONS {
-}
-
-=head1 AUTHOR
-
-James Smith,,,
-
-=head1 LICENSE
-
-This library is free software. You can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=cut
-
-__PACKAGE__->meta->make_immutable;
-
-1;
