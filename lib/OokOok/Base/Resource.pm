@@ -221,18 +221,13 @@ sub GET_oai_pmh {
 sub _DELETE {
   my($self) = @_;
 
-  print STDERR "In _DELETE\n";
   OokOok::Exception -> forbidden(
     message => "Unable to DELETE unless authenticated"
   ) unless $self -> c -> user;
 
-  print STDERR "  user is authenticated\n";
-
   OokOok::Exception -> forbidden(
     message =>  "Unable to DELETE"
   ) unless $self -> can_DELETE;
-
-  print STDERR "  user can delete\n";
 
   $self -> DELETE
 }
@@ -243,8 +238,6 @@ sub DELETE {
   OokOok::Exception::DELETE -> gone(
     message => 'Unable to DELETE without source'
   ) unless $self -> has_source;
-
-  print STDERR "  passing delete request on to resource source\n";
 
   $self -> source -> delete; 
 }

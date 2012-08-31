@@ -1,5 +1,8 @@
 <html>
 <head>
+  [%- IF canonical_url -%]
+    <link rel="canonical" href="[% canonical_url %]" />
+  [%- END -%]
   <title>[% project.name %] - [% page.title %]</title>
   [%- FOR stylesheet IN stylesheets.unique -%]
     <link href="[% stylesheet %]" rel="stylesheet/less" type="text/css">

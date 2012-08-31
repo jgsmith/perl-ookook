@@ -116,7 +116,7 @@ sub authenticate {
       if($response -> is_success) {
         my $json = JSON::decode_json($response -> decoded_content);
         use Data::Dumper ();
-        print STDERR "Returned from twitter:", Data::Dumper -> Dump([$json]);
+        #print STDERR "Returned from twitter:", Data::Dumper -> Dump([$json]);
         $info->{user_id} = $access_token -> {user_id};
         $info->{name} = $json->{name};
         $info->{url} = $json->{url};

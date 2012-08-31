@@ -66,6 +66,20 @@ controller OokOok::Controller::View
       $ctx -> uri_for( "/s/$project_uuid/style/$_" )
     } $page -> stylesheets ];
 
+    if($page -> date) {
+      my $date = $page -> source_version -> edition -> closed_on;
+      my $root = "/";
+      if($ctx -> stash -> {date}) {
+        #$root .= "../";
+      }
+      local $URI::ABS_REMOTE_LEADING_DOTS = 1;
+      my $url = URI->new($root
+              . $date -> ymd('') . $date -> hms('') 
+              .  "/v/$project_uuid/" . ($page -> slug_path || ''))
+          -> abs($ctx -> uri_for("/"));
+      $ctx -> stash -> {canonical_url} = $url -> as_string;
+    }
+
     $ctx -> stash -> {template} = 'view/play.tt2';
     $ctx -> forward( $ctx -> view('HTML') );
   }

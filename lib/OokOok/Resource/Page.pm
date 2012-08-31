@@ -180,7 +180,6 @@ sub get_layout {
   if($layout_uuid) {
     $layout = $theme -> layout($layout_uuid);
     if($layout) {
-      print "Layout: ",  $layout -> id, "\n";
       return $layout;
     }
     if($self -> parent_page) {

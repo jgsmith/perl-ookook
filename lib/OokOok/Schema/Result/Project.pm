@@ -31,17 +31,10 @@ after insert => sub {
   });
   $ce -> update_or_insert;
 
-  print STDERR "CE page id: ", $ce -> page_id, "\n";
-  print STDERR "Home page id: ", $home_page -> id, "\n";
   while($ce -> is_changed) {
-    print STDERR "CE marked as changed: ", $ce -> is_changed, "\n";
     $ce -> update_or_insert;
   }
   
-  print STDERR "CE page id: ", $ce -> page_id, "\n";
-  print STDERR "CE marked as changed: ", $ce -> is_changed, "\n";
-  
-
   # now add libraries that should be included automatically
   my @libs = $self -> result_source->schema-> resultset('Library') -> search({
     new_project_prefix => { '!=' => undef }

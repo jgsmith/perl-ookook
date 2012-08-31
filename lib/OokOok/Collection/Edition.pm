@@ -39,8 +39,6 @@ sub POST {
 
   $edition = $edition -> get_from_storage;
 
-  print STDERR "Closing date: ", $edition -> closed_on, "\n";
-
   my @changes;
 
   my $new_edition = OokOok::Resource::Edition -> new(

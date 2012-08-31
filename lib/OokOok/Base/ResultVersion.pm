@@ -40,8 +40,6 @@ override update => sub {
 sub duplicate_to_current_edition {
   my($self, $current_edition) = @_;
 
-  print STDERR "Calling duplicate_to_current_edition from ", join(", ", caller), "\n";
-
   my $edition_id_key = $self -> edition -> result_source -> from . "_id";
   my $owner_id_key = $self -> owner -> result_source -> from . "_id";
 

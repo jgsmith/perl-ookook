@@ -89,8 +89,6 @@ sub element_content {
     $name = 'body';
   }
 
-  print STDERR "content: [$name]\n";
-
   my $inherit = $attr -> {'inherit'};
 
   # we want to render the page part with the current context

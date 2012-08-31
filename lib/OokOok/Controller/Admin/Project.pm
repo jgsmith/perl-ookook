@@ -36,7 +36,6 @@ controller OokOok::Controller::Admin::Project
         );
       }
 
-      print STDERR "Getting page for $uuid: ", $page -> id, "\n";
       $ctx -> stash -> {page} = $page;
     }
 
@@ -69,7 +68,6 @@ controller OokOok::Controller::Admin::Project
         my $collection = OokOok::Collection::Project -> new(c => $ctx);
         my $params = $ctx -> request -> params;
         $params->{theme_date} = DateTime->now -> iso8601;
-print STDERR "POSTing a project:", Data::Dumper -> Dump([$params]), "\n";
         my $project = $self -> POST( $ctx, $collection, $params );
         if($project) {
           $ctx -> response -> redirect($ctx->uri_for("/admin/project/" . $project -> id));

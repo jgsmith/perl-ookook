@@ -19,7 +19,6 @@ use Catalyst::Runtime 5.80;
 
     #-Debug
 use Catalyst qw/
-    -Debug
     ConfigLoader
     Static::Simple
 

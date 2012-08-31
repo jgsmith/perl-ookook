@@ -37,10 +37,8 @@ after insert => sub {
   my $ce = $self -> current_edition;
 
   my @libs = $self -> result_source -> schema -> resultset('Library') -> all;
-  print STDERR "We have ", scalar(@libs), " libs\n";
   for my $lib (@libs) {
     next unless $lib -> new_theme_prefix && $lib -> has_public_edition;
-    print STDERR "Adding ", $lib -> new_theme_prefix, " to theme\n";
 
     my $tl = $self -> create_related('library_themes', {
       library_id => $lib -> id
