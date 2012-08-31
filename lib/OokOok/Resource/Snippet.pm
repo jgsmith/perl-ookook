@@ -83,4 +83,20 @@ sub render {
          "</div>";
 }
 
+sub for_search {
+  my($self) = @_;
+
+  my $context = OokOok::Template::Context -> new(
+    c => $self -> c,
+  );
+
+  # assume the top-level page for search context
+  $context -> set_resource(page => $self -> project -> page);
+  $context -> set_resource(project => $self -> project);
+
+  return {
+    snippet => $self -> render($context)
+  };
+}
+
 1;

@@ -4,6 +4,8 @@ controller OokOok::Controller::Admin::Theme
    extends OokOok::Base::Admin
 {
   use OokOok::Collection::Theme;
+  use OokOok::Collection::ThemeLayout;
+  use OokOok::Collection::ThemeStyle;
   use OokOok::Collection::ThemeVariable;
 
   action base under '/' as 'admin/theme';

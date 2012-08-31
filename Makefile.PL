@@ -62,6 +62,7 @@ requires 'HTML::FillInForm';
 requires 'JSON';
 requires 'Lingua::EN::Inflect';
 requires 'LWP::Protocol::https';
+requires 'Math::Round';
 requires 'Net::OAuth';
 requires 'Set::Scalar';
 requires 'String::CamelCase';

@@ -13,12 +13,20 @@ has c => (
   isa => 'Object',
 );
 
+has is_development => (
+  is => 'rw',
+  isa => 'Bool',
+  default => sub {
+    !!$_[0] -> c -> stash -> {development};
+  },
+);
+
 has date => (
   is => 'rw',
   lazy => 1,
   default => sub {
     my $self = shift;
-    if(!$self -> c -> stash -> {development}) {
+    if(!$self -> is_development) {
       $self -> c -> stash -> {date} || DateTime->now;
     }
   },
@@ -123,7 +131,7 @@ The following methods are provided for collections.
 
 =cut
 
-sub is_development { $_[0] -> c -> model('DB') -> schema -> is_development }
+#sub is_development { $_[0] -> c -> model('DB') -> schema -> is_development }
 
 sub can_GET { 1 } # by default, the collection can be retrieved - the list of
                   # items is defined by the constraint on the collection

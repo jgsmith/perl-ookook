@@ -12,18 +12,26 @@ has c => (
   required => 1,
 );
 
+has is_development => (
+  is => 'rw',
+  isa => 'Bool',
+  default => sub {
+    $_[0] -> c -> stash -> {development}
+  },
+);
+
 has date => (
   is => 'rw',
   lazy => 1,
   default => sub { 
     my $self = shift;
-    if(!$self -> c -> stash -> {development}) {
+    if(!$self -> is_development) {
       $self -> c -> stash -> {date} || DateTime->now;
     }
   },
   trigger => sub {
     my($self, $date) = @_;
-    if($self -> source) {
+    if($self -> source && !$self -> is_development) {
       $self -> source_version( 
         $self -> meta -> _get_source_version($self -> source, $date) 
       );
@@ -55,7 +63,11 @@ has collection => (
     my($self) = @_;
     my $class = $self -> meta -> resource_collection_class;
     #Module::Load::load($class);
-    $class -> new( c => $self -> c, date => $self -> date );
+    $class -> new( 
+      c => $self -> c, 
+      is_development => $self -> is_development, 
+      date => $self -> date 
+    );
   },
 );
 
@@ -105,12 +117,16 @@ sub schema {
   for my $h ($self -> meta -> get_hasa_list) {
     my $info = $self -> meta -> get_hasa($h);
     $schema -> {properties} -> {$h} -> {linkListFrom} = 
-      $info->{isa} -> new(c => $self -> c) -> collection -> link;
+      $info->{isa} -> new(
+        c => $self -> c,
+        date => $self -> date,
+        is_development => $self -> is_development,
+      ) -> collection -> link;
   }
   return $schema;
 }
 
-sub is_development { $_[0] -> c -> model('DB') -> schema -> is_development }
+#sub is_development { $_[0] -> c -> model('DB') -> schema -> is_development }
 
 sub can_GET { 
   my($self) = @_;

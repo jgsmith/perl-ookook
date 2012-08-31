@@ -40,15 +40,9 @@ prop layout => (
 prop status => (
   is => 'rw',
   type => 'Int',
+  permission => 'status.pages',
   source => sub { $_[0] -> source_version -> status },
 );
-
-#prop status => (
-#  is => 'rw',
-#  type => "Str',
-#  source => sub { $_[0] -> source_version -> status },
-#  permission => 'status.pages',
-#);
 
 belongs_to project => "OokOok::Resource::Project", (
   required => 1, # can't be created without one
@@ -67,6 +61,19 @@ has_many page_parts => "OokOok::Resource::PagePart", (
     $_[0] -> source_version -> page_parts 
   },
 );
+
+sub slug_path {
+  my($self) = @_;
+
+  my $pp = $self -> parent_page;
+
+  if($pp) {
+    return $pp -> slug_path . "/" . $self -> slug;
+  }
+  else {
+    return $self -> slug;
+  }
+}
 
 sub child_pages {
   my($self) = @_;
@@ -204,6 +211,29 @@ sub render {
   else {
     return '<p>No Layout</p>';
   }
+}
+
+sub for_search {
+  my($self) = @_;
+
+  # we want the primary content page parts - not the sidebar and such
+  # eventually, we can make this configurable for the project
+
+  my $data = {};
+  my $context = OokOok::Template::Context -> new(
+    c => $self -> c,
+  );
+  
+  $context -> set_resource(page => $self);
+  $context -> set_resource(project => $self -> project);
+
+  for my $pp (@{$self -> page_parts}) {
+    $data -> {$pp -> name} = $pp -> render($context),
+  }
+
+  $data -> {"_title"} = $self -> title;
+
+  return $data;
 }
 
 1;

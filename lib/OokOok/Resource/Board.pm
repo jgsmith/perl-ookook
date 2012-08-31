@@ -34,6 +34,24 @@ has_many 'board_ranks' => 'OokOok::Resource::BoardRank', (
   source => sub { $_[0] -> source -> board_ranks },
 );
 
+sub member {
+  my($self, $uuid) = @_;
+
+  my $membership = $self -> source -> board_members -> search( { 
+    'user.uuid' => $uuid
+  }, {
+    join => [qw/user/],
+    rows => 1,
+  } ) -> first;
+
+  if($membership) {
+    return OokOok::Resource::BoardMember -> new(
+      c => $self -> c,
+      source => $membership,
+    );
+  }
+}
+
 sub can_PUT {
   my($self) = @_;
 
