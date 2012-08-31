@@ -50,6 +50,8 @@ requires:
   Data::UUID: 0
   Data::Verifier: 0
   DateTime: 0
+  DateTime::Format::ISO8601: 0
+  DateTime::Format::Natural: 0
   ElasticSearch: 0
   Exception::Class: 0
   HTML::FillInForm: 0

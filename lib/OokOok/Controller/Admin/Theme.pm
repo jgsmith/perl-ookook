@@ -7,6 +7,7 @@ controller OokOok::Controller::Admin::Theme
   use OokOok::Collection::ThemeLayout;
   use OokOok::Collection::ThemeStyle;
   use OokOok::Collection::ThemeVariable;
+  use OokOok::Collection::ThemeEdition;
 
   action base under '/' as 'admin/theme';
 

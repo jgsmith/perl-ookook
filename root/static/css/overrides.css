@@ -39,3 +39,16 @@ ul.nav.nav-pills li.active a {
   color: #fdfdfa;
 }
 */
+
+em.hlt1 {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+em.hlt2 {
+  font-weight: bold;
+}
+
+em.htl3 {
+  text-decoration: underline;
+}

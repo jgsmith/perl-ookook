@@ -70,17 +70,17 @@ sub POST {
 
     $info -> {'__project'} = $project_uuid;
 
-    #my $res = $self -> c -> model('ES') -> index(
     push @changes, {
       type => 'page',
       id => $pv -> page -> uuid . "-" . $date,
       data => $info,
-      create => 1,
       timestamp => $date,
     };
   }
 
   # snippets are indexed to identify projects in general
+  my $pinfo = {
+  };
   for my $sv ($edition -> snippet_versions) {
     my $info = OokOok::Resource::Snippet -> new(
       c => $self -> c,
@@ -89,18 +89,17 @@ sub POST {
       source => $sv -> snippet,
       source_version => $sv,
     ) -> for_search;
- 
-    $info -> {'__project'} = $project_uuid;
-
-    #my $res = $self -> c -> model('ES') -> index(
-    push @changes, {
-      type => 'snippet',
-      id => $sv -> snippet -> uuid . "-" . $date,
-      data => $info,
-      create => 1,
-      timestamp => $date,
-    };
+    $pinfo->{$sv -> name} = $info->{snippet};
   }
+ 
+  $pinfo -> {'__project'} = $project_uuid;
+
+  push @changes, {
+    type => 'project',
+    id => $project_uuid . "-" . $date,
+    data => $pinfo,
+    timestamp => $date,
+  };
 
   if(@changes) {
     my $res = $self -> c -> model('ES') -> bulk_index(

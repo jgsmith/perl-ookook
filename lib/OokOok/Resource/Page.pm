@@ -67,7 +67,7 @@ sub slug_path {
 
   my $pp = $self -> parent_page;
 
-  if($pp) {
+  if(defined $pp && defined $pp -> slug_path && $pp->slug_path ne '') {
     return $pp -> slug_path . "/" . $self -> slug;
   }
   else {

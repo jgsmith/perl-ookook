@@ -86,7 +86,12 @@ sub process_node {
       $r = $node -> ownerDocument -> createTextNode( $r );
     }
     elsif($r ne '') {
-      $r = XML::LibXML -> new -> parse_balanced_chunk( $r );
+      $r =~ s{&}{&amp;}g;
+      $r = XML::LibXML -> new(
+        expand_entities => 0,
+        xinclude => 0,
+        load_ext_dtd => 0,
+      ) -> parse_balanced_chunk( $r );
     }
     else {
       $r = undef;

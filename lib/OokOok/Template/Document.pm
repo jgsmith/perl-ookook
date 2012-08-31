@@ -39,6 +39,7 @@ sub render {
   
   my $r = $rendering -> toStringHTML;
 
+
   #
   # we get rid of any <?xml...?> element at the beginning since we'll be
   # embedding this in an HTML document
@@ -48,6 +49,7 @@ sub render {
   # now get rid of namespace declarations
   #$r =~ s{\s*xmlns:.*?="[^"]*"}{}g;
   #$r =~ s{\s*xmlns:.*?='[^']*'}{}g;
+  $r =~ s{&amp;}{&}g;
   $r;
 }
 

@@ -52,6 +52,8 @@ requires 'MooseX::Singleton' => '0.29';
 requires 'Data::UUID';
 requires 'Data::Verifier';
 requires 'DateTime';
+requires 'DateTime::Format::ISO8601';
+requires 'DateTime::Format::Natural';
 requires 'DBIx::Class';
 requires 'DBIx::Class::Schema::Loader';
 requires 'ElasticSearch';
