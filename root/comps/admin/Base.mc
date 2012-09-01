@@ -132,6 +132,25 @@ $.invalid => sub { [] }
 % }
 </%method>
 
+<%method IndexItemTargetedAction ($disabled, $href, $icon, $title, $target)>
+% if($disabled) {
+  <span class="btn disabled btn-mini">
+% }
+% else {
+  <a href="<% $c->uri_for($href) %>" target="<% $target %>" class="btn btn-mini">
+% }
+% if($icon) {
+  <i class="icon icon-<% $icon %>"></i>
+% }
+<% $title %>
+% if($disabled) {
+  </span>
+% }
+% else {
+  </a>
+% }
+</%method>
+
 <%method ifEqual($a, $b, $text)>
 % if(defined($a) && defined($b) && $a eq $b) {
 <% $text %>

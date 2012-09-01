@@ -30,13 +30,12 @@ $.layouts => sub { [] }
                 "minus-sign", 
                 "Discard Changes"
               ) %>
-%         }}
-%         $.IndexItemActions {{
-           <% $.IndexItemAction(
+           <% $.IndexItemTargetedAction(
                 0,
                 "/admin/theme/".$.theme_id."/layout/$layout_id/preview", 
                 "screenshot", 
-                "Preview"
+                "Preview",
+                "_" . $layout_id
               ) %>
 %         }}
 %       }}
