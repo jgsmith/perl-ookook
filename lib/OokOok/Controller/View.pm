@@ -42,9 +42,7 @@ controller OokOok::Controller::View
       # for now, we shouldn't have anything left in @path -- we don't have
       # pages yet that can react to extra path info
       if(!$page || @path) {
-        $ctx -> response->body( 'Page not found' );
-        $ctx -> response -> status(404);
-        $ctx -> detach;
+        $ctx -> detach(qw/Controller::Root default/);
       }
 
       $ctx -> stash -> {page} = $page;

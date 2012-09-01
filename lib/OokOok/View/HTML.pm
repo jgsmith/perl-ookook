@@ -1,28 +1,24 @@
-package OokOok::View::HTML;
-use Moose;
-use namespace::autoclean;
+use CatalystX::Declare;
 
-extends 'Catalyst::View::TT';
+view OokOok::View::HTML is mutable
+  extends Catalyst::View::TT {
 
-__PACKAGE__->config(
+  $CLASS->config(
     TEMPLATE_EXTENSION => '.tt2',
     render_die => 1,
-    #PRE_PROCESS => 'config/main.tt2',
-    #WRAPPER => 'site/wrapper.tt2',
     ABSOLUTE => 1,
-    RELATIVE => 1,
-);
+    RELATIVE => 1
+  );
 
-#
-# This is for the RESTful pieces of the app
-#
-before process => sub {
-  my($self, $c, $stash_key) = @_;
-
-  if($stash_key) {
-    $c -> stash -> {data} = $c -> stash -> {$stash_key};
+  #
+  # This is for the RESTful pieces of the app
+  #
+  before process ($ctx, $stash_key?) {
+    if($stash_key) {
+      $ctx -> stash -> {data} = $ctx -> stash -> {$stash_key};
+    }
   }
-};
+}
 
 =head1 NAME
 
@@ -46,5 +42,3 @@ This library is free software. You can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
-
-1;

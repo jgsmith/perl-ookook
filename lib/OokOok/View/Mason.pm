@@ -1,14 +1,11 @@
-package OokOok::View::Mason;
+use CatalystX::Declare;
 
-use Moose;
-use namespace::autoclean;
+view OokOok::View::Mason is mutable
+  extends Catalyst::View::Mason2 {
 
-extends 'Catalyst::View::Mason2';
-
-__PACKAGE__ -> config(
-  plugins => [
-    'HTMLFilters'
-  ]
-);
-
-1;
+  $CLASS -> config(
+    plugins => [
+      'HTMLFilters'
+    ]
+  );
+}

@@ -1,4 +1,4 @@
-package OokOok::Plugin::Authentication;
+package Catalyst::Plugin::OokOok::Authentication;
 
 use Moose;
 

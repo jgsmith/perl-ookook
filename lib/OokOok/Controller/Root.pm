@@ -92,8 +92,30 @@ controller OokOok::Controller::Root
     }
 
     final action default (@args) {
-      $ctx->response->body( 'Page not found' );
+      $ctx->stash->{template} = 'notfound.tt2';
+      $ctx->forward( $ctx -> view( 'HTML' ) );
       $ctx->response->status(404);
     }
+  }
+
+  final action end (@) isa RenderView {
+    if( scalar @{ $ctx->error } ) {
+      $ctx->stash->{errors}   = $ctx->error;
+      for my $error ( @{ $ctx->error } ) {
+        $ctx->log->error($error);
+      }
+      $ctx->stash->{template} = 'errors.tt2';
+      $ctx->forward( $ctx -> view( 'HTML' ) );
+      $ctx->clear_errors;
+    }
+ 
+    return 1 if $ctx->response->status =~ /^3\d\d$/;
+    return 1 if $ctx->response->body;
+ 
+    unless ( $ctx->response->content_type ) {
+        $ctx->response->content_type('text/html; charset=utf-8');
+    }
+
+    $ctx->forward( $ctx -> view('Mason') );
   }
 }

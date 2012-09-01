@@ -76,7 +76,7 @@ requires 'Text::Markdown';
 #requires 'Text::MultiMarkdown';
 requires 'Text::Textile';
 
-requires 'CSS::LESSp';
+#requires 'CSS::LESSp';
 
 requires 'namespace::autoclean';
 
