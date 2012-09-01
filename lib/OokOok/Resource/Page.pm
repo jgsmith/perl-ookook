@@ -153,20 +153,11 @@ sub can_DELETE {
 sub stylesheets {
   my($self) = @_;
 
-  #my $theme = $self -> project -> theme;
-  #return unless $theme;
-  #my $layout_uuid = $self -> source_version -> layout;
-  #my $layout = $theme -> layout( $layout_uuid );
   my $layout = $self -> get_layout;
-  my @stylesheets;
-  while($layout) {
-    my $s = $layout -> theme_style;
-    if($s) {
-      push @stylesheets, $s -> id;
-    }
-    $layout = $layout -> parent_layout;
+  if($layout) {
+    return $layout -> stylesheets;
   }
-  return reverse @stylesheets;
+  return;
 }
 
 sub get_layout {

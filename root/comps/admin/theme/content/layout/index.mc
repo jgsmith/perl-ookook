@@ -31,6 +31,14 @@ $.layouts => sub { [] }
                 "Discard Changes"
               ) %>
 %         }}
+%         $.IndexItemActions {{
+           <% $.IndexItemAction(
+                0,
+                "/admin/theme/".$.theme_id."/layout/$layout_id/preview", 
+                "screenshot", 
+                "Preview"
+              ) %>
+%         }}
 %       }}
 %     }
 %   }}

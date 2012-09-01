@@ -1,56 +1,35 @@
-package OokOok::Template::Document;
+use MooseX::Declare;
 
-use Moose;
-use XML::LibXML;
-use OokOok::Template::Context;
+class OokOok::Template::Document {
 
-use namespace::autoclean;
+  use OokOok::Template::Context;
 
-has content => (
-  is => 'ro',
-  required => 1,
-  isa => 'Object', # should be a parsed XML document
-);
-
-has taglibs => (
-  is => 'ro',
-  isa => 'HashRef',
-  default => sub { +{ } },
-);
-
-sub render {
-  my($self, $parent_context) = @_;
-
-  # we want to run through the document looking for elements that are
-  # provided by taglibs - we want to work from the top down - kind of like
-  # an XSLT
-
-  my $rendering = XML::LibXML::Document -> new;
-  my $context = OokOok::Template::Context -> new(
-    parent => $parent_context,
-    document => $self,
+  has content => (
+    is => 'ro',
+    required => 1,
+    isa => 'ArrayRef',
   );
 
-  $rendering -> setDocumentElement( 
-    $context -> process_node( 
-      $self -> content -> documentElement 
-    ) 
+  has taglibs => (
+    is => 'ro',
+    isa => 'HashRef',
+    default => sub { +{ } },
   );
-  
-  my $r = $rendering -> toStringHTML;
 
+  has namespaces => (
+    is => 'ro',
+    isa => 'HashRef',
+    default => sub { +{ } },
+  );
 
-  #
-  # we get rid of any <?xml...?> element at the beginning since we'll be
-  # embedding this in an HTML document
-  #
-  $r =~ s{^\s*<\?xml\b.*?\?>\s*}{};
-  #
-  # now get rid of namespace declarations
-  #$r =~ s{\s*xmlns:.*?="[^"]*"}{}g;
-  #$r =~ s{\s*xmlns:.*?='[^']*'}{}g;
-  $r =~ s{&amp;}{&}g;
-  $r;
+  method render ($parent_context) {
+    OokOok::Template::Context -> new(
+      parent => $parent_context,
+      namespaces => $self -> namespaces,
+      document => $self,
+      is_mockup => $parent_context -> is_mockup
+    ) -> process_node(
+      $self -> content
+    );
+  }
 }
-
-1;

@@ -9,7 +9,7 @@ use OokOok::Base::TagLibrary;
 use namespace::autoclean;
 
 Moose::Exporter -> setup_import_methods(
-  with_meta => [ 'namespace', 'element' ],
+  with_meta => [ 'element' ],
   as_is => [ ],
   also => 'Moose',
 );
@@ -34,11 +34,11 @@ sub init_meta {
   return $meta;
 }
 
-sub namespace {
-  my($meta, $ns) = @_;
-
-  $meta -> namespace($ns);
-}
+#sub namespace {
+#  my($meta, $ns) = @_;
+#
+#  $meta -> namespace($ns);
+#}
 
 sub element {
   my($meta, $name, %options) = @_;

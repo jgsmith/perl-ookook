@@ -198,6 +198,22 @@ controller OokOok::Controller::Admin::Theme
       }
       $ctx -> stash -> {template} = "/admin/theme/content/layout/edit";
     }
+
+    final action theme_layout_preview as 'preview' {
+      my $context = OokOok::Template::Context -> new(
+        c => $ctx,
+        is_mockup => 1,
+      );
+      my $layout = $ctx -> stash -> {theme_layout};
+      $ctx -> stash -> {rendering} = $layout -> render($context);
+      $ctx -> stash -> {stylesheets} = [ 
+        map {
+          $ctx -> uri_for( "/ts/".$layout->theme->id."/style/$_" )
+        } $layout -> stylesheets 
+      ];
+      $ctx -> stash -> {template} = "view/play.tt2";
+      $ctx -> forward( $ctx -> view('HTML') );
+    }
   }
 
   under theme_style_base {

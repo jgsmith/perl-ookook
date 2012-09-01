@@ -53,6 +53,20 @@ sub can_PUT {
   $self -> theme -> can_PUT;
 }
 
+sub stylesheets {
+  my($layout) = @_;
+
+  my @stylesheets;
+  while($layout) {
+    my $s = $layout -> theme_style;
+    if($s) {
+      push @stylesheets, $s -> id;
+    }
+    $layout = $layout -> parent_layout;
+  } 
+  return reverse @stylesheets;
+}
+
 #
 # For now, we place the rendering stuff here since it depends on the
 # Catalyst context, which means we want to avoid putting it in the
@@ -64,28 +78,22 @@ sub render {
   my $layout = $self -> source_version;
   if($layout) {
     my $template = $layout -> layout;
-    my $processor = OokOok::Template::Processor -> new(
-      c => $self -> c,
-    );
     # now load in taglibs and prefixes
+
     my %ns;
     for my $lib ($self -> theme -> libraries) {
       my $prefix = $lib -> prefix;
       my $uin = "uin:uuid:" . $lib -> id;
       $ns{$prefix} = $uin;
     }
-    my $div = "<div";
-    for my $p (keys %ns) {
-      $div .= " xmlns:$p='" . $ns{$p} . "'";
-    }
-    $div .= ">";
-    my $doc = $processor -> parse($div . $template . "</div>");
-    my $ret = $doc -> render($context);
-    # we want to remove the outer div
-    #print STDERR "Returned doc: [$ret]\n";
-    $ret =~ s{\s*<div.*?>}{}s;
-    $ret =~ s{</div>$}{}s;
-    #print STDERR "After regex doc: [$ret]\n";
+
+    my $processor = OokOok::Template::Processor -> new(
+      c => $self -> c,
+      namespaces => \%ns,
+    );
+
+    my $ret = $processor -> parse($template) -> render($context);
+
     # now worry about parent layout
     if($self -> parent_layout) {
       $context = $context -> localize;

@@ -1,142 +1,133 @@
-package OokOok::Template::Context;
+use MooseX::Declare;
 
-use Moose;
-use MooseX::Types::Moose qw/CodeRef ArrayRef/;
+class OokOok::Template::Context {
+  use MooseX::Types::Moose qw/CodeRef ArrayRef Str HashRef/;
 
-use XML::LibXML;
-use namespace::autoclean;
-
-has parent => (
-  isa => 'Maybe[OokOok::Template::Context]',
-  is => 'ro',
-  predicate => 'has_parent',
-);
-
-has document => (
-  isa => 'Maybe[OokOok::Template::Document]',
-  is => 'ro',
-  predicate => 'has_document',
-);
-
-has vars => (
-  isa => 'HashRef',
-  is => 'ro',
-  default => sub { +{ } },
-  lazy => 1,
-);
-
-has resources => (
-  isa => 'HashRef',
-  is => 'ro',
-  default => sub { +{ } },
-  lazy => 1,
-);
-
-sub localize {
-  my($self) = @_;
-
-  OokOok::Template::Context -> new( 
-    parent => $self,
-    document => $self -> document,
+  has parent => (
+    isa => 'Maybe[OokOok::Template::Context]',
+    is => 'ro',
+    predicate => 'has_parent',
   );
-}
 
-sub delocalize {
-  my($self) = @_;
+  has document => (
+    isa => 'Maybe[OokOok::Template::Document]',
+    is => 'ro',
+    predicate => 'has_document',
+  );
 
-  if($self -> has_parent) { return $self -> parent; }
-  else                    { return $self;           }
-}
+  has namespaces => (
+    isa => 'HashRef',
+    is => 'ro',
+    default => sub { +{} },
+  );
 
-sub get_resource {
-  my($self, $key) = @_;
+  has vars => (
+    isa => 'HashRef',
+    is => 'ro',
+    default => sub { +{ } },
+    lazy => 1,
+  );
 
-  if(!exists($self -> resources -> {$key}) && $self -> parent) {
-    $self -> parent -> get_resource($key);
+  has is_mockup => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0,
+  );
+
+  has resources => (
+    isa => 'HashRef',
+    is => 'ro',
+    default => sub { +{ } },
+    lazy => 1,
+  );
+
+  method localize {
+    OokOok::Template::Context -> new( 
+      parent => $self,
+      document => $self -> document,
+      is_mockup => $self -> is_mockup,
+    );
   }
-  else {
-    $self -> resources -> {$key};
+
+  method delocalize {
+    if($self -> has_parent) { return $self -> parent; }
+    else                    { return $self;           }
   }
-}
 
-sub set_resource {
-  my($self, $key, $value) = @_;
-
-  $self -> resources -> {$key} = $value;
-}
-
-sub set_var {
-  my($self, $key, $val) = @_;
-
-  $self -> vars -> {$key} = $val;
-}
-
-sub get_var {
-  my($self, $key) = @_;
-
-  if(!exists($self -> vars -> {$key})) {
-    if($self -> has_parent) {
-      return $self -> parent -> get_var($key);
+  method get_resource ($key) {
+    if(!exists($self -> resources -> {$key}) && $self -> parent) {
+      $self -> parent -> get_resource($key);
+    }
+    else {
+      $self -> resources -> {$key};
     }
   }
-  my $val = $self -> vars -> {$key};
-  if(is_CodeRef($val)) {
-    return $val->();
+
+  method set_resource ($key, $value) {
+    $self -> resources -> {$key} = $value;
   }
-  return $val;
-}
 
-sub has_var {
-  my($self, $key) = @_;
-
-  return 1 if exists($self -> vars -> {$key});
-
-  return 0 unless $self -> parent;
-
-  return $self -> parent -> has_var($key);
-}
-
-sub process_node {
-  my($self, $node) = @_;
-
-  # text nodes pass through
-  my $nodeType = $node -> nodeType;
-  if($nodeType == XML_TEXT_NODE
-      || $nodeType == XML_COMMENT_NODE
-      || $nodeType == XML_CDATA_SECTION_NODE
-    ) {
-    return $node -> cloneNode;
+  method set_var ($key, $val) {
+    $self -> vars -> {$key} = $val;
   }
-  elsif($node -> nodeType == XML_ELEMENT_NODE) {
-    # we want to run the code associated with the node and replace the node
-    # with the results
-    my $local = $node -> localname;
-    my $ns = $node -> namespaceURI;
-    if($ns) {
-      my $taglib = $self -> document -> taglibs -> {$ns};
-      if($taglib) {
-        return $taglib -> process_node($self, $node);
+
+  method get_var ($key) {
+    if(!exists($self -> vars -> {$key})) {
+      if($self -> has_parent) {
+        return $self -> parent -> get_var($key);
       }
     }
-    else { # in HTML5
-      # we need to descend
-      my $collector = $node -> cloneNode;
-      my $child = $node -> firstChild;
-      while($child) {
-        my $r = $self -> process_node( $child );
-        if(ref $r) {
-          if(is_ArrayRef($r)) {
-            $collector -> appendChild( $_ ) for @$r;
-          }
-          elsif($r -> isa('XML::LibXML::Node')) {
-            $collector -> appendChild( $r );
-          }
+    my $val = $self -> vars -> {$key};
+    if(is_CodeRef($val)) {
+      return $val->();
+    }
+    return $val;
+  }
+
+  method has_var ($key) {
+    return 1 if exists($self -> vars -> {$key});
+
+    return 0 unless $self -> parent;
+
+    return $self -> parent -> has_var($key);
+  }
+
+  method get_namespace ($prefix) {
+    if(!exists($self -> namespaces -> {$prefix})) {
+      if($self -> has_parent) {
+        return $self -> parent -> get_namespace($prefix);
+      }
+    }
+    return $self -> namespaces -> {$prefix};
+  }
+
+  method get_prefix ($ns) {
+    for my $p (keys %{$self -> namespaces}) {
+      return $p if $self -> namespaces -> {$p} eq $ns;
+    }
+    return $self -> parent -> get_prefix($ns)
+      if $self -> has_parent;
+  }
+
+  method process_node ($node) {
+    if(is_Str($node)) {
+      return $node;
+    }
+    elsif(is_HashRef($node)) {
+      my $local = $node->{local};
+      my $ns = $self -> get_namespace($node->{prefix});
+      if($ns) {
+        my $taglib = $self -> document -> taglibs -> {$ns};
+        if($taglib) {
+          return $taglib -> process_node($self, $node);
         }
-        $child = $child -> nextSibling;
       }
-      return $collector;
+      return ''; # unrecognized tag/namespace
+    }
+    elsif(is_ArrayRef($node)) {
+      return join '', map {
+        $self -> process_node($_)
+      } @{$node};
     }
   }
 }
-
-1;

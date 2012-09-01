@@ -16,6 +16,35 @@ controller OokOok::Controller::Style
         c => $ctx,
       );
     }
+
+    action tbase as 'ts' {
+      $ctx -> stash -> {collection} = OokOok::Collection::Theme -> new(
+        c => $ctx,
+      );
+    }
+  }
+
+  under tbase {
+    action play_tbase ($uuid) as '' {
+      $self -> play_base($ctx, $uuid);
+    }
+  }
+
+  under play_tbase {
+    action tstyle_base ($uuid) as 'style' {
+      my $theme = $ctx -> stash -> {theme};
+      my $style = $theme -> style($uuid);
+
+      if(!$style) {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+
+      $ctx -> stash -> {resource} = $style;
+    }
+  }
+
+  under tstyle_base {
+    final action tstyle as '' isa REST;
   }
 
   under play_base {
@@ -40,5 +69,9 @@ controller OokOok::Controller::Style
     $ctx -> stash -> {rendering} = $ctx -> stash -> {resource} -> render;
     $ctx -> stash -> {template} = 'style/style.tt2';
     $ctx -> forward( $ctx -> view('HTML') );
+  }
+
+  method tstyle_GET ($ctx) {
+    $self -> style_GET($ctx);
   }
 }

@@ -1,80 +1,74 @@
-package OokOok::Template::Processor;
+use MooseX::Declare;
 
-use Moose;
+class OokOok::Template::Processor {
 
-use namespace::autoclean;
-use OokOok::Template::Document;
-use Carp;
+  use OokOok::Template::Document;
+  use OokOok::Template::Parser;
+  use Carp;
 
-use XML::LibXML;
-use Module::Load ();
+  use XML::LibXML;
+  use Module::Load ();
 
-has c => (
-  is => 'rw',
-  isa => 'Maybe[Object]',
-);
+  has c => ( is => 'rw', isa => 'Maybe[Object]', );
 
-has date => (
-  is => 'rw',
-  lazy => 1,
-  default => sub { $_[0] -> c -> stash -> {date} },
-);
+  has date => ( is => 'rw', lazy => 1,
+    default => sub { $_[0] -> c -> stash -> {date} },
+  );
 
-has _taglibs => (
-  is => 'rw',
-  isa => 'HashRef',
-  default => sub { +{ } }
-);
+  has namespaces => ( is => 'rw', isa => 'HashRef', default => sub { +{} } );
 
-sub BUILD {
-  my($self) = @_;
+  has _taglibs => ( is => 'rw', isa => 'HashRef', default => sub { +{ } });
 
-  for my $taglib (keys %{$self -> c -> config -> {'OokOok::Template::TagLibs'} -> {module} || {}}) {
-    $self -> register_taglib($taglib);
-  }
-}
+  has _parser => ( is => 'rw', isa => 'OokOok::Template::Parser' );
 
-sub register_taglib {
-  my($self, $taglib) = @_;
+  method BUILD {
+    for my $taglib (keys %{$self -> c -> config -> {'OokOok::Template::TagLibs'} -> {module} || {}}) {
+      $self -> register_taglib($taglib);
+    }
 
-  Module::Load::load $taglib;
-
-  my $ns = $taglib -> meta -> namespace;
-  if(!$ns) {
-    # get NS from config
-    $ns = $self -> c -> config -> {"OokOok::Template::TagLibs"} -> {module} -> {$taglib} -> {namespace};
-    $taglib -> meta -> namespace($ns); # save it for later
-  }
-  if($ns) {
-    $self -> _taglibs -> {$ns} = $taglib;
-  }
-}
-
-# we expect XML coming in - not free-form text
-sub parse {
-  my($self, $content) = @_;
-
-  my $dom = eval { XML::LibXML -> load_xml( string => $content ) };
-
-  if($@) {
-    croak "Unable to parse document ($@):\n$content\n\n";
-  }
-
-  # we need to handle taglibs
-  my %taglibs;
-  foreach my $ns (keys %{$self -> _taglibs}) {
-    $taglibs{$ns} = $self -> _taglibs -> {$ns} -> new(
-      c => $self -> c,
-      date => $self -> date,
+    $self -> _parser(
+      OokOok::Template::Parser -> new(
+        prefixes => [ keys %{$self -> namespaces} ],
+      )
     );
   }
 
-  my $doc = OokOok::Template::Document -> new(
-    content => $dom,
-    taglibs => \%taglibs,
-  );
+  method register_taglib ($taglib) {
+    Module::Load::load $taglib;
 
-  $doc;
+    my $ns = $taglib -> meta -> namespace;
+    if(!$ns) {
+      # get NS from config
+      $ns = $self -> c -> config -> {"OokOok::Template::TagLibs"} -> {module} -> {$taglib} -> {namespace};
+      $taglib -> meta -> namespace($ns); # save it for later
+    }
+    if($ns) {
+      $self -> _taglibs -> {$ns} = $taglib;
+    }
+  }
+
+  method parse ($content) {
+    my $dom = eval { $self -> _parser -> parse($content) };
+
+    if($@) {
+      croak "Unable to parse document ($@):\n$content\n\n";
+    }
+
+    # we need to handle taglibs
+    my %taglibs;
+    foreach my $ns (keys %{$self -> _taglibs}) {
+      $taglibs{$ns} = $self -> _taglibs -> {$ns} -> new(
+        c => $self -> c,
+        date => $self -> date,
+      );
+    }
+
+    my $doc = OokOok::Template::Document -> new(
+      content => $dom,
+      taglibs => \%taglibs,
+      namespaces => $self -> namespaces,
+    );
+
+    $doc;
+  }
 }
-
-1;
