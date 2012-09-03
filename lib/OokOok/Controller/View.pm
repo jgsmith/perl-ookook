@@ -28,7 +28,13 @@ controller OokOok::Controller::View
       if(!$ctx -> stash -> {project} -> source_version) {
         $ctx -> detach(qw/Controller::Root default/);
       }
-        
+
+      # closed editions are considered published (i.e., publicly readable)
+      # the edition resource
+      if(!$ctx -> stash -> {project} -> can_PLAY) {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+
       # now we walk the sitemap to find the right page
       my $page = $ctx -> stash -> {project} -> page;
       my($slug, $last_page);

@@ -17,12 +17,12 @@ has _user => (
     my($c) = @_;
 
     my $header = $c -> request -> header('X-OokOokSysAuth');
-    my $passwd = $c -> config -> {'OokOok::Plugin::Authentication'}->{system_password};
+    my $passwd = $c -> config -> {'Plugin::OokOok::Authentication'}->{system_password};
 
     if($c -> session -> {user_id}) {
       return $c -> model('DB::User') -> find({ id => $c -> session -> {user_id} });
     }
-    elsif(defined($header) && defined($passwd) && $header eq $passwd && $c -> config -> {'OokOok::Plugin::Authentication'}->{system_user_enabled}) {
+    elsif(defined($header) && defined($passwd) && $header eq $passwd && $c -> config -> {'Plugin::OokOok::Authentication'}->{system_user_enabled}) {
       return $c -> model('DB::User') -> find({ id => 1 });
     }
     elsif($c -> model('DB') -> schema -> is_development) {
@@ -57,7 +57,7 @@ sub user {
 sub authenticate {
   my($c, $provider_name) = @_;
 
-  my $provider = $c -> config -> {'OokOok::Plugin::Authentication'} -> {providers} -> {$provider_name};
+  my $provider = $c -> config -> {'Plugin::OokOok::Authentication'} -> {providers} -> {$provider_name};
   return unless $provider;
 
   my($consumer_key, $consumer_secret) = 

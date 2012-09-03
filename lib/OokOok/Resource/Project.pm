@@ -76,7 +76,7 @@ has_a page => 'OokOok::Resource::Page', (
 sub can_PUT {
   my($self) = @_;
 
-  return 1 if $self -> is_development;
+  return 1 if $self -> c -> model('DB') -> schema -> is_development;
 
   # the user has to be in a rank that can modify the project itself
   # if we get here, we have a user
@@ -91,6 +91,30 @@ sub can_PUT {
 
   return 0;
 }
+
+sub can_PLAY {
+  my($self) = @_;
+
+  return 0 if !$self -> source_version;
+
+  return 1 if $self -> source_version -> is_closed;
+
+  return 1 if $self -> c -> model('DB') -> schema -> is_development;
+
+  # make sure the logged in user is a member of the board
+  return 0 unless $self -> c -> user;
+
+  return 1 if $self -> c -> user -> is_admin;
+
+  my $memberq = $self -> board -> source -> board_members -> search({
+    user_id => $self -> c -> user -> id
+  }) -> count;
+
+  return 1 if $memberq;
+
+  return 0;
+}
+
 
 sub snippet {
   my($self, $name) = @_;
