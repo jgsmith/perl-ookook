@@ -20,7 +20,7 @@ prop layout => (
 
 prop slug => (
   data_type => 'varchar',
-  is_nullable => 1,
+  is_nullable => 0,
   default_value => '',
   size => 255,
 );
@@ -51,6 +51,13 @@ prop description => (
 );
 
 owns_many page_parts => 'OokOok::Schema::Result::PagePart';
+owns_many attachments => 'OokOok::Schema::Result::Attachment';
+
+sub assets {
+  my $self = shift;
+
+  return map { $_ -> asset } $self -> attachments;
+}
 
 sub render {
   my($self, $c) = @_;

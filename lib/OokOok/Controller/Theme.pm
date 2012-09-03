@@ -15,7 +15,7 @@ controller OokOok::Controller::Theme
   }
 
   under resource_base {
-    final action editions as 'edition' isa REST {
+    final action editions as "edition" isa REST {
       $ctx -> stash -> {collection} = OokOok::Collection::ThemeEdition ->
                                          new(c => $ctx);
     }
@@ -23,7 +23,7 @@ controller OokOok::Controller::Theme
       $ctx -> stash -> {collection} = OokOok::Collection::ThemeLayout ->
                                          new(c => $ctx);
     }
-    final action layouts as "theme-style" isa REST {
+    final action styles as "theme-style" isa REST {
       $ctx -> stash -> {collection} = OokOok::Collection::ThemeStyle ->
                                          new(c => $ctx);
     }
@@ -39,7 +39,7 @@ controller OokOok::Controller::Theme
       $ctx -> stash -> {project} -> source -> current_edition -> delete;
     };
 
-    if($@) { print STDERR "DELETE ERROR: $@\n"; }
+    $ctx -> log -> info("DELETE ERROR: $@") if $@;
 
     $self -> status_no_content($ctx);
   }

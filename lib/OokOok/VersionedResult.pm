@@ -13,7 +13,7 @@ use OokOok::Meta::VersionedResult;
 use OokOok::Base::ResultVersion;
 
 Moose::Exporter->setup_import_methods(
-  with_meta => [ 'references' ],
+  with_meta => [ 'references', 'owns_many' ],
   as_is => [ ],
   also => 'Moose',
 );
@@ -43,7 +43,7 @@ sub init_meta {
   $meta -> foreign_key($nom . "_id");
 
   # set up defaults
-  $package -> load_components("InflateColumn::DateTime");
+  #$package -> load_components("InflateColumn::DateTime");
   $package -> table($nom);
   $package -> add_columns( 
     id => {
@@ -98,6 +98,26 @@ sub references {
   $class -> has_many(
     PL_N($meta -> {package} -> table), $meta -> {package},
     $class -> meta -> foreign_key
+  );
+}
+
+sub owns_many {
+  my($meta, $method, $class, %options) = @_;
+
+  Module::Load::load($class);
+
+  %options = (cascade_copy => 0, cascade_delete => 1, %options);
+
+  $class -> add_columns( $meta -> foreign_key, {
+    data_type => 'integer',
+    is_nullable => 1,
+  } );
+  $class -> belongs_to(
+    $meta -> {package} -> table, $meta -> {package}, $meta -> foreign_key
+  );
+
+  $meta -> {package} -> has_many(
+    $method, $class, $meta -> foreign_key, \%options
   );
 }
 

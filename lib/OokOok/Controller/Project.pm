@@ -63,7 +63,7 @@ controller OokOok::Controller::Project
       $ctx -> stash -> {project} -> source -> current_edition -> delete;
     };
 
-    if($@) { print STDERR "DELETE ERROR: $@\n"; }
+    $ctx -> log -> info("DELETE ERROR: $@") if $@;
 
     $self -> status_no_content($ctx);
   }

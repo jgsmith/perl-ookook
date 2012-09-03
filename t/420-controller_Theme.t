@@ -70,7 +70,7 @@ $json = POST_ok("/project", {
   name => "Test",
   description => "Testing layouts",
   theme => $uuid,
-  theme_date => "".DateTime->now()
+  theme_date => DateTime->now->iso8601
 }, "Create project");
 
 my $project_uuid = $json -> {id};
@@ -105,7 +105,6 @@ ok( $req->is_success, "Get page");
 #diag $req -> content;
 my $content = $req -> content;
 
-like $content, qr/class=["']page-part\s+page-part-body["']/, "Right classes";
 like $content, qr/<p>Page Body<\/p>/, "Right content";
 
 #
@@ -129,7 +128,6 @@ ok( $req->is_success, "Get page");
 #diag $req -> content;
 $content = $req -> content;
 
-like $content, qr/class=["']snippet\s+snippet-header["']/, "Right classes";
 like $content, qr/<p>Heading<\/p>/, "Right content";
 
 done_testing();

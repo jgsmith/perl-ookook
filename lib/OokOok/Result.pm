@@ -11,6 +11,7 @@ use Moose ();
 use Moose::Exporter;
 use Moose::Util::MetaRole;
 use String::CamelCase qw(decamelize);
+use Lingua::EN::Inflect qw(PL_N);
 
 use MooseX::Types::Moose qw(ArrayRef);
 
@@ -21,7 +22,7 @@ use OokOok::Meta::Result;
 
 Moose::Exporter->setup_import_methods(
   with_meta => [
-    'prop', 'owns_many', 'with_uuid',
+    'prop', 'owns_many', 'with_uuid', 'references',
   ],
   as_is => [ ],
   also => 'Moose',
@@ -52,7 +53,7 @@ sub init_meta {
   $meta -> foreign_key($nom . "_id");
 
   # set up defaults
-  $package -> load_components("InflateColumn::DateTime");
+  #$package -> load_components("InflateColumn::DateTime");
   $package -> table($nom);
   $package -> add_columns(
     id => {
@@ -117,7 +118,28 @@ sub owns_many {
   $meta -> {package} -> has_many(
     $method, $class, $meta -> foreign_key, \%options
   );
+}
 
+sub references {
+  my($meta, $method, $class, %options) = @_;
+
+  Module::Load::load($class);
+
+  $meta -> {package} -> add_columns( $class -> meta -> foreign_key, {
+    data_type => 'integer',
+    is_nullable => 1,
+  } );
+  $meta -> {package} -> belongs_to(
+    $method, 
+    $class, 
+    $class -> meta -> foreign_key, 
+  );
+  $class -> has_many(
+    PL_N($meta -> {package} -> table), 
+    $meta -> {package}, 
+    $class -> meta -> foreign_key,
+    \%options
+  );
 }
 
 1;

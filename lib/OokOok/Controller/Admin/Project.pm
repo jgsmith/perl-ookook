@@ -65,11 +65,13 @@ controller OokOok::Controller::Admin::Project
     final action project_new as 'new' {
       if($ctx -> request -> method eq 'POST') {
         # get and validate data
+        my $guard = $ctx -> model('DB') -> txn_scope_guard;
         my $collection = OokOok::Collection::Project -> new(c => $ctx);
         my $params = $ctx -> request -> params;
         $params->{theme_date} = DateTime->now -> iso8601;
         my $project = $self -> POST( $ctx, $collection, $params );
         if($project) {
+          $guard -> commit;
           $ctx -> response -> redirect($ctx->uri_for("/admin/project/" . $project -> id));
         }
       }

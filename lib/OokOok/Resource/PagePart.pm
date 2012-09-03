@@ -4,6 +4,7 @@ use OokOok::Resource;
 use OokOok::Formatter::HTML;
 use OokOok::Formatter::Markdown;
 use OokOok::Formatter::BBCode;
+use OokOok::Formatter::Textile;
 
 use Moose::Util::TypeConstraints qw(enum);
 
@@ -28,8 +29,8 @@ prop content => (
 );
 
 prop filter => (
-  type => enum([qw/HTML Markdown BBCode/]), #'Str',
-  values => [qw/HTML Markdown BBCode/],
+  type => enum([qw/HTML Markdown BBCode Textile/]),
+  values => [qw/HTML Markdown BBCode Textile/],
   default => 'HTML',
 );
 
@@ -40,10 +41,6 @@ belongs_to "page" => "OokOok::Resource::Page", (
 
 sub render {
   my($self, $context) = @_;
-
-  #my $proc = OokOok::Template::Processor -> new(
-  #  c => $self -> c,
-  #);
 
   # first, we filter the content
   my $content = $self -> content;

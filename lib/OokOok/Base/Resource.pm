@@ -143,9 +143,15 @@ sub can_DELETE { $_[0] -> is_development }
 sub _GET { 
   my $self = shift;
 
-  die "Unable to GET resource" unless $self -> can_GET;
+  OokOok::Exception -> forbidden(
+    message => 'Unable to GET resource'
+  ) unless $self -> can_GET;
 
-  $self -> GET(@_) 
+  my $guard = $self -> c -> model('DB') -> txn_scope_guard;
+
+  my $r = $self -> GET(@_);
+  $guard -> commit;
+  return $r;
 }
 
 sub GET {
@@ -229,7 +235,10 @@ sub _DELETE {
     message =>  "Unable to DELETE"
   ) unless $self -> can_DELETE;
 
-  $self -> DELETE
+  my $guard = $self -> c -> model('DB') -> txn_scope_guard;
+  my $r = $self -> DELETE;
+  $guard -> commit;
+  return $r;
 }
 
 sub DELETE { 
@@ -252,6 +261,8 @@ sub _PUT {
   OokOok::Exception -> forbidden(
     message => 'Unable to PUT'
   ) unless $self -> can_GET && $self -> can_PUT;
+
+  my $guard = $self -> c -> model('DB') -> txn_scope_guard;
 
   my $embeddings = delete $json -> {_embedded};
 
@@ -342,7 +353,9 @@ sub _PUT {
   $json -> {_embedded} = {};
   $json -> {_nested} = {};
 
-  $self -> PUT($json);
+  my $r = $self -> PUT($json);
+  $guard -> commit;
+  return $r;
 }
 
 sub PUT {
@@ -353,9 +366,21 @@ sub PUT {
 
   if($self -> source_version) {
     my $row = $self -> source_version;
+    my $result_source = $row -> result_source;
     my $new_info = {};
-    for my $col ($row -> result_source -> columns) {
+    for my $col ($result_source -> columns) {
       if(exists $json -> {$col}) {
+        my $colinfo = $result_source -> column_info($col);
+        if(!defined($json->{$col}) && !$colinfo->{is_nullable}) {
+          next;
+        }
+        if($colinfo -> {data_type} =~ m{date|time}) {
+          my $d = $json -> {$col};
+          if(!ref($d)) {
+            $d = DateTime::Format::ISO8601 -> parse_datetime($d);
+            $json->{$col} = $d;
+          }
+        }
         $new_info -> {$col} = $json -> {$col};
       }
     }

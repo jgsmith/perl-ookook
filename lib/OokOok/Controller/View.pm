@@ -23,6 +23,12 @@ controller OokOok::Controller::View
     final action play (@path) as '' isa REST {
       my $date = $ctx -> stash -> {date};
 
+      # if the current dev/date doesn't map to an edition, then
+      # we can't very well find the right page
+      if(!$ctx -> stash -> {project} -> source_version) {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+        
       # now we walk the sitemap to find the right page
       my $page = $ctx -> stash -> {project} -> page;
       my($slug, $last_page);

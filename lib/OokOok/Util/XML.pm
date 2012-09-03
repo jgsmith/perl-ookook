@@ -2,7 +2,7 @@ package OokOok::Util::XML;
 
 use MooseX::Types::Moose qw(HashRef CodeRef);
 use XML::LibXML;
-use Carp::Always;
+#use Carp::Always;
 
 sub ELEMENT {
   my($name, $dom, $attrs, @children) = @_;

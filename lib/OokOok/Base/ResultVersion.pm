@@ -49,14 +49,14 @@ sub duplicate_to_current_edition {
     die "Current instance is closed. Unable to duplicate object for changes";
   }
 
-  my $new_copy = $self -> result_source -> resultset -> search({ 
+  my $others = $self -> result_source -> resultset -> search({ 
     $edition_id_key => $current_edition -> id, 
     $owner_id_key => $self -> owner -> id 
-  })->first;
+  })->count;
 
-  if($new_copy) {
+  if($others) {
     $self -> discard_changes;
-    return $new_copy;
+    die "Another copy already exists in the working edition. Unable to duplicate object for changes.";
   }
 
   return $self -> copy({

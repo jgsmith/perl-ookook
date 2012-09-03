@@ -21,13 +21,16 @@ $c -> stash -> {date} = DateTime->now;
 
 my $processor = OokOok::Template::Processor -> new(
   c => $c,
+  namespaces => {
+    r => 'uin:uuid:ypUv1ZbV4RGsjb63Mj8b',
+  }
 );
 
 $processor -> register_taglib('OokOok::Template::TagLibrary::Core');
 my $ns = OokOok::Template::TagLibrary::Core -> meta -> namespace;
 
 my $doc = $processor -> parse( <<EOXML );
-<foo xmlns:r='$ns'>
+<foo>
   <bar/>
   <r:snippet r:name="bar" />
   <!-- comment -->
@@ -47,12 +50,12 @@ my $project = $project_collection -> _POST({
   name => 'Foo',
   description => 'Test project',
   theme => $theme->id,
-  theme_date => "".DateTime->now
+  theme_date => DateTime->now->iso8601,
 });
 
 $context -> set_resource(project => $project);
 
-my $result = $doc -> render();
+my $result = $doc -> render($context);
 
 diag $result;
 

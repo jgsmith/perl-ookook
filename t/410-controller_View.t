@@ -24,7 +24,7 @@ $json = POST_ok("/theme", {
 
 my $theme_uuid = $json -> {id};
 ok $theme_uuid, "We have a theme uuid";
-my $theme_date = "".DateTime->now;
+my $theme_date = DateTime->now->iso8601;
 
 #
 # Create project and populate with sitemap

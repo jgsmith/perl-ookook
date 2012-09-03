@@ -8,12 +8,12 @@ BEGIN {
 }
 
 BEGIN { 
+  use_ok "OokOok";
   use_ok "OokOok::Model::DB";
   use_ok "OokOok::Schema";
 }
 
-my $schema = OokOok::Schema -> connect('dbi:SQLite:dbname=:memory:');
-
+my $schema = OokOok -> model("DB");
 ok $schema, "Schema object loads";
 
 #
@@ -156,11 +156,10 @@ eval {
   $page->delete;
 };
 
-ok $@, "We get an error when we try to delete a page associated with a frozen edition";
+ok !$@, "We don't get an error when we try to delete a page associated with a frozen edition - we just clear any changes since the freeze";
 
-# We should still have two pages in the DB after the failed delete.
-is $page_rs->count, 2, "two pages in the DB after trying to delete page";
-is $page_version_rs->count, 3, "three page versions in the DB after trying to delete page";
+is $page_rs->count, 2, "two pages in the DB after clearing page";
+is $page_version_rs -> count, 2, "two page revisions after clearing page";
 
 # However, we should be able to delete the page version associated with the
 # working copy. This will revert the project to the page from the prior

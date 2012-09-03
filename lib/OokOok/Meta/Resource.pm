@@ -218,7 +218,12 @@ sub add_hasa {
     my($self) = @_;
     my $row = $self->$method();
     if($row) {
-      return $resource_class -> new( c => $self->c, date => $self->$date, source => $row );
+      return $resource_class -> new( 
+        c => $self->c, 
+        is_development => $self -> is_development,
+        date => $self->$date, 
+        source => $row 
+      );
     }
   } );
 

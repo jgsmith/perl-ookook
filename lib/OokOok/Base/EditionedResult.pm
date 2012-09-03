@@ -4,6 +4,7 @@ use Moose;
 extends 'OokOok::Base::Result';
 
 use namespace::autoclean;
+use DateTime::Format::ISO8601;
 
 after insert => sub {
   $_[0] -> create_related('editions', {});
@@ -82,6 +83,11 @@ sub _apply_date_constraint {
   if($date) {
     if(ref $date) {
       $date = $self -> result_source -> schema -> storage -> datetime_parser -> format_datetime($date);
+    }
+    else {
+      $date = $self -> result_source -> schema -> storage -> datetime_parser -> format_datetime(
+        DateTime::Format::ISO8601 -> parse_datetime($date)
+      );
     }
     $q = $q -> search(
       { $join."closed_on" => { '<=' => $date } },

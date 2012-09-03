@@ -36,6 +36,8 @@ prop type => (
   size => 64,
 );
 
+# We may get rid of this eventually and hold the metadata in a
+# triple-store database so that only the blob-related stuff is here
 prop metadata => (
   data_type => 'text',
   is_nullable => 1,

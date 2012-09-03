@@ -6,6 +6,7 @@ use namespace::autoclean;
 use String::CamelCase qw(decamelize);
 use Lingua::EN::Inflect qw(PL_N);
 use OokOok::Exception;
+use DateTime::Format::ISO8601;
 
 has c => (
   is => 'rw',
@@ -152,7 +153,7 @@ sub GET {
     _links => {
       self => $self -> link
     },
-    _schema => $self -> schema,
+    #_schema => $self -> schema,
     _embedded => [ map { $_ -> GET } $self -> resources($deep) ],
   };
 
@@ -172,6 +173,8 @@ sub _POST {
   die "Unable to POST" unless $self -> can_POST;
 
   die "Unable to POST at the moment" unless $self -> may_POST;
+
+  my $guard = $self -> c -> model('DB') -> txn_scope_guard;
 
   my $resource_class = $self -> resource_class;
 
@@ -220,7 +223,9 @@ sub _POST {
   my $results = $self -> verify(POST => $json);
   delete @$results{grep { !exists $json->{$_} } keys %$results};
 
-  $self -> POST($results, @_);
+  my $r = $self -> POST($results, @_);
+  $guard -> commit;
+  return $r;
 }
 
 sub POST {
@@ -235,8 +240,17 @@ sub POST {
   # the new resource
   my $new_info = {};
 
-  for my $col ($self -> c -> model($self -> resource_model) -> result_source -> columns) {
+  my $result_source = $self -> c -> model($self -> resource_model) -> result_source;
+  for my $col ($result_source -> columns) {
     if(exists $json -> {$col}) {
+      if($result_source -> column_info($col) -> {data_type} =~ m{date|time}) {  
+        my $d = $json -> {$col};
+        if(!ref($d)) {
+          $d = DateTime::Format::ISO8601 -> parse_datetime($d);
+          $json->{$col} = $d;
+        }
+      }
+
       $new_info -> {$col} = $json -> {$col};
     }
   }

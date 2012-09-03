@@ -1,9 +1,7 @@
-package OokOok::Formatter::Markdown;
+use MooseX::Declare;
 
-use Moose;
-use namespace::autoclean;
-use Text::Markdown qw(markdown);
+class OokOok::Formatter::Markdown {
+  use Text::Markdown qw(markdown);
 
-sub format { markdown $_[1] }
-
-1;
+  method format ($text) { markdown($text); }
+}

@@ -6,7 +6,6 @@ class OokOok::Template::Processor {
   use OokOok::Template::Parser;
   use Carp;
 
-  use XML::LibXML;
   use Module::Load ();
 
   has c => ( is => 'rw', isa => 'Maybe[Object]', );
@@ -22,7 +21,7 @@ class OokOok::Template::Processor {
   has _parser => ( is => 'rw', isa => 'OokOok::Template::Parser' );
 
   method BUILD {
-    for my $taglib (keys %{$self -> c -> config -> {'OokOok::Template::TagLibs'} -> {module} || {}}) {
+    for my $taglib (keys %{$self -> c -> config -> {'TagLibs'} -> {module} || {}}) {
       $self -> register_taglib($taglib);
     }
 
@@ -39,7 +38,7 @@ class OokOok::Template::Processor {
     my $ns = $taglib -> meta -> namespace;
     if(!$ns) {
       # get NS from config
-      $ns = $self -> c -> config -> {"OokOok::Template::TagLibs"} -> {module} -> {$taglib} -> {namespace};
+      $ns = $self -> c -> config -> {"TagLibs"} -> {module} -> {$taglib} -> {namespace};
       $taglib -> meta -> namespace($ns); # save it for later
     }
     if($ns) {

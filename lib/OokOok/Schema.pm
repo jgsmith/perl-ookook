@@ -8,7 +8,7 @@ use Moose;
 use MooseX::MarkAsMethods autoclean => 1;
 extends 'DBIx::Class::Schema';
 
-our $VERSION = 2;
+our $VERSION = 3;
 
 __PACKAGE__->load_namespaces;
 
@@ -31,7 +31,7 @@ has is_development => (
 after connection => sub {
   my($self) = @_;
 
-  # If we're SQLite and dbname = :memory:, then deploy
+  # If we're PostgreSQL and dbname = 'ookook_testing', then deploy
   my $dsn = $self -> storage -> connect_info;
   while(ref $dsn) {
     if(ref $dsn eq 'HASH') {
@@ -44,8 +44,10 @@ after connection => sub {
       $dsn = undef;
     }
   }
-  if($dsn eq 'dbi:SQLite:dbname=:memory:') {
-    $self -> deploy;
+  if($dsn eq 'dbi:Pg:dbname=ookook_testing') {
+    $self -> deploy({
+      add_drop_table => 1,
+    });
     $self -> is_development(1);
   }
 };

@@ -13,7 +13,8 @@ view OokOok::View::HTML is mutable
   #
   # This is for the RESTful pieces of the app
   #
-  before process ($ctx, $stash_key?) {
+  before process ($ctx, @stuff) {
+    my $stash_key = shift @stuff;
     if($stash_key) {
       $ctx -> stash -> {data} = $ctx -> stash -> {$stash_key};
     }

@@ -4,17 +4,23 @@ use Moose;
 extends 'OokOok::Base::Result';
 
 use namespace::autoclean;
+use DateTime::Format::ISO8601;
 
 override delete => sub {
   my($self) = @_;
 
   # we want to reset the current version if we have prior versions
   my $cv = $self -> current_version;
-  if($cv -> edition -> is_closed) {
-    return 0;
+  if(!$cv) {
+    die "No current version associated with resource";
   }
 
-  return 0 unless $cv -> delete;
+  if($cv -> edition -> is_closed) {
+    die "Unable to delete a resource associated with a closed edition";
+  }
+
+  $cv -> delete;
+  $self -> get_from_storage;
   if($self -> versions -> count == 0) {
     return super;
   }
@@ -69,6 +75,11 @@ sub version_for_date {
 
   if(ref $date) {
     $date = $self -> result_source -> schema -> storage -> datetime_parser -> format_datetime($date);
+  }
+  else {
+    $date = $self -> result_source -> schema -> storage -> datetime_parser -> format_datetime(
+      DateTime::Format::ISO8601 -> parse_datetime($date)
+    );
   }
 
   my $join = "edition"; #$self -> owner -> editions -> result_source -> from;

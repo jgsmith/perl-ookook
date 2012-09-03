@@ -1,9 +1,8 @@
-package OokOok::Formatter::HTML;
+use MooseX::Declare;
 
-use Moose;
-use namespace::autoclean;
+class OokOok::Formatter::HTML {
 
-# we return HTML, so we just pass things through as-is
-sub format { $_[1] }
+  # we return HTML, so we just pass things through as-is
+  method format ($text) { $text; }
 
-1;
+}

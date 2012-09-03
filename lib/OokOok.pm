@@ -95,6 +95,26 @@ OokOok - Content Management System for scholarly editions
 
 OokOok is a platform for creating scholarly web-based projects.
 
+=head1 CONFIGURATION
+
+In addition to the standard Catalyst configuration options, OokOok has the
+following sections.
+
+=head2 TagLibs
+
+The C<TagLibs> section lets you configure the Perl modules that provide
+implementations for tag libraries. These tag libraries need additional
+configuration in the database before they can be used in projects or
+themes.
+
+For example:
+
+ <TagLibs>
+   <module OokOok::Template::TagLibrary::Core>
+     namepsace uin:uuid:ypUv1ZbV4RGsjb63Mj8b
+   </module>
+ </TagLibs>
+
 =head1 SEE ALSO
 
 L<OokOok::Controller::Root>, L<Catalyst>

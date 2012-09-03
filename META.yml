@@ -1,5 +1,5 @@
 ---
-abstract: 'Catalyst based application'
+abstract: 'Content Management System for scholarly editions'
 author:
   - 'James Smith,,,'
 build_requires:
@@ -21,10 +21,9 @@ no_index:
     - share
     - t
 requires:
-  Catalyst::Action::REST: 0
+  Catalyst::Action::REST: 1.05
   Catalyst::Action::RenderView: 0
   Catalyst::Authentication::Store::DBIx::Class: 0
-  Catalyst::Controller::HTML::FormFu: 0
   Catalyst::Model::Adaptor: 0
   Catalyst::Model::DBIC::Schema: 0
   Catalyst::Model::File: 0
@@ -37,30 +36,30 @@ requires:
   Catalyst::Plugin::StackTrace: 0
   Catalyst::Plugin::Static::Simple: 0
   Catalyst::Plugin::StatusMessage: 0
-  Catalyst::Plugin::Unicode::Encoding: 0
-  Catalyst::Runtime: 5.90012
+  Catalyst::Plugin::Unicode::Encoding: 1.8
+  Catalyst::Runtime: 5.90016
+  Catalyst::View::Mason2: 0
   Catalyst::View::TT: 0
   Catalyst::View::Thumbnail: 0
   CatalystX::Declare: 0
   CatalystX::RoleApplicator: 0
-  Config::General: 0
+  Compress::Zlib: 2.055
+  Config::General: 2.51
+  DBD::Pg: 2.19.3
   DBIx::Class: 0
   DBIx::Class::Schema::Loader: 0
-  Data::UUID: 0
-  Data::Verifier: 0
-  DateTime: 0
+  Data::UUID: 1.218
+  Data::Verifier: 0.54
+  DateTime: 0.76
   DateTime::Format::ISO8601: 0
-  DateTime::Format::Natural: 0
   ElasticSearch: 0
   Exception::Class: 0
-  HTML::FillInForm: 0
-  HTML::FormFu: 0
-  HTML::FormFu::Model::DBIC: 0
   JSON: 0
   LWP::Protocol::https: 0
   Lingua::EN::Inflect: 0
   Math::Round: 0
   Moose: 0
+  MooseX::Declare: 0
   MooseX::MarkAsMethods: 0.13
   MooseX::MethodAttributes::Role: 0
   MooseX::NonMoose: 0.16

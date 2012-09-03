@@ -4,6 +4,7 @@ use Moose ();
 use Moose::Exporter;
 use Moose::Util::MetaRole;
 use String::CamelCase qw(decamelize);
+use DateTime::Format::Pg;
 
 use Module::Load ();
 
@@ -17,6 +18,19 @@ Moose::Exporter->setup_import_methods(
   as_is => [ ],
   also => 'Moose',
 );
+
+my $inflate_datetime = sub {
+  DateTime::Format::Pg->parse_datetime(shift);
+};
+
+my $deflate_datetime = sub {
+  my $dt = shift;
+
+  if(!ref $dt) {
+    $dt = DateTime::Format::ISO8601 -> parse_datetime($dt);
+  }
+  DateTime::Format::Pg->format_datetime($dt);
+};
 
 sub init_meta {
   shift;
@@ -43,7 +57,7 @@ sub init_meta {
   $meta -> foreign_key($nom . "_id");
 
 
-  $package -> load_components("InflateColumn::DateTime");
+  #$package -> load_components("InflateColumn::DateTime");
   $package -> table($nom);
   $package -> add_columns(
     id => {
@@ -77,15 +91,25 @@ sub init_meta {
 
   $package -> set_primary_key('id');
 
+  $package -> inflate_column(created_on => {
+     inflate => $inflate_datetime,
+     deflate => $deflate_datetime,
+  });
+
+  $package -> inflate_column(closed_on => {
+     inflate => $inflate_datetime,
+     deflate => $deflate_datetime,
+  });
+
   $package -> inflate_column(published_for => {
     inflate => sub {
       my $v = shift;
       $v =~ m{^[\[\(](.*)\s*,\s*(.*)[\]\)]};
-      [ map { DateTime::Format::ISO8601 -> parse_datetime($_) } ($1, $2) ]; 
+      [ map { $_ -> $inflate_datetime } ($1, $2) ]; 
     },
     deflate => sub {
       my $v = shift;
-      "[" . join(", ", map { ref($_) ? $_ -> iso8601 : $_ } @$v) . ")"
+      "[" . join(", ", map { $_ -> $deflate_datetime } @$v) . ")"
     },
   });
 
@@ -138,6 +162,11 @@ sub references {
       is_nullable => 1,
     }
   );
+
+  $meta -> {package} -> inflate_column($prop_base . "_date" => {
+     inflate => $inflate_datetime,
+     deflate => $deflate_datetime,
+  });
 
   $meta -> {package} -> belongs_to($prop_base, $class, $prop_base . "_id", \%options);
 }

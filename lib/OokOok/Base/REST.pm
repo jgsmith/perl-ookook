@@ -83,7 +83,6 @@ controller OokOok::Base::REST
   }
 
   method resource_PUT ($ctx) {
-    use Data::Dumper ();
     my $resource = $ctx -> stash -> {resource} -> _PUT($ctx -> req -> data);
     $self -> status_ok($ctx,
       entity => $resource -> _GET(1)

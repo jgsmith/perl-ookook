@@ -49,6 +49,18 @@ controller OokOok::Controller::Admin::Theme
       $ctx -> stash -> {theme_layout} = $layout;
     }
 
+    action theme_asset_base (Str $uuid) as 'asset' {
+      my $theme = $ctx -> stash -> {theme};
+      my $asset = $theme -> asset($uuid);
+      if(!$asset) {
+        return $ctx -> response -> redirect(
+          $ctx -> uri_for("/admin/theme/" . $theme->id . "/asset")
+        );
+      }
+
+      $ctx -> stash -> {theme_asset} = $asset;
+    }
+
   }
 
   under base {
@@ -235,6 +247,29 @@ controller OokOok::Controller::Admin::Theme
         };
       }
       $ctx -> stash -> {template} = "/admin/theme/content/style/edit";
+    }
+  }
+
+  under theme_asset_base {
+    final action theme_asset_edit as 'edit' {
+      if($ctx -> request -> method eq 'POST') {
+        my $asset = $ctx -> stash -> {theme_asset};
+
+        $self -> PUT($ctx, $asset, $ctx -> request -> params);
+        #$self -> PUT_raw($ctx, $asset, $ctx -> request -> uploads);
+
+        my $theme = $ctx -> stash -> {theme};
+        $ctx -> response -> redirect(
+          $ctx -> uri_for("/admin/theme/" . $theme->id, "/asset")
+        );
+      }
+      else {
+        my $asset = $ctx -> stash -> {theme_asset};
+        $ctx -> stash -> {form_data} = {
+          name => $asset -> name,
+        };
+      }
+      $ctx -> stash -> {template} = "/admin/theme/content/asset/edit";
     }
   }
 }

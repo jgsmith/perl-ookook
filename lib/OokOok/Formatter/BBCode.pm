@@ -1,26 +1,23 @@
-package OokOok::Formatter::BBCode;
+use MooseX::Declare;
 
-use Moose;
-use namespace::autoclean;
-use Parse::BBCode::XHTML;
+class OokOok::Formatter::BBCode {
+  use Parse::BBCode;
 
-has _formatter => (
-  is => 'ro',
-  isa => 'Object',
-  builder => '_build_formatter',
-);
+  has _formatter => (
+    is => 'ro',
+    isa => 'Object',
+    builder => '_build_formatter',
+  );
 
-sub _build_formatter { Parse::BBCode::XHTML -> new }
-
-sub format { 
-  my $self = shift;
-  my $tree = $self -> _formatter -> parse(shift);
-  if($tree) {
-    $self -> _formatter -> render_tree($tree);
+  method _build_formatter { 
+    Parse::BBCode -> new(
+      close_open_tags => 1,
+      url_finder => 0,
+      strict_attributes => 0,
+      attribute_quote => q/'"/,
+    );
   }
-  else {
-    '';
-  }
+
+  method format ($text) { $self -> _formatter -> render($text); }
+
 }
-
-1;

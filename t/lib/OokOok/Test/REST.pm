@@ -87,6 +87,7 @@ sub POST_ok {
     HTTP::Request->new( POST => $url, $headers, $content )
   ), "POST: $desc");
 
+  diag( "POST url: $url" );
   diag( "Response content: " . $res -> content );
   diag $res -> content unless $res -> code < 300;
 

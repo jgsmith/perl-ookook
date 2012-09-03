@@ -62,6 +62,11 @@ has_many page_parts => "OokOok::Resource::PagePart", (
   },
 );
 
+has_many assets => "OokOok::Resource::Asset", (
+  is => 'ro',
+  source => sub { $_[0] -> source_version -> assets },
+);
+
 sub slug_path {
   my($self) = @_;
 

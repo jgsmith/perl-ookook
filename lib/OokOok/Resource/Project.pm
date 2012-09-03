@@ -49,7 +49,7 @@ prop theme_date => (
   required => 1,
   type => 'Str',
   default => sub { DateTime -> now },
-  source => sub { "".($_[0] -> source_version -> theme_date || "") },
+  source => sub { $_[0] -> source_version -> theme_date -> iso8601 },
 );
 
 has_a theme => 'OokOok::Resource::Theme', (
@@ -76,10 +76,8 @@ has_a page => 'OokOok::Resource::Page', (
 sub can_PUT {
   my($self) = @_;
 
-  print STDERR "$self -> can_PUT\n";
   return 1 if $self -> is_development;
 
-  print STDERR "Now looking up rank\n";
   # the user has to be in a rank that can modify the project itself
   # if we get here, we have a user
   # we pull out the top rank held by the user
@@ -87,10 +85,7 @@ sub can_PUT {
     user_id => $self -> c -> user -> id
   });
 
-  print STDERR "can_PUT project with rank [$rank]\n";
   return 0 unless $rank;
-
-  print STDERR "rank position: ", $rank -> rank, "\n";
 
   return 1 if $rank -> rank == 0; # top rank can always do stuff
 

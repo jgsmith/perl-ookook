@@ -9,12 +9,13 @@ BEGIN {
 }
 
 BEGIN { 
+  use_ok "OokOok";
   use_ok "OokOok::Model::DB";
   use_ok "OokOok::Schema";
 }
 
 
-my $schema = OokOok::Schema -> connect('dbi:SQLite:dbname=:memory:');
+my $schema = OokOok -> model('DB');
 ok $schema, "Schema object loads";
 
 #

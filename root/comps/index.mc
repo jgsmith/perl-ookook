@@ -1,36 +1,68 @@
-<div class="hero-unit">
+<%args>
+$.posts => sub { [] }
+</%args>
+<div class="hero-unit" style="text-align: center;">
   <h1>OokOok!</h1>
-  <h2>Digital Library for Born-Digital Material</h2>
-  <p>
-    OokOok is a platform for born-digital scholarly projects. 
-    OokOok is designed from the ground up to enable long-term 
-    preservation of digital projects.
-  </p>
-  <p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+  <form action="<% $c->uri_for("/search") %>">
+    <div class="row">
+      <div class="offset3 span6">
+        <input type="text" name="q" class="span6" />
+      </div>
+      <div class="offset4 span4">
+        <button type="submit" class="btn btn-primary">Search</button>
+        <button type="submit" class="btn" name="l" value="1">I'm feeling lucky</button>
+      </div>
+    </div>
+  </form>
 </div>
 
-<!-- Example row of columns -->
-<div class="row-fluid">
-  <div class="span4">
-    <h2>It's a Platform</h2>
-    <p>OokOok is a content management system designed for born-digital
-       scholarly projects.</p>
-    <p><a class="btn" href="#">View details &raquo;</a></p>
+<!-- we want to have a display of recently updated projects below
+     that automatically loads as you scroll down the page -->
+<section id="content" class="row">
+% for my $post (@{$.posts}) {
+  <div class="box <% $post->{class} %>">
+    <% $post->{content} %>
   </div>
-  <div class="span4">
-    <h2>It's Curated</h2>
-    <p>OokOok doesn't try to preserve what has been made. It preserves
-       what will be made.</p>
-    <p><a class="btn" href="#">View details &raquo;</a></p>
-  </div>
-  <div class="span4">
-    <h2>It's Forever</h2>
-    <p>OokOok is designed to preserve your work forever, or a hundred
-       years. Whichever comes first.</p>
-    <p><a class="btn" href="#">View details &raquo;</a></p>
-  </div>
-</div>
-<hr>
-<footer>
-  <p>&copy; Company 2012</p>
-</footer>
+% }
+</section>
+<nav id="page-nav">
+  <a href="<% $c->uri_for("/?page=2") %>"></a>
+</nav>
+<script src="<% $c->uri_for("/static/js/masonry.js") %>"></script>
+<script src="<% $c->uri_for("/static/js/jquery.infinitescroll.min.js") %>"></script>
+<script>
+  $(function(){
+    
+    var $container = $('#container');
+    
+    $container.imagesLoaded(function(){
+      $container.masonry({
+        itemSelector: '.box',
+        columnWidth: 100
+      });
+    });
+    
+    $container.infinitescroll({
+      navSelector  : '#page-nav',    // selector for the paged navigation 
+      nextSelector : '#page-nav a',  // selector for the NEXT link (to page 2)
+      itemSelector : '.box',     // selector for all items you'll retrieve
+      loading: {
+          finishedMsg: 'No more pages to load.',
+          img: 'http://i.imgur.com/6RMhx.gif'
+        }
+      },
+      // trigger Masonry as a callback
+      function( newElements ) {
+        // hide new items while they are loading
+        var $newElems = $( newElements ).css({ opacity: 0 });
+        // ensure that images load before adding to masonry layout
+        $newElems.imagesLoaded(function(){
+          // show elems now they're ready
+          $newElems.animate({ opacity: 1 });
+          $container.masonry( 'appended', $newElems, true ); 
+        });
+      }
+    );
+    
+  });
+</script>

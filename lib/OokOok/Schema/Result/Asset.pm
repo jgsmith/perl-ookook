@@ -10,4 +10,6 @@ OokOok::Schema::Result::Asset
 use OokOok::VersionedResult;
 use namespace::autoclean;
 
+owns_many attachments => 'OokOok::Schema::Result::Attachment';
+
 1;

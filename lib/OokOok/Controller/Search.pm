@@ -115,6 +115,10 @@ controller OokOok::Controller::Search {
         $b -> {date}  cmp $a -> {date}
       } values %docs;
 
+      if($ctx -> request -> params -> {l} && @docs) {
+        return $ctx -> response -> redirect( $docs[0]->{instances}->[0]->{link} );
+      }
+
       for my $d (@docs) {
         $d -> {score} = Math::Round::nearest(0.01, $d -> {score} / $max_score);
         for my $i (@{$d -> {instances}}) {

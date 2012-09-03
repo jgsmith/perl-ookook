@@ -23,8 +23,8 @@ prop content => (
 );
 
 prop filter => (
-  type => enum([qw/HTML Markdown BBCode/]), #'Str',
-  values => [qw/HTML Markdown BBCode/],
+  type => enum([qw/HTML Markdown BBCode Textile/]),
+  values => [qw/HTML Markdown BBCode Textile/],
   default => 'HTML',
   source => sub { $_[0] -> source_version -> filter },
 );

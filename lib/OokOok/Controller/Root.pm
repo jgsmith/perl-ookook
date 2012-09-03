@@ -1,7 +1,7 @@
 use CatalystX::Declare;
 
 controller OokOok::Controller::Root 
-   extends Catalyst::Controller::REST
+#   extends Catalyst::Controller::REST
 {
 
   use OokOok::Collection::Project;
@@ -22,73 +22,27 @@ controller OokOok::Controller::Root
 
   under '/' {
 
-    final action index as '' isa REST;
-
-    final action index_GET is private {
+    final action index as '' {
       my $entity = { };
 
-      if($ctx -> request -> content_type ne 'text/html') {
-        my %embeddings = (
-          projects => OokOok::Collection::Project->new(c=>$ctx),
-          boards => OokOok::Collection::Board->new(c=>$ctx),
-          themes => OokOok::Collection::Theme->new(c=>$ctx),
-          libraries => OokOok::Collection::Library->new(c=>$ctx),
-          databases => OokOok::Collection::Database->new(c=>$ctx),
-        );
-
-        $entity = {
-          _links => {
-            self => $ctx->uri_for('/') -> as_string,
-          },
-          _auth => { authenticated => 0 },
-          _embedded => [ ]
-        };
-
-        if($ctx -> user) {
-          $entity -> {_auth}{authenticated} = 1;
-          $ctx -> stash -> {development} = 1;
+      my $page = $ctx -> request -> params->{page} || 1;
+      my @posts;
+      my $editions = $ctx -> model('DB::Edition') -> search({
+          'me.closed_on' => { '!=' => undef },
+        }, {
+          page => $page,
+          order_by => { -desc => 'me.closed_on' },
         }
-  
-        push @{$entity->{_embedded}}, {
-          _links => { self => $embeddings{projects} -> link },
-          dataType => 'Project',
-          title => 'Projects',
-          id => 'projects',
-          schema => $embeddings{projects} -> schema,
-        };
-  
-        if($ctx -> user) {
-          push @{$entity->{_embedded}}, {
-            _links => { self => $embeddings{boards} -> link },
-            dataType => 'Board',
-            title => 'Editorial Boards',
-            id => 'boards',
-            schema => $embeddings{boards} -> schema,
-          };
-          if($ctx -> user -> is_admin) {
-            push @{$entity->{_embedded}}, {
-              _links => { self => $embeddings{themes} -> link },
-              dataType => 'Theme',
-              title => 'Themes',
-              id => 'themes',
-              schema => $embeddings{themes} -> schema,
-            };
-          }
-        }
-      }
-      $self -> status_ok($ctx, entity => $entity);
-    }
-
-    final action index_OPTIONS is private {
-      $ctx -> response -> status(200);
-      $ctx -> response -> headers -> header(
-        Allow => [qw/GET OPTIONS/],
-        Accept => [qw{application/json text/html}],
       );
-      $ctx -> response -> body('');
-      $ctx -> response -> content_length(0);
-      $ctx -> response -> content_type("text/plain");
-      $ctx -> detach;
+
+      for my $edition ($editions -> all) {
+        push @posts, {
+          class => 'span' . ($page > 2 ? 2 : (8 - 2*$page)),
+          content => '<h1>' . $edition -> name . '</h1>' . '<p>' . $edition -> description . '</p>',
+        };
+      }
+
+      $ctx -> stash -> {posts} = [ @posts ];
     }
 
     final action default (@args) {

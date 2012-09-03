@@ -15,7 +15,7 @@ controller OokOok::Base::Admin {
 
   final action end (@args) isa RenderView;
 
-  final action doMethod ($method, $resource, $params) is private {
+  method doMethod ($ctx, $method, $resource, $params) {
     my $thing = eval {
       $resource -> $method($params);
     };

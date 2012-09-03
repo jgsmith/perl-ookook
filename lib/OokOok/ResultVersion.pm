@@ -42,7 +42,7 @@ sub init_meta {
 
   $meta -> foreign_key($nom . "_id");
 
-  $package -> load_components("InflateColumn::DateTime");
+  #$package -> load_components("InflateColumn::DateTime");
   $package -> table($nom);
   $package -> add_columns(
     id => {

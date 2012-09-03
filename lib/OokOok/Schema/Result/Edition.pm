@@ -29,7 +29,6 @@ references_own page => 'OokOok::Schema::Result::Page';
 
 references theme => 'OokOok::Schema::Result::Theme';
 
-
 owns_many page_versions => "OokOok::Schema::Result::PageVersion";
 owns_many snippet_versions => "OokOok::Schema::Result::SnippetVersion";
 

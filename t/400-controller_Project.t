@@ -31,7 +31,7 @@ $json = POST_ok("/theme", {
 
 my $theme_uuid = $json -> {id};
 ok $theme_uuid, "We have a theme uuid";
-my $theme_date = "".DateTime->now;
+my $theme_date = DateTime->now;
 
 #
 # Create a project
@@ -41,7 +41,7 @@ $json = POST_ok("/project", {
     name => "Test Project",
     description => "Test project description",
     theme => $theme_uuid,
-    theme_date => $theme_date,
+    theme_date => $theme_date -> iso8601,
   }, "create project");
 
 is $json->{name}, "Test Project", "Name returned";
@@ -98,7 +98,7 @@ $json = POST_ok("/project", {
   name => "Test Project 2",
   description => "Another test project",
   theme => $theme_uuid,
-  theme_date => $theme_date,
+  theme_date => $theme_date -> iso8601,
 }, "create another project");
 
 is $json->{name}, "Test Project 2", "Right name";
