@@ -2,10 +2,13 @@ use CatalystX::Declare;
 
 controller OokOok::Base::Admin {
 
-  final action begin is private {
+  final action begin (@rest) is private {
+    $ctx -> log -> debug("OokOok::Base::Admin#begin called\n");
+    return if $ctx -> action -> class eq "OokOok::Controller::Admin::OAuth";
     if(!$ctx -> user) {
       # redirect to admin top-level page
       $ctx -> session -> {redirect} = $ctx -> request -> uri;
+      $ctx -> session -> {allow_GET_for_oauth} = 1;
       $ctx -> response -> redirect($ctx -> uri_for("/admin/oauth/twitter"));
       $ctx -> detach;
     }
@@ -13,7 +16,7 @@ controller OokOok::Base::Admin {
     $ctx -> stash -> {development} = 1;
   }
 
-  final action end (@args) isa RenderView;
+  final action end (@args) is private isa RenderView;
 
   method doMethod ($ctx, $method, $resource, $params) {
     my $thing = eval {

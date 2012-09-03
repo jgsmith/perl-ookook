@@ -31,12 +31,7 @@
             <ul class="nav">
               <% $.navLink("/", "Home") %>
 %             if($c -> user) {
-                <% $.navLink("/admin/project", "Projects") %>
-%               if($c -> user -> may_design) {
-                  <% $.navLink("/admin/theme", "Themes") %>
-                  <% $.navLink("/admin/typeface", "Typefaces") %>
-%               }
-                <% $.navLink("/admin/board", "Boards") %>
+                <% $.navLink("/admin", "Admin") %>
 %             }
             </ul>
             <ul class="nav pull-right">

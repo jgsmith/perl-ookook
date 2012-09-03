@@ -6,9 +6,9 @@ $.invalid => sub { [] }
 <%augment wrap>
   <% $.navigation %>
   <div class="row-fluid">
-    <div class="span12">
+    <!-- div class="span12" -->
       <% inner() %>
-    </div>
+    <!-- /div -->
   </div>
   <script>
     $(function() {

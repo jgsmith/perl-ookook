@@ -7,7 +7,7 @@ controller OokOok::Controller::Admin::Project
 
   use OokOok::Collection::Project;
   use OokOok::Collection::Theme;
-  #use OokOok::Resource::Project;
+  use OokOok::Resource::Project;
   use OokOok::Resource::Theme;
 
   action base under '/' as 'admin/project';
@@ -17,9 +17,9 @@ controller OokOok::Controller::Admin::Project
     action project_base (Str $uuid) as '' {
       my $resource = OokOok::Collection::Project->new(c => $ctx) ->
                      resource($uuid);
-      if(!$resource) {
-        $ctx -> detach(qw/Controller::Root default/);
-      }
+
+      $ctx -> detach(qw/Controller::Root default/) unless $resource;
+
       $ctx -> stash -> {project} = $resource;
     }
 
@@ -31,9 +31,10 @@ controller OokOok::Controller::Admin::Project
       my $page = OokOok::Collection::Page -> new(c => $ctx) -> resource($uuid);
       if(!$page) {
         my $project = $ctx -> stash -> {project};
-        return $ctx -> response -> redirect(
+        $ctx -> response -> redirect(
           $ctx -> uri_for("/admin/project/" . $project->id . "/page")
         );
+        $ctx -> detach;
       }
 
       $ctx -> stash -> {page} = $page;
@@ -43,9 +44,10 @@ controller OokOok::Controller::Admin::Project
       my $snippet = OokOok::Collection::Snippet -> new(c => $ctx) -> resource($uuid);
       if(!$snippet) {
         my $project = $ctx -> stash -> {project};
-        return $ctx -> response -> redirect(
+        $ctx -> response -> redirect(
           $ctx -> uri_for("/admin/project/" . $project->id . "/snippet")
         );
+        $ctx -> detach;
       }
 
       $ctx -> stash -> {snippet} = $snippet;
@@ -73,6 +75,7 @@ controller OokOok::Controller::Admin::Project
         if($project) {
           $guard -> commit;
           $ctx -> response -> redirect($ctx->uri_for("/admin/project/" . $project -> id));
+          $ctx -> detach;
         }
       }
       $ctx -> stash -> {themes} = [ 

@@ -1,3 +1,4 @@
+<div class="span12">
 % $.IndexTable(1) {{
 %   $.IndexHead {{
       <% $.IndexHeadName("Typeface") %>
@@ -15,3 +16,4 @@
 <a href="<% $c->uri_for("/admin/typeface/new") %>" class="btn btn-primary">
   New Typeface
 </a>
+</div>

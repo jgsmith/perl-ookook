@@ -23,7 +23,7 @@ application OokOok
   use CatalystX::RoleApplicator;
   use DateTime;
 
-  $CLASS->apply_request_class_roles(qw[
+  $CLASS -> apply_request_class_roles(qw[
     Catalyst::TraitFor::Request::REST::ForBrowsers
   ]);
 

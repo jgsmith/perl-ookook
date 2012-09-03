@@ -8,7 +8,8 @@ use Moose;
 use MooseX::MarkAsMethods autoclean => 1;
 extends 'DBIx::Class::Schema';
 
-our $VERSION = 3;
+# the schema version - not the OokOok package version
+our $VERSION = 1;
 
 __PACKAGE__->load_namespaces;
 

@@ -32,7 +32,7 @@ $.layouts => sub { [] }
               ) %>
            <% $.IndexItemTargetedAction(
                 0,
-                "/admin/theme/".$.theme_id."/layout/$layout_id/preview", 
+                "/dev/admin/theme/".$.theme_id."/layout/$layout_id/preview", 
                 "screenshot", 
                 "Preview",
                 "_" . $layout_id

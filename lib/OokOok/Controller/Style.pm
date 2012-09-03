@@ -33,6 +33,14 @@ controller OokOok::Controller::Style
   under play_tbase {
     action tstyle_base ($uuid) as 'style' {
       my $theme = $ctx -> stash -> {theme};
+
+      # closed editions are considered published (i.e., publicly readable)
+      # the edition resource
+      if(!$theme -> can_PLAY) {
+        $ctx -> log -> info("Can't play theme");
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+
       my $style = $theme -> style($uuid);
 
       if(!$style) {
@@ -49,12 +57,20 @@ controller OokOok::Controller::Style
 
   under play_base {
     action style_base ($uuid) as 'style' {
+      # closed editions are considered published (i.e., publicly readable)
+      # the edition resource
+      if(!$ctx -> stash -> {project} -> can_PLAY) {
+        $ctx -> log -> info("Can't play project");
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+
       my $theme = $ctx -> stash -> {project} -> theme;
       my $style = $theme -> style($uuid);
 
       if(!$style) {
         $ctx -> detach(qw/Controller::Root default/);
       }
+
 
       $ctx -> stash -> {resource} = $style;
     }

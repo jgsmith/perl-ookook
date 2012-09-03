@@ -13,3 +13,9 @@ $.typeface_id => sub { shift -> typeface -> id }
 <%method branding>
   <a class="brand" href="#"><% $.typeface->name %> Typeface</a>
 </%method>
+
+<%augment wrap>
+  <div class="span12">
+    <% inner() %>
+  </div>
+</%augment>

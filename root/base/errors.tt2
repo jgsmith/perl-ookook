@@ -24,7 +24,8 @@
         <p>It looks like we ran into a problem.
            Don't worry, though. Someone will be on top of it as soon as
            possible.
-        </p>
+           You can go to <a href="[% c.uri_for("/") %]">the top page</a>
+           or search for something.</p>
         <form action="[% c.uri_for("/search") %]">
           <div class="row">
             <div class="offset1 span10">

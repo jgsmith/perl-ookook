@@ -73,6 +73,40 @@ sub can_PUT {
   $self -> c -> user -> is_admin;
 }
 
+sub can_PLAY {
+  my($self) = @_;
+
+  print STDERR "$self can_PLAY?\n";
+
+  return 0 if !$self -> source_version;
+  print STDERR "We have a source_version\n";
+
+  return 1 if $self -> source_version -> is_closed;
+  print STDERR "We're not closed\n";
+
+  return 1 if $self -> c -> model('DB') -> schema -> is_development;
+  print STDERR "We're not in development\n";
+
+  # make sure the logged in user is a member of the board
+  return 0 unless $self -> c -> user;
+  print STDERR "We have a user\n";
+
+  return 1 if $self -> c -> user -> is_admin;
+  print STDERR "Not marked as admin\n";
+
+  return 0 unless $self -> board;
+  print STDERR "We have a board\n";
+
+  my $memberq = $self -> board -> source -> board_members -> search({
+    user_id => $self -> c -> user -> id
+  }) -> count;
+
+  print STDERR "We're a member of the board? $memberq\n";
+  return 1 if $memberq;
+
+  return 0;
+}
+
 sub layout {
   my($self, $uuid) = @_;
 
