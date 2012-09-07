@@ -1,10 +1,7 @@
-use CatalystX::Declare;
+use OokOok::Declare;
 
-controller OokOok::Controller::Project
-   extends OokOok::Base::REST
-{
+rest_controller OokOok::Controller::Project {
 
-  use OokOok::Collection::Project;
   use OokOok::Collection::Edition;
   use OokOok::Collection::Page;
   use OokOok::Collection::Snippet;

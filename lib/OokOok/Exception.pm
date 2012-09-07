@@ -1,116 +1,66 @@
-package OokOok::Exception;
+use MooseX::Declare;
 
-use Moose;
-extends 'Throwable::Error';
+class OokOok::Exception extends Throwable::Error is mutable {
+  has status => ( is => 'ro', isa => 'Int', default => 400 );
 
-use namespace::autoclean;
-
-has status => (
-  is => 'ro',
-  isa => 'Int',
-  default => 400,
-);
-
-sub bad_request { shift -> throw( @_, status => 400 ) }
-sub forbidden   { shift -> throw( @_, status => 403 ) }
-sub not_found   { shift -> throw( @_, status => 404 ) }
-sub gone        { shift -> throw( @_, status => 410 ) }
-
-package OokOok::Exception::DELETE;
-
-use Moose;
-extends 'OokOok::Exception';
-use namespace::autoclean;
-
-
-package OokOok::Exception::PUT;
-
-use Moose;
-extends 'OokOok::Exception';
-use namespace::autoclean;
-
-has missing => (
-  is => 'ro',
-  isa => 'ArrayRef',
-  required => 0,
-  predicate => 'has_missing',
-);
-
-has invalid => (
-  is => 'ro',
-  isa => 'ArrayRef',
-  required => 0,
-  predicate => 'has_invalid',
-);
-
-package OokOok::Exception::POST;
-
-use Moose;
-extends 'OokOok::Exception::PUT';
-use namespace::autoclean;
-
-
-package OokOok::Exception::OAIPMH;
-
-use Moose;
-extends 'Throwable::Error';
-
-has code => (
-  is => 'ro',
-  isa => 'Str',
-  required => 1,
-);
-
-sub badVerb {
-  shift -> throw( 
-    message => "Illegal OAI verb", @_,
-    code => 'badVerb' 
-  ) 
-}
-sub badArgument  {
-  shift -> throw( 
-    message => '',
-    @_, 
-    code => 'badArgument' 
-  )
-}
-sub cannotDisseminateFormat {
-  shift -> throw( 
-    message => '',
-    @_, 
-    code => 'cannotDisseminateFormat' 
-  )
-}
-sub noMetadataFormats {
-  shift -> throw( 
-    message => '',
-    @_, 
-    code => 'noMetadataFormats' 
-  )
-}
-sub idDoesNotExist  {
-  shift -> throw( 
-    message => 'No matching identifier in this repository', @_, 
-    code => 'idDoesNotExist' 
-  )
-}
-sub noSetHierarchy {
-  shift -> throw( 
-    message => "This repostory does not support sets", @_,
-    code => "noSetHierarchy" 
-  )
-}
-sub badResumptionToken {
-  shift -> throw(
-    message => '', @_,
-    code => 'badResumptionToken'
-  )
-}
-sub noRecordsMatch {
-  shift -> throw(
-    message => '', @_,
-    code => 'noRecordsMatch'
-  )
+  method bad_request (Object|ClassName $self: %args) 
+                     { $self -> throw( %args, status => 400 ) }
+  method forbidden   (Object|ClassName $self: %args) 
+                     { $self -> throw( %args, status => 403 ) }
+  method not_found   (Object|ClassName $self: %args) 
+                     { $self -> throw( %args, status => 404 ) }
+  method gone        (Object|ClassName $self: %args) 
+                     { $self -> throw( %args, status => 410 ) }
 }
 
-1;
+class OokOok::Exception::DELETE extends OokOok::Exception is mutable;
+
+class OokOok::Exception::GET extends OokOok::Exception is mutable;
+
+class OokOok::Exception::PUT extends OokOok::Exception is mutable {
+
+  has missing => (
+    is => 'ro',
+    isa => 'ArrayRef',
+    required => 0,
+    predicate => 'has_missing',
+  );
+
+  has invalid => (
+    is => 'ro',
+    isa => 'ArrayRef',
+    required => 0,
+    predicate => 'has_invalid',
+  );
+
+}
+
+class OokOok::Exception::POST extends OokOok::Exception::PUT is mutable;
+
+class OokOok::Exception::OAIPMH extends Throwable::Error is mutable {
+  use CLASS;
+
+  has code => ( is => 'ro', isa => 'Str', required => 1 );
+
+  my %messages = (
+    badVerb => 'Illegal OAI verb',
+    badArgument => '',
+    cannotDisseminateFormat => '',
+    noMetadataFormats => '',
+    idDoesNotExist => 'No matching identifier in this repository',
+    noSetHierarchy => 'This repository does not support sets',
+    badResumptionToken => '',
+    noRecordsMatch => '',
+  );
+
+  for my $method (keys %messages) {
+    $CLASS -> meta -> add_method( $method => sub {
+      my($self, %args) = @_;
+      $self -> throw(
+        message => $messages{$method},
+        %args,
+        code => $method
+      );
+    } );
+  }
+}

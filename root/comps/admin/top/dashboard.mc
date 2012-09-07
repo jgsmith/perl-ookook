@@ -11,7 +11,7 @@ $.themes   => sub { [] }
   </div>
 </div>
 % }
-% elsif(@{$.projects} == 0) {
+% elsif(@{$.projects} == 0 && !$c -> user -> is_admin) {
 <div class="hero-unit" style="text-align: center;">
   <p>You don't have any projects!</p>
   <div class="offset4 span4">

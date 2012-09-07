@@ -1,9 +1,7 @@
-use CatalystX::Declare;
+use OokOok::Declare;
 
-controller OokOok::Controller::Admin::Theme
-   extends OokOok::Base::Admin
-{
-  use OokOok::Collection::Theme;
+admin_controller OokOok::Controller::Admin::Theme {
+
   use OokOok::Collection::ThemeLayout;
   use OokOok::Collection::ThemeStyle;
   use OokOok::Collection::ThemeVariable;
@@ -29,9 +27,10 @@ controller OokOok::Controller::Admin::Theme
       my $theme = $ctx -> stash -> {theme};
       my $style = $theme -> style($uuid);
       if(!$style) {
-        return $ctx -> response -> redirect(
+        $ctx -> response -> redirect(
           $ctx -> uri_for("/admin/theme/" . $theme->id . "/style")
         );
+        $ctx -> detach;
       }
 
       $ctx -> stash -> {theme_style} = $style;
@@ -41,9 +40,10 @@ controller OokOok::Controller::Admin::Theme
       my $theme = $ctx -> stash -> {theme};
       my $layout = $theme -> layout($uuid);
       if(!$layout) {
-        return $ctx -> response -> redirect(
+        $ctx -> response -> redirect(
           $ctx -> uri_for("/admin/theme/" . $theme->id . "/layout")
         );
+        $ctx -> detach;
       }
 
       $ctx -> stash -> {theme_layout} = $layout;
@@ -53,12 +53,26 @@ controller OokOok::Controller::Admin::Theme
       my $theme = $ctx -> stash -> {theme};
       my $asset = $theme -> asset($uuid);
       if(!$asset) {
-        return $ctx -> response -> redirect(
+        $ctx -> response -> redirect(
           $ctx -> uri_for("/admin/theme/" . $theme->id . "/asset")
         );
+        $ctx -> detach;
       }
 
       $ctx -> stash -> {theme_asset} = $asset;
+    }
+
+    action theme_snippet_base (Str $uuid) as 'snippet' {
+      my $theme = $ctx -> stash -> {theme};
+      my $snippet = $theme -> snippet($uuid);
+      if(!$snippet) {
+        $ctx -> response -> redirect(
+          $ctx -> uri_for("/admin/theme/" . $theme->id . "/asset")
+        );
+        $ctx -> detach;
+      }
+
+      $ctx -> stash -> {theme_snippet} = $snippet;
     }
 
   }
@@ -76,11 +90,15 @@ controller OokOok::Controller::Admin::Theme
       if($ctx -> request -> method eq 'POST') {
         # get and validate data
         my $collection = OokOok::Collection::Theme -> new(c => $ctx);
-        my $theme = $self -> POST( $ctx, $collection, $ctx -> request -> params );
+        my $theme = $self -> POST( $ctx, 
+          collection => 'OokOok::Collection::Theme', 
+          redirect => 0
+        );
         if($theme) {
           $ctx -> response -> redirect(
             $ctx->uri_for("/admin/theme/" . $theme -> id)
           );
+          $ctx -> detach;
         }
       }
       $ctx -> stash -> {template} = "/admin/top/themes/new";
@@ -107,12 +125,9 @@ controller OokOok::Controller::Admin::Theme
 
     final action theme_editions_new as 'editions/new' {
       if($ctx -> request -> method eq 'POST') {
-        my $theme = $ctx -> stash -> {theme};
-        # really do the new edition
-        my $edition_collection = OokOok::Collection::ThemeEdition -> new(c => $ctx);
-        $edition_collection -> _POST({});
-        $ctx -> response -> redirect(
-          $ctx -> uri_for("/admin/theme/" . $theme->id . "/editions")
+        $self -> POST($ctx, 
+          collection => 'OokOok::Collection::ThemeEdition',
+          params => {},
         );
       }
       $ctx -> stash -> {template} = '/admin/theme/settings/editions/new';
@@ -142,6 +157,14 @@ controller OokOok::Controller::Admin::Theme
       $ctx -> stash -> {template} = "/admin/theme/content/style";
     }
 
+    final action theme_snippets as 'snippet' {
+      $ctx -> stash -> {snippets} = [ 
+        OokOok::Collection::ThemeSnippet -> new(c => $ctx) -> resources 
+      ];
+
+      $ctx -> stash -> {template} = "/admin/theme/content/snippet";
+    }
+
     final action theme_variables as 'variable' {
       $ctx -> stash -> {theme_variables} = [ 
         OokOok::Collection::ThemeVariable -> new(c => $ctx) -> resources 
@@ -152,32 +175,18 @@ controller OokOok::Controller::Admin::Theme
 
     final action theme_layout_new as 'layout/new' {
       if($ctx -> request -> method eq 'POST') {
-        # get and validate data
-        my $theme = $ctx -> stash -> {theme};
-        my $collection = OokOok::Collection::ThemeLayout -> new(
-          c => $ctx
+        $self -> POST($ctx, 
+          collection => 'OokOok::Collection::ThemeLayout',
         );
-        my $layout = $self -> POST($ctx, $collection, $ctx -> request -> params);
-        if($layout) {
-          $ctx -> response -> redirect($ctx->uri_for("/admin/theme/" . $theme -> id . "/layout"));
-        }
       }
       $ctx -> stash -> {template} = "/admin/theme/content/layout/new";
     }
 
     final action theme_style_new as 'style/new' {
       if($ctx -> request -> method eq 'POST') {
-        # get and validate data
-        my $theme = $ctx -> stash -> {theme};
-        my $collection = OokOok::Collection::ThemeStyle -> new(
-          c => $ctx
+        $self -> POST($ctx, 
+          collection => 'OokOok::Collection::ThemeStyle'
         );
-        my $style = $self -> POST($ctx, $collection, $ctx -> request -> params);
-        if($style) {
-          $ctx -> response -> redirect(
-            $ctx->uri_for("/admin/theme/" . $theme -> id . "/style")
-          );
-        }
       }
       $ctx -> stash -> {template} = "/admin/theme/content/style/new";
     }
@@ -186,11 +195,8 @@ controller OokOok::Controller::Admin::Theme
   under theme_layout_base {
     final action theme_layout_edit as 'edit' {
       if($ctx -> request -> method eq 'POST') {
-        my $layout = $ctx -> stash -> {theme_layout};
-        $self -> PUT($ctx, $layout, $ctx -> request -> params);
-        my $theme = $ctx -> stash -> {theme};
-        $ctx -> response -> redirect(
-          $ctx->uri_for("/admin/theme/" . $theme -> id . "/layout")
+        $self -> PUT($ctx,
+          resource => 'theme_layout',
         );
       }
       else {
@@ -232,11 +238,8 @@ controller OokOok::Controller::Admin::Theme
 
     final action theme_style_edit as 'edit' {
       if($ctx -> request -> method eq 'POST') {
-        my $style = $ctx -> stash -> {theme_style};
-        $self -> PUT($ctx, $style, $ctx -> request -> params);
-        my $theme = $ctx -> stash -> {theme};
-        $ctx -> response -> redirect(
-          $ctx->uri_for("/admin/theme/" . $theme -> id . "/style")
+        $self -> PUT($ctx,
+          resource => 'theme_style',
         );
       }
       else {
@@ -253,14 +256,8 @@ controller OokOok::Controller::Admin::Theme
   under theme_asset_base {
     final action theme_asset_edit as 'edit' {
       if($ctx -> request -> method eq 'POST') {
-        my $asset = $ctx -> stash -> {theme_asset};
-
-        $self -> PUT($ctx, $asset, $ctx -> request -> params);
-        #$self -> PUT_raw($ctx, $asset, $ctx -> request -> uploads);
-
-        my $theme = $ctx -> stash -> {theme};
-        $ctx -> response -> redirect(
-          $ctx -> uri_for("/admin/theme/" . $theme->id, "/asset")
+        $self -> PUT($ctx,
+          resource => 'theme_asset',
         );
       }
       else {
@@ -270,6 +267,39 @@ controller OokOok::Controller::Admin::Theme
         };
       }
       $ctx -> stash -> {template} = "/admin/theme/content/asset/edit";
+    }
+  }
+
+  under theme_snippet_base {
+    final action theme_snippet_edit as 'edit' {
+      if($ctx -> request -> method eq 'POST') {
+        my $res = $self -> PUT($ctx, 
+          resource => 'theme_snippet',
+        );
+      }  
+      else {
+        my $snippet = $ctx -> stash -> {theme_snippet};
+        $ctx -> stash -> {form_data} = {
+          name => $snippet -> name,
+          content => $snippet -> content,
+          filter => $snippet -> filter,
+          status => $snippet -> status,
+        };
+      }  
+      $ctx -> stash -> {template} = "/admin/theme/content/snippet/edit";
+    }
+
+    final action theme_snippet_discard as 'discard' {
+      if($ctx -> request -> method eq 'POST') {
+        my $snippet = $ctx -> stash -> {theme_snippet};
+        if($self -> DELETE($ctx, resource => 'snippet')) {
+          my $theme = $ctx -> stash -> {theme};
+          $ctx -> response -> redirect(
+            $ctx -> uri_for("/admin/theme/" . $theme->id . "/snippet")
+          );
+        }
+      }  
+      $ctx -> stash -> {template} = "/admin/theme/content/snippet/discard";
     }
   }
 }

@@ -1,7 +1,7 @@
 package OokOok::Resource::TypefaceFontFile;
 
 use OokOok::Resource;
-use namesapce::autoclean;
+use namespace::autoclean;
 
 prop id => (
   type => 'Str',

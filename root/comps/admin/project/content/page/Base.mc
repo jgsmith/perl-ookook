@@ -48,7 +48,7 @@ $.form_data => sub { +{} }
             <label class="control-label">Filter:</label>
             <div class="controls">
               <select name="part[<% $count %>][filter]">
-%               for my $opt (qw/HTML Markdown BBCode/) {
+%               for my $opt (map { s{^.*::}{}; $_ } OokOok->formatters) {
                   <option value="<% $opt %>" <% $.ifEqual($opt, $part->{filter}, ' selected') %>><% $opt %></option>
 %               }
               </select>
@@ -156,7 +156,7 @@ $.form_data => sub { +{} }
                  '<input type="hidden" name="part[$count][name]" value="$name" />' +  
             '<div class="control-group"><label class="control-label">Filter:</label> <div class="controls">' +
             '<select name="part[$count][filter]">' +
-%         for my $opt (qw/HTML Markdown Textile/) {
+%         for my $opt (map { s{^.*::}{}; $_ } OokOok->formatters) {
             '<option value="<% $opt %>"><% $opt %></option>' +
 %         }
         '</select></div></div>' +

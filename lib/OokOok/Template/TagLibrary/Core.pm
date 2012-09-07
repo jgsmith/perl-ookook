@@ -15,6 +15,14 @@ my $SAMPLE_CONTENT = <<'EOHTML';
 <h2>Paragraph</h2>
 <p>Lorem ipsum dolor sit amet, <a href="#" title="test link">test link</a> adipiscing elit. Nullam dignissim convallis est. Quisque aliquam. Donec faucibus. Nunc iaculis suscipit dui. Nam sit amet sem. Aliquam libero nisi, imperdiet at, tincidunt nec, gravida vehicula, nisl. Praesent mattis, massa quis luctus fermentum, turpis mi volutpat justo, eu volutpat enim diam eget metus. Maecenas ornare tortor. Donec sed tellus eget sapien fringilla nonummy. Mauris a ante. Suspendisse quam sem, consequat at, commodo vitae, feugiat in, nunc. Morbi imperdiet augue quis tellus.</p>
 <p>Lorem ipsum dolor sit amet, <em>emphasis</em> consectetuer adipiscing elit. Nullam dignissim convallis est. Quisque aliquam. Donec faucibus. Nunc iaculis suscipit dui. Nam sit amet sem. Aliquam libero nisi, imperdiet at, tincidunt nec, gravida vehicula, nisl. Praesent mattis, massa quis luctus fermentum, turpis mi volutpat justo, eu volutpat enim diam eget metus. Maecenas ornare tortor. Donec sed tellus eget sapien fringilla nonummy. Mauris a ante. Suspendisse quam sem, consequat at, commodo vitae, feugiat in, nunc. Morbi imperdiet augue quis tellus.</p>
+<h2>Body Text Sizes</h2>
+<p>
+<span style="font-size: 90%;">90% ABCDEFGOQPRSWXYZ abcdefghijmnrpqszwuvt</span><br/>
+<span style="font-size: 80%;">80% ABCDEFGOQPRSWXYZ abcdefghijmnrpqszwuvt</span><br/>
+<span style="font-size: 70%;">70% ABCDEFGOQPRSWXYZ abcdefghijmnrpqszwuvt</span><br/>
+<span style="font-size: 60%;">60% ABCDEFGOQPRSWXYZ abcdefghijmnrpqszwuvt</span><br/>
+<span style="font-size: 50%;">50% ABCDEFGOQPRSWXYZ abcdefghijmnrpqszwuvt</span><br/>
+</p>
 <hr/>
 <h2>List Types</h2>
 <h3>Definition List</h3>

@@ -1,8 +1,7 @@
-use CatalystX::Declare;
+use OokOok::Declare;
 
-controller OokOok::Controller::Play
-   extends OokOok::Base::Player
-{
+play_controller OokOok::Controller::Play {
+
   $CLASS -> config(
     map => {
       'text/html' => [ 'View', 'HTML' ],

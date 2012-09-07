@@ -34,12 +34,6 @@ sub init_meta {
   return $meta;
 }
 
-#sub namespace {
-#  my($meta, $ns) = @_;
-#
-#  $meta -> namespace($ns);
-#}
-
 sub element {
   my($meta, $name, %options) = @_;
 

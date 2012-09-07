@@ -1,11 +1,6 @@
 package OokOok::Resource::PagePart;
 use OokOok::Resource;
 
-use OokOok::Formatter::HTML;
-use OokOok::Formatter::Markdown;
-use OokOok::Formatter::BBCode;
-use OokOok::Formatter::Textile;
-
 use Moose::Util::TypeConstraints qw(enum);
 
 prop id => (
@@ -29,8 +24,9 @@ prop content => (
 );
 
 prop filter => (
-  type => enum([qw/HTML Markdown BBCode Textile/]),
-  values => [qw/HTML Markdown BBCode Textile/],
+  #type => enum([map { s{^.*::}{}; $_ } OokOok->formatters]),
+  #values => [map { s{^.*::}{}; $_ } OokOok->formatters],
+  type => 'Str',
   default => 'HTML',
 );
 

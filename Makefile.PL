@@ -61,6 +61,7 @@ requires 'JSON';
 requires 'Lingua::EN::Inflect';
 requires 'LWP::Protocol::https';
 requires 'Math::Round';
+requires 'Module::Pluggable';
 requires 'Net::OAuth';
 requires 'Set::Scalar';
 requires 'String::CamelCase';

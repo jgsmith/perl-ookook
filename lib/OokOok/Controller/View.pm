@@ -1,8 +1,6 @@
-use CatalystX::Declare;
+use OokOok::Declare;
 
-controller OokOok::Controller::View
-   extends OokOok::Base::Player
-{
+play_controller OokOok::Controller::View {
 
   $CLASS -> config(
     map => {

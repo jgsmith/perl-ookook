@@ -1,8 +1,7 @@
-use CatalystX::Declare;
+use OokOok::Declare;
 
-controller OokOok::Controller::Style
-   extends OokOok::Base::Player
-{
+play_controller OokOok::Controller::Style {
+
   $CLASS -> config(
     map => {
       'text/css' => [ 'View', 'CSS' ],
@@ -20,6 +19,7 @@ controller OokOok::Controller::Style
     action tbase as 'ts' {
       $ctx -> stash -> {collection} = OokOok::Collection::Theme -> new(
         c => $ctx,
+        is_development => 1,
       );
     }
   }

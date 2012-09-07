@@ -15,6 +15,7 @@ $.form_data => sub { +{} }
   </fieldset>
   <div class="form-actions">
     <input accesskey="S" class="btn btn-primary" name="commit" type="submit" value="<% $button %>">
+    <input accesskey="S" class="btn" name="_continue" type="submit" value="<% $button %> and Continue Editing">
     or <a href="<% $c -> uri_for("/admin/theme/" . $.theme_id . "/style") %>">Cancel</a>
   </div>
 </form>

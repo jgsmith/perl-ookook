@@ -16,7 +16,8 @@ $.form_data => sub { +{} }
       <label class="control-label">Filter:</label>
       <div class="controls">
         <select name="filter">
-%         for my $opt (qw/HTML Markdown BBCode/) {
+
+%         for my $opt (map { s{^.*::}{}; $_ } OokOok->formatters) {
             <option value="<% $opt %>" <% $.ifEqual($opt, $.form_data->{filter}, ' selected') %>><% $opt %></option>
 %         }
         </select>

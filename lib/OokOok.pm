@@ -78,8 +78,27 @@ application OokOok
     # was stripped from the request path:
     my $base = $ctx->request->base;
     $base->path($base->path . $first);
-  };
+  }
+
+  our @FORMATTERS;
+
+  method formatters ($self:) {
+    return @FORMATTERS if @FORMATTERS;
+    @FORMATTERS = $self -> _formatters;
+  }
+
 }
+
+BEGIN {
+  package OokOok;
+  use Module::Pluggable (search_path => 'OokOok::Formatter', 
+                         sub_name => '_formatters',
+                         require => 1,
+                         max_depth => 3);
+}
+
+1;
+
 
 __END__
 

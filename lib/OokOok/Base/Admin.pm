@@ -2,8 +2,9 @@ use CatalystX::Declare;
 
 controller OokOok::Base::Admin {
 
+  use MooseX::Types::Moose qw(Str);
+
   final action begin (@rest) is private {
-    $ctx -> log -> debug("OokOok::Base::Admin#begin called\n");
     return if $ctx -> action -> class eq "OokOok::Controller::Admin::OAuth";
     if(!$ctx -> user) {
       # redirect to admin top-level page
@@ -18,17 +19,22 @@ controller OokOok::Base::Admin {
 
   final action end (@args) is private isa RenderView;
 
-  method doMethod ($ctx, $method, $resource, $params) {
+  method doMethod (
+      Object  $ctx, 
+      Str     $method, 
+      Object  $resource, 
+      HashRef $params
+  ) {
     my $thing = eval {
       $resource -> $method($params);
     };
 
     my $e = $@;
 
+    $ctx -> stash -> {form_data} = $ctx -> request -> params;
     if($e) {
       if(blessed($e)) {
         if($e -> isa('OokOok::Exception::PUT')) {
-          $ctx -> stash -> {form_data} = $ctx -> request -> params;
           $ctx -> stash -> {error_msg} = $e -> message;
           $ctx -> stash -> {missing} = $e -> missing;
           $ctx -> stash -> {invalid} = $e -> invalid;
@@ -46,7 +52,69 @@ controller OokOok::Base::Admin {
     return $thing;
   }
 
-  final action PUT (@args) is private { $self -> doMethod($ctx, "_PUT", @args) }
-  final action POST (@args) is private { $self -> doMethod($ctx, "_POST", @args) }
-  final action DELETE (@args) is private { $self -> doMethod($ctx, "_DELETE", @args) }
+  method PUT (
+      Object        $ctx,
+      Str|Object   :$resource, 
+      HashRef|Bool :$params = 0, 
+      Bool         :$redirect = 1
+  ) {
+    if(!$params) {
+      $params = $ctx -> request -> params;
+    }
+    if(is_Str($resource)) { # key in stash
+      $resource = $ctx -> stash -> {$resource};
+    }
+    my $res = $self -> doMethod($ctx, "_PUT", $resource, $params);
+    if($redirect && $res) {
+      if(!$params -> {_continue}) {
+        my $url = $ctx -> request -> uri;
+        my $path = $url -> path;
+        $path =~ s{[-A-Za-z0-9_]{20}/edit}{};
+        $url -> path($path);
+        $ctx -> response -> redirect( $path );
+        $ctx -> detach;
+      }
+    }
+
+    return $res;
+  }
+
+  method POST (
+      Object            $ctx, 
+      Object|ClassName :$collection, 
+      HashRef|Bool     :$params = 0, 
+      Bool             :$redirect = 1
+  ) { 
+    if(is_Str($collection)) {
+      $collection = $collection -> new( c => $ctx );
+    }
+    if(!$params) {
+      $params = $ctx -> request -> params;
+    }
+    my $res = $self -> doMethod($ctx, "_POST", $collection, $params);
+    if($redirect && $res) {
+      my $url = $ctx -> request -> uri;
+      my $path = $url -> path;
+      $path =~ s{new$}{};
+      if(!$params -> {_continue}) {
+        $url -> path($path);
+      }
+      else {
+        $url -> path($path . $res -> id . '/edit');
+      }
+      $ctx -> response -> redirect( $url );
+      $ctx -> detach;
+    }
+    return $res;
+  }
+
+  method DELETE (
+      Object      $ctx, 
+      Object|Str :$resource
+  ) { 
+    if(is_Str($resource)) {
+      $resource = $ctx -> stash -> {$resource};
+    }
+    $self -> doMethod($ctx, "_DELETE", $resource);
+  }
 }

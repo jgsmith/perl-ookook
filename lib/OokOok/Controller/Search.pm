@@ -1,4 +1,4 @@
-use CatalystX::Declare;
+use OokOok::Declare;
 
 controller OokOok::Controller::Search {
 

@@ -1,7 +1,6 @@
-use CatalystX::Declare;
+use OokOok::Declare;
 
-controller OokOok::Controller::Admin 
-   extends OokOok::Base::Admin {
+admin_controller OokOok::Controller::Admin {
 
   final action index as '' {
     $ctx -> stash -> {projects} = [
@@ -21,5 +20,3 @@ controller OokOok::Controller::Admin
   final action end (@rest) is private isa RenderView;
 
 }
-
-1;

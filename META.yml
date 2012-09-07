@@ -58,6 +58,7 @@ requires:
   LWP::Protocol::https: 0
   Lingua::EN::Inflect: 0
   Math::Round: 0
+  Module::Pluggable: 0
   Moose: 0
   MooseX::Declare: 0
   MooseX::MarkAsMethods: 0.13

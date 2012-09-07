@@ -1,4 +1,4 @@
-use CatalystX::Declare;
+use OokOok::Declare;
 
 controller OokOok::Controller::Admin::OAuth {
   use Catalyst::Authentication::Store::DBIx::Class;

@@ -1,7 +1,6 @@
-use CatalystX::Declare;
+use OokOok::Declare;
 
-controller OokOok::Controller::Board
-   extends OokOok::Base::REST
+rest_controller OokOok::Controller::Board
 {
 
   $CLASS -> config(

@@ -1,13 +1,8 @@
-use CatalystX::Declare;
+use OokOok::Declare;
 
-controller OokOok::Controller::Admin::Board
-   extends OokOok::Base::Admin
-{
+admin_controller OokOok::Controller::Admin::Board {
 
   use DateTime;
-
-  use OokOok::Collection::Board;
-  use OokOok::Resource::Board;
 
   action base under '/' as 'admin/board';
 
