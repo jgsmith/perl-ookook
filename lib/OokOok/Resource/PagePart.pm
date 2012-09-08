@@ -1,77 +1,62 @@
-package OokOok::Resource::PagePart;
-use OokOok::Resource;
+use OokOok::Declare;
 
-use Moose::Util::TypeConstraints qw(enum);
+resource OokOok::Resource::PagePart {
 
-prop id => (
-  type => 'Str',
-  is => 'ro',
-  source => sub { $_[0] -> source -> name },
-);
+  use Moose::Util::TypeConstraints qw(enum);
 
-prop name => (
-  required => 1,
-  max_length => 64,
-  type => 'Str',
-  maps_to => 'title',
-  source => sub { $_[0] -> source -> name },
-);
+  prop id => (
+    type => 'Str',
+    is => 'ro',
+    source => sub { $_[0] -> source -> name },
+  );
 
-prop content => (
-  required => 0,
-  type => 'Str',
-  deep => 1,
-);
+  prop name => (
+    required => 1,
+    max_length => 64,
+    type => 'Str',
+    maps_to => 'title',
+    source => sub { $_[0] -> source -> name },
+  );
 
-prop filter => (
-  #type => enum([map { s{^.*::}{}; $_ } OokOok->formatters]),
-  #values => [map { s{^.*::}{}; $_ } OokOok->formatters],
-  type => 'Str',
-  default => 'HTML',
-);
+  prop content => (
+    required => 0,
+    type => 'Str',
+    deep => 1,
+  );
 
-belongs_to "page" => "OokOok::Resource::Page", (
-  is => 'ro',
-  required => 1,
-);
+  prop filter => (
+    #type => enum([map { s{^.*::}{}; $_ } OokOok->formatters]),
+    #values => [map { s{^.*::}{}; $_ } OokOok->formatters],
+    type => 'Str',
+    default => 'HTML',
+  );
 
-sub render {
-  my($self, $context) = @_;
+  belongs_to "page" => "OokOok::Resource::Page", (
+    is => 'ro',
+    required => 1,
+  );
 
-  # first, we filter the content
-  my $content = $self -> content;
-  my $filter = $self -> filter;
+  method render (Object $context) {
+    # first, we filter the content
+    my $content = $self -> content;
+    my $filter = $self -> filter;
 
-  my $formatter = eval {
-    "OokOok::Formatter::$filter" -> new
-  };
-  if($formatter && !$@) {
-    $content = $formatter -> format($content);
+    my $formatter = eval {
+      "OokOok::Formatter::$filter" -> new
+    };
+    if($formatter && !$@) {
+      $content = $formatter -> format($content);
+    }
+    return $content;
   }
-  return $content;
 
-  # handle taglib registration based on page type and such
-  #my $doc = $proc -> parse($content);
+  method link {
+    $self -> page -> link . "/page-part/" . $self -> id;
+  }
 
-  my $name = $self -> source -> name;
-  $name =~ s{[^-A-Za-z0-9_]+}{-}g;
-  $name =~ s{-+}{-}g;
-  return "<div class='page-part page-part-$name'>" .
-         #$doc -> render($context) .
-         $content .
-         "</div>";
+  method can_PUT    { $self -> page -> can_PUT    }
+  method can_GET    { $self -> page -> can_GET    }
+  method can_DELETE { $self -> page -> can_DELETE }
 }
-
-sub link {
-  my($self) = @_;
-
-  $self -> page -> link . "/page-part/" . $self -> id;
-}
-
-sub can_PUT    { $_[0] -> page -> can_PUT    }
-sub can_GET    { $_[0] -> page -> can_GET    }
-sub can_DELETE { $_[0] -> page -> can_DELETE }
-
-1;
 
 __END__

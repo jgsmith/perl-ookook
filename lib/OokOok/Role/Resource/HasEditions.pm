@@ -1,24 +1,15 @@
-package OokOok::Role::Resource::HasEditions;
-use Moose::Role;
+use MooseX::Declare;
 
-has edition_resource_class => (
-  is => 'rw',
-  isa => 'Str',
-  lazy => 1,
-  default => sub {
-    my($self) = @_;
-    my $class = blessed $self;
-    $class . 'Edition';
-  },
-);
+role OokOok::Role::Resource::HasEditions {
 
-sub edition {
-  my($self) = @_;
+  method edition_resource_class {
+    blessed($self) . "Edition";
+  }
 
-  $self -> edition_resource_class -> new(
-    c => $self -> c,
-    source => $self -> source -> current_edition,
-  );
+  method edition {
+    $self -> edition_resource_class -> new(
+      c => $self -> c,
+      source => $self -> source -> current_edition,
+    );
+  }
 }
-
-1;

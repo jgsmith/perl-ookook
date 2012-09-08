@@ -25,7 +25,7 @@ prop primary_language => (
   is_nullable => 0,
 );
 
-references_own page => 'OokOok::Schema::Result::Page';
+references_own home_page => 'OokOok::Schema::Result::Page';
 
 references theme => 'OokOok::Schema::Result::Theme';
 
@@ -59,7 +59,7 @@ after delete => sub {
   my($self) = @_;
 
   # now we want to delete any pages or snippets that don't have versions
-  map { $_ -> delete } 
+  map { eval { $_ -> delete } } 
       grep { $_ -> versions -> count == 0 }
            $self -> project -> pages, $self -> project -> snippets;
 };

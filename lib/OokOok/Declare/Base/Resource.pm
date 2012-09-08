@@ -1,6 +1,6 @@
 use MooseX::Declare;
 
-class OokOok::Base::Resource {
+class OokOok::Declare::Base::Resource {
   use Lingua::EN::Inflect qw(PL_V);
   use String::CamelCase qw(decamelize);
   use OokOok::Exception;

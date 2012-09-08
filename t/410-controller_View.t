@@ -106,7 +106,7 @@ $json = GET_ok("/page/$pages{'Foo'}", "Get updated Foo page");
 is $json->{slug}, "", "Right slug";
 
 PUT_ok("/project/$uuid", {
-  page => $pages{'Foo'}
+  home_page => $pages{'Foo'}
 }, "Set root page for project to Foo");
 
 $json = GET_ok("/project/$uuid", "Get update project");

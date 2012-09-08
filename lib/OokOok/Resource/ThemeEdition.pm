@@ -1,38 +1,32 @@
-package OokOok::Resource::ThemeEdition;
-use Moose;
-use namespace::autoclean;
-use OokOok::Resource;
+use OokOok::Declare;
 
-prop name => (
-  is => 'rw',
-  deep => 1,
-  isa => 'Str'
-);
+resource OokOok::Resource::ThemeEdition {
 
-prop description => (
-  is => 'rw',
-  deep => 1,
-  isa => 'Str',
-);
+  prop name => (
+    is => 'rw',
+    deep => 1,
+    isa => 'Str'
+  );
 
-prop created_on => (
-  is => 'ro',
-  isa => 'Str',
-  source => sub { "".$_[0] -> source -> created_on }
-);
+  prop description => (
+    is => 'rw',
+    deep => 1,
+    isa => 'Str',
+  );
 
-prop closed_on => (
-  is => 'ro',
-  isa => 'Str',
-  source => sub { "".($_[0] -> source -> closed_on || "") }
-);
+  prop created_on => (
+    is => 'ro',
+    isa => 'Str',
+    source => sub { $_[0] -> source -> created_on -> iso8601 }
+  );
 
-sub link {
-  my($self) = @_;
+  prop closed_on => (
+    is => 'ro',
+    isa => 'Str',
+    source => sub { "".($_[0] -> source -> closed_on || "") }
+  );
 
-  $self -> collection -> link . '/edition';
+  method link {
+    $self -> collection -> link . '/edition';
+  }
 }
-
-1;
-
-__END__

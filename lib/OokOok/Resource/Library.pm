@@ -1,29 +1,28 @@
-package OokOok::Resource::Library;
-use OokOok::Resource;
-use namespace::autoclean;
-with 'OokOok::Role::Resource::HasEditions';
+use OokOok::Declare;
 
-prop name => (
-  required => 1,
-  type => 'Str',
-  source => sub { $_[0] -> source_version -> name },
-);
+resource OokOok::Resource::Library 
+  with OokOok::Role::Resource::HasEditions {
 
-prop id => (
-  is => 'ro',
-  type => 'Str',
-  source => sub { $_[0] -> source -> uuid },
-);
+  prop name => (
+    required => 1,
+    type => 'Str',
+    source => sub { $_[0] -> source_version -> name },
+  );
 
-prop description => (
-  type => 'Str',
-  source => sub { $_[0] -> source_version -> description },
-);
+  prop id => (
+    is => 'ro',
+    type => 'Str',
+    source => sub { $_[0] -> source -> uuid },
+  );
 
-has_many editions => 'OokOok::Resource::LibraryEdition', (
-  source => sub { $_[0] -> source -> editions },
-);
+  prop description => (
+    type => 'Str',
+    source => sub { $_[0] -> source_version -> description },
+  );
 
-sub can_PUT { 0 }
+  has_many editions => 'OokOok::Resource::LibraryEdition', (
+    source => sub { $_[0] -> source -> editions },
+  );
 
-1;
+  method can_PUT { 0 }
+}

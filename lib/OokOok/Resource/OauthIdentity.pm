@@ -1,29 +1,24 @@
-package OokOok::Resource::OauthIdentity;
+use OokOok::Declare;
 
-use OokOok::Resource;
+resource OokOok::Resource::OauthIdentity {
 
-use namespace::autoclean;
-
-prop service => (
-  is => 'ro',
-  source => sub {
-    my($self) = @_;
-    my $id = $self -> source -> oauth_service_id;
-    for my $service (keys %{$self -> c -> config -> {'OokOok::Plugin::Authentication'}->{providers}}) {
-      if($self -> c -> config -> {'OokOok::Plugin::Authentication'}->{providers}->{$service}->{id} == $id) {
-        return $service;
+  prop service => (
+    is => 'ro',
+    source => sub {
+      my($self) = @_;
+      my $id = $self -> source -> oauth_service_id;
+      for my $service (keys %{$self -> c -> config -> {'OokOok::Plugin::Authentication'}->{providers}}) {
+        if($self -> c -> config -> {'OokOok::Plugin::Authentication'}->{providers}->{$service}->{id} == $id) {
+          return $service;
+        }
       }
-    }
-  },
-);
+    },
+  );
 
-sub link {
-  my($self) = @_;
+  method link {
+    my $service = $self -> service;
+    $self -> c -> uri_for('/oauth/' . $service) -> as_string;
+  }
 
-  my $service = $self -> service;
-  $self -> c -> uri_for('/oauth/' . $service) -> as_string;
+  method can_PUT { 0 }
 }
-
-sub can_PUT { 0 }
-
-1;

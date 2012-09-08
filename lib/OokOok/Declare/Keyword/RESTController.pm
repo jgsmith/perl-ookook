@@ -13,5 +13,5 @@ class OokOok::Declare::Keyword::RESTController
     );
   }
 
-  method default_superclasses { 'OokOok::Base::REST' }
+  method default_superclasses { 'OokOok::Declare::Base::REST' }
 }

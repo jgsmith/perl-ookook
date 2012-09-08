@@ -1,6 +1,6 @@
 use CatalystX::Declare;
 
-controller OokOok::Base::REST
+controller OokOok::Declare::Base::REST
    extends Catalyst::Controller::REST
 {
 

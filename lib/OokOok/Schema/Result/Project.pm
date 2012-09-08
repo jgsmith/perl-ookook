@@ -27,7 +27,7 @@ after insert => sub {
     slug => '',
   });
   $ce -> update({
-    page => $home_page
+    home_page => $home_page
   });
   $ce -> update_or_insert;
 

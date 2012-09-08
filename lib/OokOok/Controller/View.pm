@@ -34,7 +34,7 @@ play_controller OokOok::Controller::View {
       }
 
       # now we walk the sitemap to find the right page
-      my $page = $ctx -> stash -> {project} -> page;
+      my $page = $ctx -> stash -> {project} -> home_page;
       my($slug, $last_page);
 
       while($page && @path) {
@@ -72,6 +72,8 @@ play_controller OokOok::Controller::View {
     my $project_uuid = $page -> project -> source -> uuid;
     $ctx -> stash -> {stylesheets} = [ map {
       $ctx -> uri_for( "/s/$project_uuid/style/$_" )
+    } grep {
+      defined
     } $page -> stylesheets ];
 
     if($page -> date) {

@@ -1,141 +1,150 @@
-package OokOok::Resource::Project;
-use OokOok::Resource;
-use namespace::autoclean;
-with 'OokOok::Role::Resource::HasEditions';
+use OokOok::Declare;
 
-has '+edition_resource_class' => (
-  default => 'OokOok::Resource::Edition',
-);
+resource OokOok::Resource::Project
+  with OokOok::Role::Resource::HasEditions {
 
-has '+source' => (
-  isa => 'OokOok::Model::DB::Project',
-);
+  method edition_resource_class { 'OokOok::Resource::Edition' }
 
-prop name => (
-  required => 1,
-  type => 'Str',
-  source => sub { $_[0] -> source_version -> name },
-  maps_to => 'title',
-);
+  #has '+source' => (
+  #  isa => 'OokOok::Model::DB::Project',
+  #);
 
-prop id => (
-  is => 'ro',
-  type => 'Str',
-  source => sub { $_[0] -> source -> uuid },
-);
+  prop name => (
+    required => 1,
+    type => 'Str',
+    source => sub { $_[0] -> source_version -> name },
+    maps_to => 'title',
+  );
 
-prop description => (
-  type => 'Str',
-  source => sub { $_[0] -> source_version -> description },
-);
+  prop id => (
+    is => 'ro',
+    type => 'Str',
+    source => sub { $_[0] -> source -> uuid },
+  );
 
-has_many pages => 'OokOok::Resource::Page', (
-  is => 'ro',
-  source => sub { $_[0] -> source -> pages },
-);
+  prop description => (
+    type => 'Str',
+    source => sub { $_[0] -> source_version -> description },
+  );
 
-has_many editions => 'OokOok::Resource::Edition', (
-  is => 'ro',
-  source => sub { $_[0] -> source -> editions },
-);
+  has_many pages => 'OokOok::Resource::Page', (
+    is => 'ro',
+    source => sub { $_[0] -> source -> pages },
+  );
 
-has_many snippets => 'OokOok::Resource::Snippet', (
-  is => 'ro',
-  source => sub { $_[0] -> source -> snippets },
-);
+  has_many editions => 'OokOok::Resource::Edition', (
+    is => 'ro',
+    source => sub { $_[0] -> source -> editions },
+  );
 
-prop theme_date => (
-  is => 'rw',
-  required => 1,
-  type => 'Str',
-  default => sub { DateTime -> now },
-  source => sub { $_[0] -> source_version -> theme_date -> iso8601 },
-);
+  has_many snippets => 'OokOok::Resource::Snippet', (
+    is => 'ro',
+    source => sub { $_[0] -> source -> snippets },
+  );
 
-has_a theme => 'OokOok::Resource::Theme', (
-  source => sub { $_[0] -> source_version -> theme },
-  date => sub { $_[0] -> source_version -> theme_date },
-  required => 1,
-  is => 'rw',
-  maps_to => 'theme',
-  value_type => "Theme",
-);
+  prop theme_date => (
+    is => 'rw',
+    required => 1,
+    type => 'Str',
+    default => sub { DateTime -> now },
+    source => sub { $_[0] -> source_version -> theme_date -> iso8601 },
+  );
 
-has_a board => 'OokOok::Resource::Board', (
-  source => sub { $_[0] -> source -> board },
-  is => 'rw',
-  maps_to => 'board',
-  value_type => 'Board',
-);
+  has_a theme => 'OokOok::Resource::Theme', (
+    source => sub { $_[0] -> source_version -> theme },
+    date => sub { $_[0] -> source_version -> theme_date },
+    required => 1,
+    is => 'rw',
+    maps_to => 'theme',
+    value_type => "Theme",
+  );
 
-has_a page => 'OokOok::Resource::Page', (
-  source => sub { $_[0] -> source_version -> page },
-  is => 'rw',
-);
+  has_a board => 'OokOok::Resource::Board', (
+    source => sub { $_[0] -> source -> board },
+    is => 'rw',
+    maps_to => 'board',
+    value_type => 'Board',
+  );
 
-sub can_PUT {
-  my($self) = @_;
+  has_a home_page => 'OokOok::Resource::Page', (
+    source => sub { $_[0] -> source_version -> home_page },
+    is => 'rw',
+  );
 
-  return 1 if $self -> c -> model('DB') -> schema -> is_development;
+  method can_PUT {
+    return 1 if $self -> c -> model('DB') -> schema -> is_development;
 
-  # the user has to be in a rank that can modify the project itself
-  # if we get here, we have a user
-  # we pull out the top rank held by the user
-  my $rank = $self -> board -> source -> board_members -> find({
-    user_id => $self -> c -> user -> id
-  });
+    # the user has to be in a rank that can modify the project itself
+    # if we get here, we have a user
+    # we pull out the top rank held by the user
+    my $rank = $self -> board -> source -> board_members -> find({
+      user_id => $self -> c -> user -> id
+    });
 
-  return 0 unless $rank;
+    return 0 unless $rank;
 
-  return 1 if $rank -> rank == 0; # top rank can always do stuff
+    return 1 if $rank -> rank == 0; # top rank can always do stuff
 
-  return 0;
-}
+    return 0;
+  }
 
-sub can_PLAY {
-  my($self) = @_;
+  method can_PLAY {
+    return 0 if !$self -> source_version;
 
-  return 0 if !$self -> source_version;
+    return 1 if $self -> source_version -> is_closed;
 
-  return 1 if $self -> source_version -> is_closed;
+    return 1 if $self -> c -> model('DB') -> schema -> is_development;
 
-  return 1 if $self -> c -> model('DB') -> schema -> is_development;
+    # make sure the logged in user is a member of the board
+    return 0 unless $self -> c -> user;
 
-  # make sure the logged in user is a member of the board
-  return 0 unless $self -> c -> user;
+    return 1 if $self -> c -> user -> is_admin;
 
-  return 1 if $self -> c -> user -> is_admin;
+    my $memberq = $self -> board -> source -> board_members -> search({
+      user_id => $self -> c -> user -> id
+    }) -> count;
 
-  my $memberq = $self -> board -> source -> board_members -> search({
-    user_id => $self -> c -> user -> id
-  }) -> count;
+    return 1 if $memberq;
 
-  return 1 if $memberq;
+    return 0;
+  }
 
-  return 0;
-}
+  method page (Str $uuid) {
+    # we want to find the right snippet_version that corresponds to our
+    # date/dev constraints
+    my $p = $self -> c -> model('DB::Page') -> search({
+      'me.uuid' => $uuid,
+      'me.project_id' => $self -> source -> id,
+    }) -> first;
 
+    if($p) {
+      return OokOok::Resource::Page -> new(
+        c => $self -> c,
+        is_development => $self -> is_development,
+        date => $self -> date,
+        source => $p -> page,
+      );
+    }
+  }
 
-sub snippet {
-  my($self, $name) = @_;
+  method snippet (Str $name) {
+    # we want to find the right snippet_version that corresponds to our
+    # date/dev constraints
+    my $s = $self -> c -> model('DB::SnippetVersion') -> search({
+      'me.name' => $name,
+      'edition.project_id' => $self -> source -> id,
+    }, {
+       join => [qw/edition/],
+       order_by => { -desc => 'me.edition_id' },
+    }) -> first;
 
-  # we want to find the right snippet_version that corresponds to our
-  # date/dev constraints
-  my $s = $self -> c -> model('DB::SnippetVersion') -> search({
-    'me.name' => $name,
-    'edition.project_id' => $self -> source -> id,
-  }, {
-     join => [qw/edition/],
-     order_by => { -desc => 'me.edition_id' },
-  }) -> first;
-
-  if($s) {
-    return OokOok::Resource::Snippet -> new(
-      c => $self -> c,
-      date => $self -> date,
-      source => $s -> snippet,
-    );
+    if($s) {
+      return OokOok::Resource::Snippet -> new(
+        c => $self -> c,
+        is_development => $self -> is_development,
+        date => $self -> date,
+        source => $s -> snippet,
+      );
+    }
   }
 }
-
-1;

@@ -78,7 +78,7 @@ my $project_uuid = $json -> {id};
 ok $project_uuid, "Project has id";
 is $json -> {_links} -> {theme}, $theme_url, "Right theme URL";
 
-my $page_url = $json -> {_links} -> {page};
+my $page_url = $json -> {_links} -> {home_page};
 ok $page_url, "We have a root page for the project";
 
 $json = POST_ok($page_url . "/page-part/body", {
