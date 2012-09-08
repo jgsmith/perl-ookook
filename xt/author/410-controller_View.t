@@ -8,8 +8,7 @@ BEGIN {
   $ENV{'OOKOOK_CONFIG_LOCAL_SUFFIX'} = "testing";
 }
 
-use lib 't/lib';
-use OokOok::Test::REST;
+use OokOok::ForTesting::REST;
 use OokOok::Controller::View;
 
 my $json;

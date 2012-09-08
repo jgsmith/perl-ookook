@@ -20,6 +20,8 @@ application OokOok
   with OokOok::Authentication
 {
 
+# ABSTRACT: Temporal Content Management System
+
   use CatalystX::RoleApplicator;
   use DateTime;
 
@@ -100,11 +102,12 @@ BEGIN {
 1;
 
 
+
+#=head1 NAME
+#
+#OokOok - Content Management System for scholarly editions
+
 __END__
-
-=head1 NAME
-
-OokOok - Content Management System for scholarly editions
 
 =head1 SYNOPSIS
 

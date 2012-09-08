@@ -1,4 +1,4 @@
-package OokOok::Test::REST;
+package OokOok::ForTesting::REST;
 
 use Catalyst::Test 'OokOok';
 

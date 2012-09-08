@@ -2,7 +2,6 @@
 
 use DBIx::Class::Fixtures;
 use Test::More no_plan;
-#use lib 't/lib';
 
 BEGIN {
   $ENV{'OOKOOK_CONFIG_LOCAL_SUFFIX'} = "testing";
