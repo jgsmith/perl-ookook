@@ -27,8 +27,8 @@ application OokOok
     Catalyst::TraitFor::Request::REST::ForBrowsers
   ]);
 
-  our $VERSION = '0.01';
-  $VERSION = eval $VERSION;
+  #our $VERSION = '0.01';
+  #$VERSION = eval $VERSION;
 
   $CLASS->config(
     name => 'OokOok',
