@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::ApiKey;
 
-=head1 NAME
-
-OokOok::Schema::Result::ApiKey
-
-=cut
+# ABSTRACT: ApiKey database row
 
 use OokOok::Result;
 use namespace::autoclean;

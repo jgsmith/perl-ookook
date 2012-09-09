@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Project
+
+# ABSTRACT: Controller for project REST interface
+
 rest_controller OokOok::Controller::Project {
 
   use OokOok::Collection::Edition;
@@ -13,15 +17,6 @@ rest_controller OokOok::Controller::Project {
     },
     default => 'text/html',
   );
-
-  #
-  # base establishes the root slug for the project management
-  # routes
-  #
-
-  under '/' {
-    action base as 'project';
-  }
 
   ###
   ### Project-specific information/resources

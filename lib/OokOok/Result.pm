@@ -1,5 +1,7 @@
 package OokOok::Result;
 
+# ABSTRACT: Methods to define a database schema result
+
 # default props:
 #   id
 

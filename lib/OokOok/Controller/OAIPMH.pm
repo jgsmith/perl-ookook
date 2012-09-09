@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::OAIPMH
+
+# ABSTRACT: Controller providing OAI-PMH support
+
 controller OokOok::Controller::OAIPMH {
   use String::CamelCase qw(camelize decamelize);
   use XML::LibXML;

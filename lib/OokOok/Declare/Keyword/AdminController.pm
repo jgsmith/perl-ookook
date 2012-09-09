@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Declare::Keyword::AdminController
+
+# ABSTRACT: Provides the admin_controller keyword
+
 class OokOok::Declare::Keyword::AdminController
   extends CatalystX::Declare::Keyword::Controller {
 

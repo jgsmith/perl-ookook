@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::ThemeAsset
+
+# ABSTRACT: Theme Asset REST resource
+
 resource OokOok::Resource::ThemeAsset {
   #has '+source' => (
   #  isa => 'OokOok::Model::DB::ThemeAsset',

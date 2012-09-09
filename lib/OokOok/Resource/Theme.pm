@@ -1,15 +1,15 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::Theme
+
+# ABSTRACT: Theme REST Resource
+
 resource OokOok::Resource::Theme
   with OokOok::Role::Resource::HasEditions {
 
   use OokOok::Resource::LibraryTheme;
   use OokOok::Resource::ThemeAsset;
   use OokOok::Collection::ThemeAsset;
-
-  #has '+source' => (
-  #  isa => 'OokOok::Model::DB::Theme',
-  #);
 
   prop name => (
     required => 1,

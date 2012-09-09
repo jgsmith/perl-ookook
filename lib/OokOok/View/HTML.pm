@@ -1,5 +1,9 @@
 use CatalystX::Declare;
 
+# PODNAME: OokOok::View::HTML
+
+# ABSTRACT: View Using Template Toolkit 2
+
 view OokOok::View::HTML is mutable
   extends Catalyst::View::TT {
 
@@ -21,10 +25,6 @@ view OokOok::View::HTML is mutable
   }
 }
 
-=head1 NAME
-
-OokOok::View::HTML - TT View for OokOok
-
 =head1 DESCRIPTION
 
 TT View for OokOok.
@@ -32,14 +32,5 @@ TT View for OokOok.
 =head1 SEE ALSO
 
 L<OokOok>
-
-=head1 AUTHOR
-
-James Smith,,,
-
-=head1 LICENSE
-
-This library is free software. You can redistribute it and/or modify
-it under the same terms as Perl itself.
 
 =cut

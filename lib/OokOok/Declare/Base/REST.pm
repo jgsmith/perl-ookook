@@ -1,5 +1,9 @@
 use CatalystX::Declare;
 
+# PODNAME: OokOok::Declare::Base::REST
+
+# ABSTRACT: Base class for REST controller classes
+
 controller OokOok::Declare::Base::REST
    extends Catalyst::Controller::REST
 {

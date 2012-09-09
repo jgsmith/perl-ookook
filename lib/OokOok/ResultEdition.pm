@@ -1,5 +1,7 @@
 package OokOok::ResultEdition;
 
+# ABSTRACT: Methods for defining an edition attached to an editioned result
+
 use Moose ();
 use Moose::Exporter;
 use Moose::Util::MetaRole;

@@ -1,10 +1,8 @@
 use CatalystX::Declare;
 
-=head1 NAME
+# PODNAME: OokOok::Model::ES
 
-OokOok::Model::ES - ElasticSearch model glue for OokOok
-
-=cut
+# ABSTRACT: ElasticSearch model glue for OokOok
 
 model OokOok::Model::ES {
 
@@ -26,5 +24,3 @@ model OokOok::Model::ES {
     return ElasticSearch->new($class->config||{});
   }
 }
-
-1;

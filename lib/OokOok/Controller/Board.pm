@@ -1,5 +1,7 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Board
+
 rest_controller OokOok::Controller::Board
 {
 
@@ -8,9 +10,5 @@ rest_controller OokOok::Controller::Board
     },
     default => 'text/html',
   );
-
-  under '/' {
-    action base as 'board';
-  }
 
 }

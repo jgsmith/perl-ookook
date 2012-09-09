@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::PagePart
+
+# ABSTRACT: Page Part REST resource
+
 resource OokOok::Resource::PagePart {
 
   use Moose::Util::TypeConstraints qw(enum);

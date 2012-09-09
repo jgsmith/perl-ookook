@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::Library
+
+# ABSTRACT: Library REST Resource
+
 resource OokOok::Resource::Library 
   with OokOok::Role::Resource::HasEditions {
 

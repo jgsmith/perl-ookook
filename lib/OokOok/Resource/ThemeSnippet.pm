@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::ThemeSnippet
+
+# ABSTRACT: Theme Snippet REST resource
+
 resource OokOok::Resource::ThemeSnippet {
 
   #has '+source' => (

@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::BoardApplicant
+
+# ABSTRACT: Board Applicant REST resource
+
 resource OokOok::Resource::BoardApplicant {
 
   #has '+source' => (

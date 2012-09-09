@@ -1,5 +1,7 @@
 package OokOok::ResultVersion;
 
+# ABSTRACT: Methods to define a version of a versioned result
+
 use Moose ();
 use Moose::Exporter;
 use Moose::Util::MetaRole;

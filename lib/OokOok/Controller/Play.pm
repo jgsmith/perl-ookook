@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Play
+
+# ABSTRACT: Prototype interface for running algorithms
+
 play_controller OokOok::Controller::Play {
 
   $CLASS -> config(

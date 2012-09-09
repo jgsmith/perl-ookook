@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::ThemeStyle
+
+# ABSTRACT: Theme Style REST Resource
+
 resource OokOok::Resource::ThemeStyle {
 
   #has '+source' => (

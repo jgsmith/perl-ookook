@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::LibraryEdition
+
+# ABSTRACT: library edition REST resource
+
 resource OokOok::Resource::LibraryEdition {
 
   prop name => (

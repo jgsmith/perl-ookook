@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Admin::OAuth
+
+# ABSTRACT: Controller to manage OAuth login/logout
+
 controller OokOok::Controller::Admin::OAuth {
   use Catalyst::Authentication::Store::DBIx::Class;
 

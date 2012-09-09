@@ -1,5 +1,7 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Base::TagLibrary
+
 class OokOok::Base::TagLibrary {
   use MooseX::Types::Moose qw( ArrayRef );
 

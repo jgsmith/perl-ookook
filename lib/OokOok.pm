@@ -1,6 +1,18 @@
 use CatalystX::Declare;
 use 5.012;
 
+# PODNAME: OokOok
+
+=head1 SYNOPSIS
+
+    script/ookook_server.pl
+
+=head1 DESCRIPTION
+
+OokOok is a platform for creating scholarly web-based projects.
+
+=cut
+
 application OokOok
   with ConfigLoader
   with Static::Simple
@@ -20,7 +32,7 @@ application OokOok
   with OokOok::Authentication
 {
 
-# ABSTRACT: Temporal Content Management System
+# ABSTRACT: Temporal Content and Data Management System
 
   use CatalystX::RoleApplicator;
   use DateTime;
@@ -29,8 +41,27 @@ application OokOok
     Catalyst::TraitFor::Request::REST::ForBrowsers
   ]);
 
-  #our $VERSION = '0.01';
-  #$VERSION = eval $VERSION;
+=head1 CONFIGURATION
+
+In addition to the standard Catalyst configuration options, OokOok has the
+following sections.
+
+=head2 TagLibs
+
+The C<TagLibs> section lets you configure the Perl modules that provide
+implementations for tag libraries. These tag libraries need additional
+configuration in the database before they can be used in projects or
+themes.
+
+For example:
+
+ <TagLibs>
+   <module OokOok::Template::TagLibrary::Core>
+     namepsace uin:uuid:ypUv1ZbV4RGsjb63Mj8b
+   </module>
+ </TagLibs>
+
+=cut
 
   $CLASS->config(
     name => 'OokOok',
@@ -43,6 +74,20 @@ application OokOok
       file => $CLASS -> path_to( 'conf' ),
     },
   );
+
+=method prepare_path ()
+
+OokOok will check the first component of the request path. If it
+is C<dev>, then the request is marked as pertaining to the development
+version of the resource, asset, or page. If it is a sequence of
+fourteen (14) digits, then it is parsed as a date and time
+(yyyymmddhhmmss) indicating the date and time of the version of the
+resource, asset, or page.
+
+If the first component is neither C<dev> nor a date and time, then the
+path is left unchanged.
+
+=cut
 
   override prepare_path ($ctx:) {
     super;
@@ -82,6 +127,12 @@ application OokOok
     $base->path($base->path . $first);
   }
 
+=method formatters ()
+
+Returns the list of formatter classes available.
+
+=cut
+
   our @FORMATTERS;
 
   method formatters ($self:) {
@@ -103,51 +154,12 @@ BEGIN {
 
 
 
-#=head1 NAME
-#
-#OokOok - Content Management System for scholarly editions
-
 __END__
-
-=head1 SYNOPSIS
-
-    script/ookook_server.pl
-
-=head1 DESCRIPTION
-
-OokOok is a platform for creating scholarly web-based projects.
-
-=head1 CONFIGURATION
-
-In addition to the standard Catalyst configuration options, OokOok has the
-following sections.
-
-=head2 TagLibs
-
-The C<TagLibs> section lets you configure the Perl modules that provide
-implementations for tag libraries. These tag libraries need additional
-configuration in the database before they can be used in projects or
-themes.
-
-For example:
-
- <TagLibs>
-   <module OokOok::Template::TagLibrary::Core>
-     namepsace uin:uuid:ypUv1ZbV4RGsjb63Mj8b
-   </module>
- </TagLibs>
 
 =head1 SEE ALSO
 
-L<OokOok::Controller::Root>, L<Catalyst>
-
-=head1 AUTHOR
-
-James Smith,,,
-
-=head1 LICENSE
-
-This library is free software. You can redistribute it and/or modify
-it under the same terms as Perl itself.
+=for :list
+* L<OokOok::Controller::Root>
+* L<Catalyst>
 
 =cut

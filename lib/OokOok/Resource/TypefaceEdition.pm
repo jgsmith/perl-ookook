@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::TypefaceEdition
+
+# ABSTRACT: REST resource of a typeface edition
+
 resource OokOok::Resource::TypefaceEdition {
 
   prop name => (

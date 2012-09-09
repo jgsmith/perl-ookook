@@ -1,8 +1,6 @@
 package OokOok::Collection;
 
-=head1 NAME
-
-OokOok::Collection - base class for resource collections
+# ABSTRACT: Methods to describe resource collections
 
 =head1 SYNOPSIS
 

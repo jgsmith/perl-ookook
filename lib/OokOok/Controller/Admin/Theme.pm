@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Admin::Theme
+
+# ABSTRACT: Controller for admin interface for themes
+
 admin_controller OokOok::Controller::Admin::Theme {
 
   use OokOok::Collection::ThemeLayout;

@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::User
+
+# ABSTRACT: User REST Resource
+
 resource OokOok::Resource::User {
 
   #has '+source' => (

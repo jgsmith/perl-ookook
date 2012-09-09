@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::OauthIdentity;
 
-=head1 NAME
-
-OokOok::Schema::Result::OauthIdentity
-
-=cut
+# ABSTRACT: information about a user's OAuth identity
 
 use OokOok::Result;
 use namespace::autoclean;

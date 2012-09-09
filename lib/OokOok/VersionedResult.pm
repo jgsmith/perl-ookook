@@ -1,5 +1,7 @@
 package OokOok::VersionedResult;
 
+# ABSTRACT: Declarative methods for versioned database results
+
 use Moose ();
 use Moose::Exporter;
 use Moose::Util::MetaRole;

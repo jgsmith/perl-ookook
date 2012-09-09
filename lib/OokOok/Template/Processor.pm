@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Template::Processor
+
+# ABSTRACT: Encapsulate management of the parser and document rendering
+
 class OokOok::Template::Processor {
 
   use OokOok::Template::Document;
@@ -46,7 +50,13 @@ class OokOok::Template::Processor {
     }
   }
 
-  method parse ($content) {
+=method parse (Str $content)
+
+Parses and renders the provided template content.
+
+=cut
+
+  method parse (Str $content) {
     my $dom = eval { $self -> _parser -> parse($content) };
 
     if($@) {

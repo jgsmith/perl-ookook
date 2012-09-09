@@ -1,5 +1,7 @@
 package OokOok::EditionedResult;
 
+# ABSTRACT: Declarative methods for editioned database results
+
 # has editions
 # has uuid
 

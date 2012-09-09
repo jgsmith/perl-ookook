@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Style
+
+# ABSTRACT: Style Provider for Project Viewing
+
 play_controller OokOok::Controller::Style {
 
   $CLASS -> config(

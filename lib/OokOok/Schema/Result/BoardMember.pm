@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::BoardMember;
 
-=head1 NAME
-
-OokOok::Schema::Result::BoardMember
-
-=cut
+# ABSTRACT: information about a user's membership on a board
 
 use OokOok::Result;
 use namespace::autoclean;

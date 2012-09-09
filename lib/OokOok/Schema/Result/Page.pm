@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::Page;
 
-=head1 NAME
-
-OokOok::Schema::Result::Page
-
-=cut
+# ABSTRACT: a page in a project
 
 use OokOok::VersionedResult;
 use namespace::autoclean;

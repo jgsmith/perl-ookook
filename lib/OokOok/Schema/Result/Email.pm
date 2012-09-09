@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::Email;
 
-=head1 NAME
-
-OokOok::Schema::Result::Email
-
-=cut
+# ABSTRACT: an email address and related information
 
 use OokOok::Result;
 use namespace::autoclean;

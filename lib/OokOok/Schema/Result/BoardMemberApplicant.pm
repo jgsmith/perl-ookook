@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::BoardMemberApplicant;
 
-=head1 NAME
-
-OokOok::Schema::Result::BoardMemberApplicant
-
-=cut
+# ABSTRACT: A board member's comment and vote about a board applicant
 
 use OokOok::Result;
 use namespace::autoclean;

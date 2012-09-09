@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::BoardRank;
 
-=head1 NAME
-
-OokOok::Schema::Result::BoardRank
-
-=cut
+# ABSTRACT: a rank in a board
 
 use OokOok::Result;
 use namespace::autoclean;

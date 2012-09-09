@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::PageVersion;
 
-=head1 NAME
-
-OokOok::Schema::Result::PageVersion
-
-=cut
+# ABSTRACT: temporal information about a page in a project
 
 use OokOok::ResultVersion;
 use namespace::autoclean;

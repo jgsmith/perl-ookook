@@ -3,8 +3,6 @@ package OokOok::Collection::Snippet;
 use OokOok::Collection;
 use namespace::autoclean;
 
-#use OokOok::Resource::Snippet;
-
 sub constrain_collection {
   my($self, $q, $deep) = @_;
 

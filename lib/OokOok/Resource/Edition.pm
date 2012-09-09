@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::Edition
+
+# ABSTRACT: Project Edition REST Resource
+
 resource OokOok::Resource::Edition {
 
   # Changes are made via the project - not the edition

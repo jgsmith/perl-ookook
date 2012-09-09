@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::ThemeEdition
+
+# ABSTRACT: Theme Edition REST Resource
+
 resource OokOok::Resource::ThemeEdition {
 
   prop name => (

@@ -1,8 +1,9 @@
 package OokOok::Util::XML;
 
+# ABSTRACT: Simple Functions for Building XML Documents
+
 use MooseX::Types::Moose qw(HashRef CodeRef);
 use XML::LibXML;
-#use Carp::Always;
 
 sub ELEMENT {
   my($name, $dom, $attrs, @children) = @_;

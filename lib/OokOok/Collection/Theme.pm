@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Collection::Theme
+
+# ABSTRACT: Theme REST collection
+
 class OokOok::Collection::Theme {
   use OokOok::Collection;
 

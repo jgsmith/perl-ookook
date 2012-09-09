@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::Snippet;
 
-=head1 NAME
-
-OokOok::Schema::Result::Snippet
-
-=cut
+# ABSTRACT: A snippet of content in a project
 
 use OokOok::VersionedResult;
 use namespace::autoclean;

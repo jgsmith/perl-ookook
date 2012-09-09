@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Meta::Resource
+
+# ABSTRACT: Metaclass for REST resource classes
+
 role OokOok::Meta::Resource {
   use Data::Verifier;
   use Module::Load;

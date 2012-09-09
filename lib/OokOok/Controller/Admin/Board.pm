@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Admin::Board
+
+# ABSTRACT: Controller to administer boards
+
 admin_controller OokOok::Controller::Admin::Board {
 
   use DateTime;

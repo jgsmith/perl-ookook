@@ -1,5 +1,7 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Base::EditionedResult
+
 class OokOok::Base::EditionedResult extends OokOok::Base::Result {
   use DateTime::Format::ISO8601;
   use OokOok::Exception;

@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::SnippetVersion;
 
-=head1 NAME
-
-OokOok::Schema::Result::SnippetVersion
-
-=cut
+# ABSTRACT: temporal information of a project snippet
 
 use OokOok::ResultVersion;
 use namespace::autoclean;

@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Formatter::Textile
+
+# ABSTRACT: Format Textile as HTML
+
 class OokOok::Formatter::Textile {
   use Text::Textile qw(textile);
 
@@ -19,5 +23,16 @@ class OokOok::Formatter::Textile {
     );
   }
 
-  method format ($text) { $self -> _textile -> process($text); }
+=method format (Str $text)
+
+Formats the given text using Textile, returning HTML.
+
+=cut
+
+  method format (Str $text) { $self -> _textile -> process($text); }
 }
+
+=head1 SEE ALSO
+
+=for :list
+* L<Text::Textile>

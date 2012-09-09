@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::PagePart;
 
-=head1 NAME
-
-OokOok::Schema::Result::PagePart
-
-=cut
+# ABSTRACT: content for a page part of a project page
 
 use OokOok::Result;
 use namespace::autoclean;

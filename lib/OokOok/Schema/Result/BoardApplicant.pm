@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::BoardApplicant;
 
-=head1 NAME
-
-OokOok::Schema::Result::BoardApplicant
-
-=cut
+# ABSTRACT: an applicant for membership on a board
 
 use OokOok::Result;
 use namespace::autoclean;

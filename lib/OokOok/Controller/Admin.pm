@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Admin
+
+# ABSTRACT: Gateway to administrative interface
+
 admin_controller OokOok::Controller::Admin {
 
   final action index as '' {

@@ -1,5 +1,7 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Template::Context
+
 class OokOok::Template::Context {
   use MooseX::Types::Moose qw/CodeRef ArrayRef Str HashRef/;
 
@@ -40,6 +42,14 @@ class OokOok::Template::Context {
     default => sub { +{ } },
     lazy => 1,
   );
+
+=method localize ()
+
+Returns a new OokOok::Template::Context that provides a localized set of
+variables and other settings. The context on which this method is called
+becomes the parent of the returned context.
+
+=cut
 
   method localize {
     OokOok::Template::Context -> new( 

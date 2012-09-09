@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Exception
+
+# ABSTRACT: Common exceptions
+
 class OokOok::Exception extends Throwable::Error is mutable {
   has status => ( is => 'ro', isa => 'Int', default => 400 );
 

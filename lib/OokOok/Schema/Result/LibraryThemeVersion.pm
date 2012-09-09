@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::LibraryThemeVersion;
 
-=head1 NAME
-
-OokOok::Schema::Result::LibraryThemeVersion
-
-=cut
+# ABSTRACT: temporal information about how a theme uses a library
 
 use OokOok::ResultVersion;
 use namespace::autoclean;

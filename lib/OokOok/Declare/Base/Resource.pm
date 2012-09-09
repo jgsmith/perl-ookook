@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Declare::Base::Resource
+
+# ABSTRACT: Base class for resource classes
+
 class OokOok::Declare::Base::Resource {
   use Lingua::EN::Inflect qw(PL_V);
   use String::CamelCase qw(decamelize);

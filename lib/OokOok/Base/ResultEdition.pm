@@ -1,5 +1,7 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Base::ResultEdition
+
 class OokOok::Base::ResultEdition extends OokOok::Base::Result {
 
   use DateTime;

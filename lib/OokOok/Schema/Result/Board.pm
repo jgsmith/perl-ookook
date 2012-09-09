@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::Board;
 
-=head1 NAME
-
-OokOok::Schema::Result::Board
-
-=cut
+# ABSTRACT: a governing board
 
 use OokOok::Result;
 use namespace::autoclean;

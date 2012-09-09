@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Formatter::BBCode
+
+# ABSTRACT: Format BBCode as HTML
+
 class OokOok::Formatter::BBCode {
   use Parse::BBCode;
 
@@ -18,6 +22,17 @@ class OokOok::Formatter::BBCode {
     );
   }
 
-  method format ($text) { $self -> _formatter -> render($text); }
+=method format (Str $text)
+
+Formats the provided BBCode string as HTML.
+
+=cut
+
+  method format (Str $text) { $self -> _formatter -> render($text); }
 
 }
+
+=head1 SEE ALSO
+
+=for :list
+* L<Parse::BBCode>

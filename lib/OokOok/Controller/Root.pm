@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Root
+
+# ABSTRACT: Controller for front page of OokOok-based site
+
 controller OokOok::Controller::Root {
 
   use OokOok::Collection::Project;

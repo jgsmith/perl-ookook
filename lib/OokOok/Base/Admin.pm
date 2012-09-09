@@ -1,5 +1,9 @@
 use CatalystX::Declare;
 
+# PODNAME: OokOok::Base::Admin
+
+# ABSTRACT: Baseclass for administrative interface controllers
+
 controller OokOok::Base::Admin {
 
   use MooseX::Types::Moose qw(Str);

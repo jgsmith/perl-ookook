@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::View
+
+# ABSTRACT: provides processed view of project pages
+
 play_controller OokOok::Controller::View {
 
   $CLASS -> config(

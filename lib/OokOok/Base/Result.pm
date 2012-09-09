@@ -1,5 +1,7 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Base::Result
+
 class OokOok::Base::Result extends DBIx::Class::Core {
 
   use MooseX::NonMoose;

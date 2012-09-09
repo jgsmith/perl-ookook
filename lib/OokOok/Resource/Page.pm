@@ -1,10 +1,10 @@
 use OokOok::Declare;
 
-resource OokOok::Resource::Page {
+# PODNAME: OokOok::Resource::Page
 
-  #has '+source' => (
-  #  isa => 'OokOok::Model::DB::Page',
-  #);
+# ABSTRACT: Page REST resource
+
+resource OokOok::Resource::Page {
 
   prop title => (
     required => 0,

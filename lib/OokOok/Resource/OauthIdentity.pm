@@ -1,5 +1,7 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::OauthIdentity
+
 resource OokOok::Resource::OauthIdentity {
 
   prop service => (

@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::ThemeLayout
+
+# ABSTRACT: Theme Layout REST resource
+
 resource OokOok::Resource::ThemeLayout {
 
   use OokOok::Template::Processor;

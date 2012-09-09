@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::AssetVersion;
 
-=head1 NAME
-
-OokOok::Schema::Result::AssetVersion
-
-=cut
+# ABSTRACT: Project Asset version
 
 use OokOok::ResultVersion;
 use namespace::autoclean;

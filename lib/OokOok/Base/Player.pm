@@ -1,5 +1,7 @@
 use CatalystX::Declare;
 
+# PODNAME: OokOok::Base::Player
+
 controller OokOok::Base::Player
    extends Catalyst::Controller::REST
 {

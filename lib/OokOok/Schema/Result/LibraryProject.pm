@@ -1,11 +1,7 @@
 use utf8;
 package OokOok::Schema::Result::LibraryProject;
 
-=head1 NAME
-
-OokOok::Schema::Result::LibraryProject
-
-=cut
+# ABSTRACT: A library as used by a project
 
 use OokOok::VersionedResult;
 use namespace::autoclean;

@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::BoardRank
+
+# ABSTRACT: Board Rank REST resource
+
 resource OokOok::Resource::BoardRank {
 
   #has '+source' => (

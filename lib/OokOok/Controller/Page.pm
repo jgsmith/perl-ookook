@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Page
+
+# ABSTRACT: Controller for Page REST interface
+
 rest_controller OokOok::Controller::Page {
 
   $CLASS -> config(
@@ -7,10 +11,6 @@ rest_controller OokOok::Controller::Page {
     },
     default => 'text/html',
   );
-
-  under '/' {
-    action base as 'page';
-  }
 
   under resource_base {
     final action page_parts as "page-part" isa REST;

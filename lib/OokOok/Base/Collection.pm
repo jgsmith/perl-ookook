@@ -1,5 +1,7 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Base::Collection
+
 class OokOok::Base::Collection {
 
   use String::CamelCase qw(decamelize);

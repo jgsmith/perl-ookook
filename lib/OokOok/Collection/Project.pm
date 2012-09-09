@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Collection::Project
+
+# ABSTRACT: Project REST collection
+
 class OokOok::Collection::Project {
   use OokOok::Collection;
 

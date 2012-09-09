@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::ThemeStyle
+
+# ABSTRACT: Controller for theme style REST interface
+
 rest_controller OokOok::Controller::ThemeStyle {
 
   $CLASS -> config(
@@ -8,7 +12,4 @@ rest_controller OokOok::Controller::ThemeStyle {
     default => 'text/html',
   );
 
-  under '/' {
-    action base as "theme-style";
-  }
 }

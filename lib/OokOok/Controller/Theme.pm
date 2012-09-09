@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Theme
+
+# ABSTRACT: Controller for Theme REST interface
+
 rest_controller OokOok::Controller::Theme {
 
   $CLASS -> config(
@@ -7,10 +11,6 @@ rest_controller OokOok::Controller::Theme {
     },
     default => 'text/html',
   );
-
-  under '/' {
-    action base as 'theme';
-  }
 
   under resource_base {
     final action editions as "edition" isa REST {

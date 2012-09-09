@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Controller::Search
+
+# ABSTRACT: Controller providing search support
+
 controller OokOok::Controller::Search {
 
   use Math::Round ();

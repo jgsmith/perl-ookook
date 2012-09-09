@@ -1,8 +1,7 @@
 use utf8;
 package OokOok::Schema;
 
-# Created by DBIx::Class::Schema::Loader
-# DO NOT MODIFY THE FIRST PART OF THIS FILE
+# ABSTRACT: A database schema for OokOok
 
 use Moose;
 use MooseX::MarkAsMethods autoclean => 1;
@@ -19,15 +18,19 @@ for my $class (__PACKAGE__ -> sources) {
   );
 }
 
-# Created by DBIx::Class::Schema::Loader v0.07024 @ 2012-05-21 15:39:15
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:sUKIshFTrsfsCwi3JdVYpw
-
 has is_development => (
   is => 'rw',
   isa => 'Bool',
   default => 0,
   lazy => 1,
 );
+
+=method connection ()
+
+OokOok extends the default L<DBIx::Class::Schema> method to automatically
+deploy the schema if the DSN is equal to C<dbi:Pg:dbname=ookook_testing>.
+
+=cut
 
 after connection => sub {
   my($self) = @_;
@@ -53,6 +56,15 @@ after connection => sub {
   }
 };
 
+=method deploy ()
+
+OokOok extends the default L<DBIx::Class::Schema> method to add the
+core tag library with the uuid C<ypUv1ZbV4RGsjb63Mj8b>.
+
+This mirrors the example configuration in L<OokOok>.
+
+=cut
+
 override deploy => sub {
   my($self) = @_;
 
@@ -72,6 +84,5 @@ override deploy => sub {
   $l -> current_edition -> close;
 };
 
-# You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable(inline_constructor => 0);
 1;

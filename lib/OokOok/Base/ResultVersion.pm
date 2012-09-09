@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Base::ResultVersion
+
+# ABSTRACT: Base class for results attached to a versioned result
+
 class OokOok::Base::ResultVersion extends OokOok::Base::Result {
 
   override update (HashRef $columns?) {

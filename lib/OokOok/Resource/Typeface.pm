@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::Typeface
+
+# ABSTRACT: Typeface REST Resource
+
 resource OokOok::Resource::Typeface
   with OokOok::Role::Resource::HasEditions {
 

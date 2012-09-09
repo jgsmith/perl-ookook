@@ -1,5 +1,7 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::Board
+
 resource OokOok::Resource::Board {
 
   #has '+source' => (

@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: Catalyst::Plugin::OokOok::Authentication
+
+# ABSTRACT: Provides OAuth authentication to OokOok
+
 class Catalyst::Plugin::OokOok::Authentication {
   use Net::OAuth::Client;
   use String::Random qw/ random_string /;
@@ -36,6 +40,10 @@ class Catalyst::Plugin::OokOok::Authentication {
     },
   );
 
+=method user (Object $user?)
+
+=cut
+
   method user ($user?) {
     if($user) {
       $self -> _user($user);
@@ -49,7 +57,11 @@ class Catalyst::Plugin::OokOok::Authentication {
     $self -> _user;
   }
 
-  method authenticate ($provider_name) {
+=method authenticate (Str $provider)
+
+=cut
+
+  method authenticate (Str $provider_name) {
     my $provider = $self -> config -> {'Plugin::OokOok::Authentication'} -> {providers} -> {$provider_name};
     return unless $provider;
 
@@ -189,6 +201,10 @@ class Catalyst::Plugin::OokOok::Authentication {
     }
   }
   
+=method logout ()
+
+=cut
+
   method logout { 
     $self -> _user(undef);
     delete $self -> session -> {user_id};

@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Template::Parser
+
+# ABSTRACT: Template parser
+
 class OokOok::Template::Parser {
 
   use Text::Balanced qw(extract_delimited);
@@ -15,7 +19,14 @@ class OokOok::Template::Parser {
 
   has _el_stack => ( is => 'rw', isa => 'ArrayRef', default => sub { [] } );
 
-  method parse ($text) {
+=method parse (Str $text)
+
+Parses the provided template text into a parse tree suitable for rendering
+by a L<OokOok::Template::Document> instance.
+
+=cut
+
+  method parse (Str $text) {
     push @{$self -> _el_stack}, {
       prefix => '',
       local => '',
@@ -63,23 +74,39 @@ class OokOok::Template::Parser {
     return $self -> _el_stack -> [0] -> {children};
   }
 
-  method characters ($chars) {
+=method characters (Str $chars)
+
+=cut
+
+  method characters (Str $chars) {
     $self -> _buffer( $self -> _buffer . $chars );
   }
 
-  method start_element ($prefix, $el) {
+=method start_element (Str $prefix, Str $name)
+
+=cut
+
+  method start_element (Str $prefix, Str $el) {
     push @{$self -> _el_stack -> [0] -> {children}}, $self -> _buffer;
     $self -> _buffer('');
     unshift @{$self -> _el_stack}, { prefix => $prefix, local => $el, attrs => {}, children => [] };
   }
 
+=method attribute (Str $prefix, Str $name, Str $value)
+
+=cut
+
   # we allow attributes to be specified multiple times
-  method attribute ($prefix, $name, $value) {
+  method attribute (Str $prefix, Str $name, Str $value) {
     $self -> _el_stack -> [0] -> {attrs} -> {$prefix} -> {$name} ||= [];
     push @{$self -> _el_stack -> [0] -> {attrs} -> {$prefix} -> {$name}}, $value;
   }
 
-  method end_element ($prefix, $el) {
+=method end_element (Str $prefix, Str $name)
+
+=cut
+
+  method end_element (Str $prefix, Str $el) {
     # we make sure the end matches
     push @{$self -> _el_stack -> [0] -> {children}}, $self -> _buffer;
     $self -> _buffer('');

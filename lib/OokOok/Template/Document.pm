@@ -1,5 +1,9 @@
 use MooseX::Declare;
 
+# PODNAME: OokOok::Template::Document
+
+# ABSTRACT: Container for a parsed template document
+
 class OokOok::Template::Document {
 
   use OokOok::Template::Context;

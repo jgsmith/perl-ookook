@@ -1,5 +1,9 @@
 use OokOok::Declare;
 
+# PODNAME: OokOok::Resource::Snippet
+
+# ABSTRACT: Snippet REST resource
+
 resource OokOok::Resource::Snippet {
 
   use Moose::Util::TypeConstraints qw(enum);
