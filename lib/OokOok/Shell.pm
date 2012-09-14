@@ -10,8 +10,6 @@ class OokOok::Shell with MooseX::Getopt {
   use IO::Handle;
   use Module::Load ();
 
-  our $VERSION = "0.0.1";
-
   Moose::Exporter -> setup_import_methods(
     as_is => [ qw( shell ) ]
   );

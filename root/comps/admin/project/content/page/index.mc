@@ -49,6 +49,6 @@ $.pages => sub { [] }
       <% $.IndexHeadActions("Modify") %>
 %   }}
 %   $.IndexBody {{
-      <% $.renderPages($.project->page) %>
+      <% $.renderPages($.project->home_page) %>
 %   }}
 % }}

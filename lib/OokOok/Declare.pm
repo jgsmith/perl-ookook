@@ -19,8 +19,6 @@ class OokOok::Declare extends CatalystX::Declare is dirty is mutable {
 
   clean;
 
-  our $VERSION = '0.01';
-
   around keywords (ClassName $self:) {
     $self->$orig,
 

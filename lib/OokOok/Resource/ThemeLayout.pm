@@ -52,6 +52,19 @@ resource OokOok::Resource::ThemeLayout {
 
   method can_PUT { $self -> theme -> can_PUT; }
 
+  method BAG ($bag) {
+    $bag -> add_data( layout => $self -> layout );
+    $bag -> add_meta( type => 'theme layout' );
+    $bag -> add_meta( uuid => $self -> id );
+    $bag -> add_meta( name => $self -> name );
+    if($self -> theme_style) {
+      $bag -> add_meta(theme_style => $self -> theme_style -> id);
+    }
+    if($self -> parent_layout) {
+      $bag -> add_meta(parent_layout => $self -> parent_layout -> id);
+    }
+  }
+
   method stylesheets (Object $layout:) {
     my @stylesheets;
     while($layout) {

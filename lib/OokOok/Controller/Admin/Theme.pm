@@ -11,6 +11,8 @@ admin_controller OokOok::Controller::Admin::Theme {
   use OokOok::Collection::ThemeVariable;
   use OokOok::Collection::ThemeEdition;
 
+  use File::Copy ();
+
   action base under '/' as 'admin/theme';
 
   under base {
@@ -27,6 +29,12 @@ admin_controller OokOok::Controller::Admin::Theme {
   }
 
   under theme_base {
+
+    action theme_edition_base (Str $date_str) as 'editions' {
+      my $date = OokOok::DateTime::Parser -> parse_datetime($date_str);
+      $ctx -> stash -> {theme} -> date($date);
+    }
+
     action theme_style_base (Str $uuid) as 'style' {
       my $theme = $ctx -> stash -> {theme};
       my $style = $theme -> style($uuid);
@@ -110,7 +118,7 @@ admin_controller OokOok::Controller::Admin::Theme {
 
   }
 
-  under theme_base {  
+  under theme_base {
     final action theme_view as '' {
       my $uuid = $ctx -> stash -> {theme} -> id;
       $ctx -> response -> redirect(
@@ -193,6 +201,29 @@ admin_controller OokOok::Controller::Admin::Theme {
         );
       }
       $ctx -> stash -> {template} = "/admin/theme/content/style/new";
+    }
+  }
+
+  under theme_edition_base {
+    final action theme_edition_download as 'bag' {
+      # provide all of the current edition theme assets as a tarball
+      my $uuid = $ctx -> stash -> {theme} -> id;
+      my $date = OokOok::DateTime::Parser -> format_datetime($ctx -> stash -> {theme} -> date);
+      my $bag = $ctx -> stash -> {theme} -> _BAG( $ctx -> response );
+      #$ctx -> response -> content_length( );
+      #$ctx -> response -> content_encoding( );
+      $ctx -> response -> content_type('application/octet-stream');
+      $ctx -> response -> header(
+        'Content-Disposition', qq[attachment; filename="theme-$uuid-$date.tgz"]
+      );
+      $ctx -> response -> status(200);
+      print STDERR "Bag: ", $bag, "\n";
+      File::Copy::copy($bag, "/tmp/theme-$uuid-$date.tgz");
+      open my $fh, "<", $bag;
+      local($/);
+      $ctx -> response->body(<$fh>);
+      close $fh;
+      #File::Copy::copy( $bag, $ctx -> response );
     }
   }
 

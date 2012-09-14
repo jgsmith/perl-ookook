@@ -8,6 +8,8 @@ class OokOok::Declare::Base::Resource {
   use Lingua::EN::Inflect qw(PL_V);
   use String::CamelCase qw(decamelize);
   use OokOok::Exception;
+  use OokOok::Bag;
+  use OokOok::DateTime::Parser;
 
   has c => (
     is => 'rw',
@@ -29,7 +31,11 @@ class OokOok::Declare::Base::Resource {
     default => sub { 
       my $self = shift;
       if(!$self -> is_development) {
-        $self -> c -> stash -> {date} || DateTime->now;
+        my $date = $self -> c -> stash -> {date};
+        if(!$date) {
+          $date = DateTime->now;
+          $date -> set_formatter('OokOok::DateTime::Parser');
+        }
       }
     },
     trigger => sub {
@@ -135,6 +141,14 @@ class OokOok::Declare::Base::Resource {
 
   method can_PUT { $self -> is_development; }
   method can_DELETE { $self -> is_development; }
+
+  method _BAG {
+    my $bag = OokOok::Bag -> new;
+
+    $self -> BAG($bag);
+
+    return $bag -> write;
+  }
 
   method _GET ($deep = 0) { 
     OokOok::Exception::GET -> forbidden(

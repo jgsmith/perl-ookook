@@ -22,7 +22,9 @@ Moose::Exporter->setup_import_methods(
 );
 
 my $inflate_datetime = sub {
-  DateTime::Format::Pg->parse_datetime(shift);
+  my $date = DateTime::Format::Pg->parse_datetime(shift);
+  $date -> set_formatter('OokOok::DateTime::Parser');
+  $date;
 };
 
 my $deflate_datetime = sub {

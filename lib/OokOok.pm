@@ -89,6 +89,8 @@ path is left unchanged.
 
 =cut
 
+  #my $formatter = OokOok::DateTime::Parser -> new;
+
   override prepare_path ($ctx:) {
     super;
 
@@ -100,15 +102,9 @@ path is left unchanged.
     if($first eq 'dev') {
       $ctx -> stash -> {development} = 1;
     }
-    elsif($first =~ m{^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$}) {
-      $ctx -> stash -> {date} = DateTime -> new({
-        year => $1,
-        month => $2,
-        day => $3,
-        hour => $4,
-        minute => $5,
-        second => $6
-      });
+    elsif(length($first) == 14 && $first =~ m{^\d+$}) {
+      $ctx -> stash -> {date} = OokOok::DateTime::Parser -> parse_datetime($first);
+      $ctx -> stash -> {date} -> set_formatter('OokOok::DateTime::Parser');
     }
     else {
       unshift @path_chunks, $first;
@@ -135,7 +131,7 @@ Returns the list of formatter classes available.
 
   our @FORMATTERS;
 
-  method formatters ($self:) {
+  method formatters () {
     return @FORMATTERS if @FORMATTERS;
     @FORMATTERS = $self -> _formatters;
   }
@@ -144,6 +140,7 @@ Returns the list of formatter classes available.
 
 BEGIN {
   package OokOok;
+  use OokOok::DateTime::Parser ();
   use Module::Pluggable (search_path => 'OokOok::Formatter', 
                          sub_name => '_formatters',
                          require => 1,

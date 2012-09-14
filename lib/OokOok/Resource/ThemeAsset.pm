@@ -41,5 +41,15 @@ resource OokOok::Resource::ThemeAsset {
     source => sub { $_[0] -> source -> theme },
   );
 
+  method BAG ($bag) {
+    $bag -> add_meta( uuid => $self -> id );
+    $bag -> add_meta( type => 'theme asset' );
+    $bag -> add_meta( size => $self -> size );
+    $bag -> add_meta( file_type => $self -> type );
+    $bag -> add_meta( name => $self -> name );
+    $bag -> add_meta( filename => $self -> filename );
+    # TODO: add asset content
+  }
+
   method can_PUT { $self -> theme -> can_PUT }
 }

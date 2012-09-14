@@ -6,6 +6,7 @@ $.editions => sub { [] }
 %   $.IndexHead {{
       <% $.IndexHeadName("Edition") %>
       <% $.IndexHeadStatus("Published At") %>
+      <% $.IndexHeadActions("Methods") %>
 %   }}
 %   $.IndexBody {{
 %     for my $edition (reverse @{$.editions}) {
@@ -20,6 +21,14 @@ $.editions => sub { [] }
 %           else {
               &mdash;
 %           }
+%         }}
+%         $.IndexItemActions {{
+%           $.IndexItemAction(
+%              !$edition -> source -> is_closed,
+%              "/admin/theme/".$.theme_id."/editions/".$edition->closed_on."/bag",
+%              "download",
+%              "Download"
+%           )
 %         }}
 %       }}
 %     }

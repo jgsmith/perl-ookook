@@ -65,20 +65,22 @@ sub init_meta {
   $package -> set_primary_key('id');
 
   my $version_pkg = $package . "Version";
-  Module::Load::load($version_pkg);
-  $version_pkg -> add_columns( $meta -> foreign_key, {
-    data_type => 'integer',
-    is_nullable => 0,
-  });
-  $version_pkg -> belongs_to(
-    $nom, $package, $meta -> foreign_key
-  );
-  $package -> has_many(
-    versions => $version_pkg, $meta -> foreign_key
-  );
-  $version_pkg -> meta -> add_method( owner => sub {
-    $_[0] -> $nom
-  } );
+  eval { Module::Load::load($version_pkg) };
+  if(!$@) {
+    $version_pkg -> add_columns( $meta -> foreign_key, {
+      data_type => 'integer',
+      is_nullable => 0,
+    });
+    $version_pkg -> belongs_to(
+      $nom, $package, $meta -> foreign_key
+    );
+    $package -> has_many(
+      versions => $version_pkg, $meta -> foreign_key
+    );
+    $version_pkg -> meta -> add_method( owner => sub {
+      $_[0] -> $nom
+    } );
+  }
 
   return $meta;
 }

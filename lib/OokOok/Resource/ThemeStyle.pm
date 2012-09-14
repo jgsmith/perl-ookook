@@ -43,6 +43,13 @@ resource OokOok::Resource::ThemeStyle {
 
   method can_PUT { $self -> theme -> can_PUT; }
 
+  method BAG ($bag) {
+    $bag -> add_data( content => $self -> styles );
+    $bag -> add_meta( type => 'theme style' );
+    $bag -> add_meta( uuid => $self -> id );
+    $bag -> add_meta( name => $self -> name );
+  }
+
   method render (Object $context?) {
     $self -> styles;
   }
