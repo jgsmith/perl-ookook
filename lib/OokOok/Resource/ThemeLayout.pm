@@ -48,21 +48,13 @@ resource OokOok::Resource::ThemeLayout {
     type => 'Str',
     required => 1,
     source => sub { $_[0] -> source_version -> layout },
+    archive_as_file => 'content',
   );
 
   method can_PUT { $self -> theme -> can_PUT; }
 
-  method BAG ($bag) {
-    $bag -> add_data( layout => $self -> layout );
+  after BAG ($bag) {
     $bag -> add_meta( type => 'theme layout' );
-    $bag -> add_meta( uuid => $self -> id );
-    $bag -> add_meta( name => $self -> name );
-    if($self -> theme_style) {
-      $bag -> add_meta(theme_style => $self -> theme_style -> id);
-    }
-    if($self -> parent_layout) {
-      $bag -> add_meta(parent_layout => $self -> parent_layout -> id);
-    }
   }
 
   method stylesheets (Object $layout:) {

@@ -56,30 +56,9 @@ resource OokOok::Resource::Theme
     source => sub { $_[0] -> source -> editions },
   );
 
-  method _bag_resource ($bag, $r) {
-    $bag -> with_data_directory( $r -> id, sub {
-      $r -> BAG($bag);
-    });
-  }
-
-  method BAG ($bag) {
-    # each resource that is attached to this edition goes into the bag
-    $bag -> with_data_directory('layouts' => sub {
-      $self -> _bag_resource($bag, $_) for @{$self -> theme_layouts}
-    });
-    $bag -> with_data_directory('assets' => sub {
-      $self -> _bag_resource($bag, $_) for @{$self -> theme_assets}
-    });
-    $bag -> with_data_directory('styles' => sub {
-      $self -> _bag_resource($bag, $_) for @{$self -> theme_styles}
-    });
-    $bag -> with_data_directory('variables' => sub {
-      $self -> _bag_resource($bag, $_) for @{$self -> theme_variables}
-    });
-    $bag -> add_meta(description => $self -> description);
-    $bag -> add_meta(uuid => $self -> id);
-    $bag -> add_meta(name => $self -> name);
-    $bag -> add_meta(closed_on => $self -> source_version -> closed_on);
+  after BAG ($bag) {
+    $bag -> add_meta(closed_on => $self -> source_version -> closed_on)
+      if $self -> source_version -> closed_on;
     $bag -> add_meta(type => 'theme edition');
   }
 

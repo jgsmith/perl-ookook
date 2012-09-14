@@ -48,7 +48,7 @@ $.form_data => sub { +{} }
             <label class="control-label">Filter:</label>
             <div class="controls">
               <select name="part[<% $count %>][filter]">
-%               for my $opt (map { s{^.*::}{}; $_ } OokOok->formatters) {
+%               for my $opt (map { s{^.*::}{}; $_ } $c->formatters) {
                   <option value="<% $opt %>" <% $.ifEqual($opt, $part->{filter}, ' selected') %>><% $opt %></option>
 %               }
               </select>

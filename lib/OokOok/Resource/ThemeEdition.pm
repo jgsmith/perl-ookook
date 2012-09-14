@@ -33,8 +33,4 @@ resource OokOok::Resource::ThemeEdition {
   method link {
     $self -> collection -> link . '/edition';
   }
-
-  method bagit ($bag) {
-    # add stuff to the bag
-  }
 }

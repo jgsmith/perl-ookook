@@ -6,7 +6,7 @@ use MooseX::Declare;
 
 role OokOok::Meta::Resource {
   use Data::Verifier;
-  use Module::Load;
+  use Module::Load ();
 
   has resource_name => (
     is => 'rw',
@@ -255,25 +255,30 @@ role OokOok::Meta::Resource {
 
   method add_embedded (Str $key, %config) {
     my $resource_class = $config{isa};
-    Module::Load::load($resource_class);
-    my $method = $config{source};
-    my $date   = $config{date} || sub { $_[0] -> date };
-    $self -> add_method( $key => sub {
-      my($self) = @_;
-      my $row;
-      [
-        grep { defined $_ } map {
-          $_ ? $resource_class -> new( 
-                 c => $self -> c, 
-                 date => $self -> $date, 
-                 source => $_ 
-               )
-             : undef
-        } $self->$method()
-      ];
-    } );
+    eval { Module::Load::load($resource_class) };
+    if($@) {
+      warn "Unable to load $resource_class for $key\n";
+    }
+    else {
+      my $method = $config{source};
+      my $date   = $config{date} || sub { $_[0] -> date };
+      $self -> add_method( $key => sub {
+        my($self) = @_;
+        my $row;
+        [
+          grep { defined $_ } map {
+            $_ ? $resource_class -> new( 
+                   c => $self -> c, 
+                   date => $self -> $date, 
+                   source => $_ 
+                 )
+               : undef
+          } $self->$method()
+        ];
+      } );
 
-    $self -> embedded -> {$key} = \%config;
+      $self -> embedded -> {$key} = \%config;
+    }
   }
 
   method get_embedded_list { keys %{$self->embedded} }

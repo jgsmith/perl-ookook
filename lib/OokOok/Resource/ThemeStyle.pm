@@ -38,16 +38,14 @@ resource OokOok::Resource::ThemeStyle {
     is => 'rw',
     isa => 'Str',
     required => 1,
-    source => sub { $_[0] -> source_version -> styles }
+    source => sub { $_[0] -> source_version -> styles },
+    archive_as_file => 'content'
   );
 
   method can_PUT { $self -> theme -> can_PUT; }
 
-  method BAG ($bag) {
-    $bag -> add_data( content => $self -> styles );
+  after BAG ($bag) {
     $bag -> add_meta( type => 'theme style' );
-    $bag -> add_meta( uuid => $self -> id );
-    $bag -> add_meta( name => $self -> name );
   }
 
   method render (Object $context?) {

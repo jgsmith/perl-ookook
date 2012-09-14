@@ -14,13 +14,14 @@ class OokOok::Formatter::Textile {
   );
 
   method _build_textile {
-    Text::Textile -> new(
-      css => 1,
+    my $ob = Text::Textile -> new(
       charset => 'utf-8',
       trim_spaces => 1,
       char_encoding => 1,
       handle_quotes => 1,
     );
+    $ob -> css(1);
+    $ob;
   }
 
 =method format (Str $text)

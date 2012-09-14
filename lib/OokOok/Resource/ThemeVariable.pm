@@ -53,15 +53,8 @@ resource OokOok::Resource::ThemeVariable {
     source => sub { $_[0] -> source -> theme },
   );
 
-  method BAG ($bag) {
-    $bag -> add_meta(uuid => $self -> id);
+  after BAG ($bag) {
     $bag -> add_meta(type => 'theme variable');
-    $bag -> add_meta(variable_type => $self -> type);
-    $bag -> add_meta(default_value => $self -> default_value);
-    $bag -> add_meta(status => $self -> status);
-    $bag -> add_meta(description => $self -> description);
-    $bag -> add_meta(name => $self -> name);
-    $bag -> add_meta(unused => $self -> unused);
   }
 
   method can_PUT { $self -> theme -> can_PUT; }

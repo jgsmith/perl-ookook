@@ -53,10 +53,6 @@ class OokOok::Bag {
 
   method _write_file ($file, $content) {
     $self -> _archive -> add($file, \$content);
-    #open my $fh, ">", join("/", $self -> _on_disk_dir, $file)
-    #  or croak "Unable to add content to bag";
-    #$fh -> print($content);
-    #close $fh;
   }
 
   method _read_file ($file) {
@@ -68,16 +64,11 @@ class OokOok::Bag {
       $content = <$fh>;
       close $fh;
     }
-    #open my $fh, "<", join("/", $self -> _on_disk_dir, $file)
-    #  or croak "Unable to read content from bag";
-    #local($/);
-    #$content = <$fh>;
-    #close $fh;
     return $content;
   }
 
   method add_data ($name, $content) {
-    $content = encode('utf8', $content);
+    $content = encode('utf8', $content) if utf8::is_utf8($content);
     my $dir = join("/", @{$self -> _data_dir});
     push @{$self -> md5data}, md5_hex($content) . " $dir/$name";
     push @{$self -> sha1data}, sha1_hex($content) . " $dir/$name";
@@ -121,15 +112,15 @@ class OokOok::Bag {
 
     # add metadata pieces at top-level of bag
     pop @{$self -> _data_dir};
-    $self -> _write_file("manifest-md5.txt", join("\n", @{$self -> md5data}));
-    $self -> _write_file("manifest-sha1.txt", join("\n", @{$self -> sha1data}));
+    $self -> _write_file("manifest-md5.txt", encode('utf-8', join("\n", @{$self -> md5data})));
+    $self -> _write_file("manifest-sha1.txt", encode('utf-8', join("\n", @{$self -> sha1data})));
 
-    $self -> _write_file("bagit.txt", <<EOF);
+    $self -> _write_file("bagit.txt", encode('utf-8', <<EOF));
 BagIt-version: 0.97
 Tag-File-Character-Encoding: UTF-8
 EOF
     my $version = $OokOok::VERSION || 'dev';
-    $self -> _write_file("package-info.txt", <<EOF);
+    $self -> _write_file("package-info.txt", encode('utf-8', <<EOF));
 Bag-Software-Agent: OokOok $version (http://search.cpan.org/dist/OokOok)
 EOF
 

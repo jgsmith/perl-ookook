@@ -25,7 +25,7 @@ $.editions => sub { [] }
 %         $.IndexItemActions {{
 %           $.IndexItemAction(
 %              !$edition -> source -> is_closed,
-%              "/admin/theme/".$.theme_id."/editions/".$edition->closed_on."/bag",
+%              "/admin/theme/".$.theme_id."/editions/".$edition->closed_on."/archive",
 %              "download",
 %              "Download"
 %           )

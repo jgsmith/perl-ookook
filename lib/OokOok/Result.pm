@@ -108,40 +108,50 @@ sub prop {
 sub owns_many {
   my($meta, $method, $class, %options) = @_;
 
-  Module::Load::load($class);
+  eval { Module::Load::load($class) };
 
-  $class -> add_columns( $meta -> foreign_key, {
-    data_type => 'integer',
-    is_nullable => 1,
-  } );
-  $class -> belongs_to(
-    $meta -> {package} -> table, $meta -> {package}, $meta -> foreign_key
-  );
-  $meta -> {package} -> has_many(
-    $method, $class, $meta -> foreign_key, \%options
-  );
+  if($@) {
+    warn "Unable to load $class for $method\n";
+  }
+  else {
+    $class -> add_columns( $meta -> foreign_key, {
+      data_type => 'integer',
+      is_nullable => 1,
+    } );
+    $class -> belongs_to(
+      $meta -> {package} -> table, $meta -> {package}, $meta -> foreign_key
+    );
+    $meta -> {package} -> has_many(
+      $method, $class, $meta -> foreign_key, \%options
+    );
+  }
 }
 
 sub references {
   my($meta, $method, $class, %options) = @_;
 
-  Module::Load::load($class);
+  eval { Module::Load::load($class) };
 
-  $meta -> {package} -> add_columns( $class -> meta -> foreign_key, {
-    data_type => 'integer',
-    is_nullable => 1,
-  } );
-  $meta -> {package} -> belongs_to(
-    $method, 
-    $class, 
-    $class -> meta -> foreign_key, 
-  );
-  $class -> has_many(
-    PL_N($meta -> {package} -> table), 
-    $meta -> {package}, 
-    $class -> meta -> foreign_key,
-    \%options
-  );
+  if($@) {
+    warn "unable to load $class for $method\n";
+  }
+  else {
+    $meta -> {package} -> add_columns( $class -> meta -> foreign_key, {
+      data_type => 'integer',
+      is_nullable => 1,
+    } );
+    $meta -> {package} -> belongs_to(
+      $method, 
+      $class, 
+      $class -> meta -> foreign_key, 
+    );
+    $class -> has_many(
+      PL_N($meta -> {package} -> table), 
+      $meta -> {package}, 
+      $class -> meta -> foreign_key,
+      \%options
+    );
+  }
 }
 
 1;

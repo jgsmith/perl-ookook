@@ -73,8 +73,13 @@ the class will not load.
 sub collection_class {
   my($meta, $class) = @_;
 
-  Module::Load::load($class);
-  $meta -> resource_collection_class($class);
+  eval { Module::Load::load($class) };
+  if($@) {
+    warn "Unable to load $class as collection class for ", $meta -> {package}, "\n";
+  }
+  else {
+    $meta -> resource_collection_class($class);
+  }
 }
 
 =method prop (Str $name, %options)
@@ -109,26 +114,30 @@ sub prop {
 sub belongs_to {
   my($meta, $key, $resource_class, %config) = @_;
 
-  Module::Load::load($resource_class);
-
-  my $method;
-
-  if(!$config{source}) {
-    $method = sub { $_[0] -> source -> $key };
-  }
-  elsif(!ref $config{source}) {
-    my $mkey = $config{source};
-    $method = sub { $_[0] -> source -> $mkey };
+  eval { Module::Load::load($resource_class) };
+  if($@) {
+    warn "Unable to load $resource_class for $key\n";
   }
   else {
-    $method = $config{source};
-  }
+    my $method;
 
-  $meta -> add_owner( $key, 
-    %config,
-    isa => $resource_class,
-    source => $method,
-  );
+    if(!$config{source}) {
+      $method = sub { $_[0] -> source -> $key };
+    }
+    elsif(!ref $config{source}) {
+      my $mkey = $config{source};
+      $method = sub { $_[0] -> source -> $mkey };
+    }
+    else {
+      $method = $config{source};
+    }
+
+    $meta -> add_owner( $key, 
+      %config,
+      isa => $resource_class,
+      source => $method,
+    );
+  }
 }
 
 =method has_a (Str $key, ClassName $resource_class, %config)
@@ -165,34 +174,38 @@ sub has_a {
 sub has_many {
   my($meta, $key, $resource_class, %config) = @_;
 
-  Module::Load::load($resource_class);
+  eval { Module::Load::load($resource_class) };
 
-  my $method;
-
-  if(!$config{source}) {
-    $method = sub { $_[0] -> source -> $key };
-  }
-  elsif(!ref $config{source}) {
-    my $mkey = $config{source};
-    $method = sub { $_[0] -> source -> $mkey };
+  if($@) {
+    warn "Unable to load $resource_class for $key\n";
   }
   else {
-    $method = $config{source};
+    my $method;
+
+    if(!$config{source}) {
+      $method = sub { $_[0] -> source -> $key };
+    }
+    elsif(!ref $config{source}) {
+      my $mkey = $config{source};
+      $method = sub { $_[0] -> source -> $mkey };
+    }
+    else {
+      $method = $config{source};
+    }
+
+    $meta -> add_embedded( $key, (
+      %config,
+      isa => $resource_class,
+      source => $method,
+      default => sub {
+        my($self) = @_;
+        [ map { $resource_class -> new(
+          c => $self -> c,
+          source => $_,
+        ) } $method->($self) ];
+      },
+    ));
   }
-
-
-  $meta -> add_embedded( $key, (
-    %config,
-    isa => $resource_class,
-    source => $method,
-    default => sub {
-      my($self) = @_;
-      [ map { $resource_class -> new(
-        c => $self -> c,
-        source => $_,
-      ) } $method->($self) ];
-    },
-  ));
 }
 
 1;

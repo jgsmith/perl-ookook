@@ -23,6 +23,7 @@ resource OokOok::Resource::Snippet {
     is => 'rw',
     type => 'Str',
     source => sub { $_[0] -> source_version -> content },
+    archive_as_file => 'content',
   );
 
   prop filter => (
@@ -49,6 +50,10 @@ resource OokOok::Resource::Snippet {
     source => sub { $_[0] -> source -> project },
   );
 
+  after BAG ($bag) {
+    $bag -> add_meta(type => 'snippet');
+  }
+
   method can_PUT { $self -> project -> can_PUT; }
 
   method can_DELETE { $self -> project -> can_PUT; }
@@ -74,7 +79,7 @@ resource OokOok::Resource::Snippet {
     );
 
     # assume the top-level page for search context
-    $context -> set_resource(page => $self -> project -> page);
+    $context -> set_resource(page => $self -> project -> home_page);
     $context -> set_resource(project => $self -> project);
 
     return {

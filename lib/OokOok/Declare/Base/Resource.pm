@@ -75,12 +75,17 @@ class OokOok::Declare::Base::Resource {
     default => sub {
       my($self) = @_;
       my $class = $self -> meta -> resource_collection_class;
-      Module::Load::load($class);
-      $class -> new( 
-        c => $self -> c, 
-        is_development => $self -> is_development, 
-        date => $self -> date 
-      );
+      eval { Module::Load::load($class) };
+      if($@) {
+        warn "Unable to load $class as collection for ", (ref($self)||$self), "\n";
+      }
+      else {
+        $class -> new( 
+          c => $self -> c, 
+          is_development => $self -> is_development, 
+          date => $self -> date 
+        );
+      }
     },
   );
 
@@ -142,12 +147,55 @@ class OokOok::Declare::Base::Resource {
   method can_PUT { $self -> is_development; }
   method can_DELETE { $self -> is_development; }
 
+  method _bag_resource ($bag, $r) {
+    if($r -> source -> can("uuid")) {
+      $bag -> with_data_directory( $r -> source -> uuid, sub {
+        $r -> BAG($bag);
+      });
+    }
+  }
+
   method _BAG {
+
     my $bag = OokOok::Bag -> new;
-
     $self -> BAG($bag);
+    $bag -> write;
+  }
 
-    return $bag -> write;
+  method BAG ($bag) {
+
+    if($self -> source -> can('uuid')) {
+      $bag -> add_meta(uuid => $self -> source -> uuid);
+    }
+
+    for my $key ($self -> meta -> get_prop_list) {
+      next if $key eq 'id'; # we use uuid for this
+      my $pinfo = $self -> meta -> get_prop($key);
+      if($pinfo -> {archive_as_file}) {
+        $bag -> add_data($pinfo -> {archive_as_file}, $self -> $key);
+      }
+      else {
+        $bag -> add_meta($key, $self -> $key);
+      }
+    }
+    for my $key ($self -> meta -> get_hasa_list) {
+      my $hinfo = $self -> meta -> get_hasa($key);
+      my $h = $self -> $key;
+      if($h) {
+        $bag -> add_meta($key, $h -> source -> uuid);
+        # if we have a meaningful date that can be changed, then it will 
+        # be a prop anyway. Otherwise, the date is assumed to be the same
+        # as the date for this object
+      }
+    }
+
+    for my $key ($self -> meta -> get_embedded_list) {
+      next if $key eq 'editions'; # we don't do these here
+      $bag -> with_data_directory( $key, sub {
+        $self -> _bag_resource( $bag, $_ ) for (@{$self -> $key});
+      });
+    }
+
   }
 
   method _GET ($deep = 0) { 

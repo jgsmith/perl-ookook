@@ -27,6 +27,12 @@ admin_controller OokOok::Controller::Admin::Project {
 
   under project_base {
 
+    action project_edition_base (Str $date_str) as 'editions' {
+      my $date = OokOok::DateTime::Parser -> parse_datetime($date_str);
+      $ctx -> stash -> {project} -> date($date);
+      $ctx -> stash -> {project} -> is_development(0);
+    }
+
     action project_page_base (Str $uuid) as 'page' {
       my $page = OokOok::Collection::Page -> new(c => $ctx) -> resource($uuid);
       if(!$page) {
@@ -239,6 +245,27 @@ admin_controller OokOok::Controller::Admin::Project {
     }
 
   }
+
+  under project_edition_base {
+    final action project_edition_download as 'archive' {
+      my $uuid = $ctx -> stash -> {project} -> id;
+      my $date = OokOok::DateTime::Parser -> format_datetime($ctx -> stash -> {project} -> date);
+      my $bag = $ctx -> stash -> {project} -> _BAG( $ctx -> response );
+      $ctx -> response -> content_type('application/octet-stream');
+      $ctx -> response -> header(
+        'Content-Disposition', qq[attachment; filename="project-$uuid-$date.tgz"]
+      );
+      $ctx -> response -> status(200);
+      File::Copy::copy($bag, "/tmp/project-$uuid-$date.tgz");
+      # TODO: find better way to feed archive to client
+      open my $fh, "<", $bag;
+      local($/);
+      $ctx -> response->body(<$fh>);
+      close $fh;
+    }
+  }
+
+ 
 
   under project_snippet_base {
     final action project_snippet_edit as 'edit' {

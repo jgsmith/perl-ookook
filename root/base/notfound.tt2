@@ -6,8 +6,6 @@
     <title>OokOok</title>
     <script src="[% c.uri_for('/static/js/jquery.js') %]"></script>
     <script src="[% c.uri_for('/static/js/bootstrap.min.js') %]"></script>
-    <script src="[% c.uri_for('/static/js/ace/ace.js') %]"></script>
-    <script src="[% c.uri_for('/static/js/ace/mode-xml.js') %]"></script>
     <link href="[% c.uri_for('/static/css/bootstrap.min.css') %]" rel="stylesheet">
     <link href="[% c.uri_for('/static/css/bootstrap-responsive.css') %]" rel="stylesheet">
     <link href="[% c.uri_for('/static/css/overrides.css') %]" rel="stylesheet">

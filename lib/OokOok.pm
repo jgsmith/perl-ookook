@@ -131,7 +131,7 @@ Returns the list of formatter classes available.
 
   our @FORMATTERS;
 
-  method formatters () {
+  method formatters (Object|ClassName $self:) {
     return @FORMATTERS if @FORMATTERS;
     @FORMATTERS = $self -> _formatters;
   }

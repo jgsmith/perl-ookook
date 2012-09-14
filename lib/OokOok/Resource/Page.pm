@@ -66,6 +66,17 @@ resource OokOok::Resource::Page {
     source => sub { $_[0] -> source_version -> assets },
   );
 
+  after BAG ($bag) {
+    $bag -> add_meta(type => 'page');
+    $bag -> with_data_directory('page_parts', sub {
+      for my $pp (@{$self -> page_parts}) {
+        $bag -> with_data_directory($pp -> name, sub {
+          $pp -> BAG($bag);
+        });
+      }
+    });
+  }
+
   method slug_path {
     my $pp = $self -> parent_page;
 

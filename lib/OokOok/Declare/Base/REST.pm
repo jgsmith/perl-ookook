@@ -32,9 +32,14 @@ controller OokOok::Declare::Base::REST
       $collection_class =~ s{::Controller::(.*::)?}{::Collection::};
     }
 
-    Module::Load::load($collection_class);
+    eval { Module::Load::load($collection_class) };
 
-    $ctx -> stash -> {collection} = $collection_class -> new(c => $ctx);
+    if($@) {
+      warn "Unable to load $collection_class for ", (ref($self)||$self), "\n";
+    }
+    else {
+      $ctx -> stash -> {collection} = $collection_class -> new(c => $ctx);
+    }
   }
 
   under base_config {

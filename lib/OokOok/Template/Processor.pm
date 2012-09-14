@@ -37,16 +37,21 @@ class OokOok::Template::Processor {
   }
 
   method register_taglib ($taglib) {
-    Module::Load::load $taglib;
+    eval { Module::Load::load $taglib };
 
-    my $ns = $taglib -> meta -> namespace;
-    if(!$ns) {
-      # get NS from config
-      $ns = $self -> c -> config -> {"TagLibs"} -> {module} -> {$taglib} -> {namespace};
-      $taglib -> meta -> namespace($ns); # save it for later
+    if($@) {
+      warn "Unable to load $taglib\n";
     }
-    if($ns) {
-      $self -> _taglibs -> {$ns} = $taglib;
+    else {
+      my $ns = $taglib -> meta -> namespace;
+      if(!$ns) {
+        # get NS from config
+        $ns = $self -> c -> config -> {"TagLibs"} -> {module} -> {$taglib} -> {namespace};
+        $taglib -> meta -> namespace($ns); # save it for later
+      }
+      if($ns) {
+        $self -> _taglibs -> {$ns} = $taglib;
+      }
     }
   }
 
