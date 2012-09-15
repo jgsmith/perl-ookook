@@ -36,9 +36,9 @@ class OokOok::Declare::Base::TagLibrary {
         }
         elsif($einfo->{attributes}->{$ns}->{$a}->{type} eq 'Bool') {
           if(defined($value)) {
-            $attributes->{$a} = map {
+            $attributes->{$a} = [ map {
               m{^\s*(yes|true|on|1)\s*$} ? 1 : 0
-            } @{$value};
+            } @{$value} ];
           }
         }
         if($einfo->{attributes}->{$ns}->{$a} -> {required}) {
@@ -48,9 +48,9 @@ class OokOok::Declare::Base::TagLibrary {
     }
 
     my $yield;
-    if($einfo -> {uses_content} && @{$node -> {children}||[]}) {
+    if($einfo -> {yields} && @{$node -> {children}||[]}) {
       $yield = sub { 
-        $yield -> process_node( $node -> {children} || [''] );
+        $context -> process_node( $node -> {children} || [''] );
       };
     }
 
