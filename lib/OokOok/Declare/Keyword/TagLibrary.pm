@@ -8,7 +8,7 @@ use MooseX::Declare;
 
  use OokOok::Declare;
 
- taglib OokOok::Template::TagLibrary::Foo {
+ taglib OokOok::TagLibrary::Foo {
    attribute bat isa Str; # makes @bat available on any element that is a
                           # taglib element - way to set something on a
                           # somewhat global level
@@ -23,17 +23,21 @@ use MooseX::Declare;
 =cut
 
 class OokOok::Declare::Keyword::TagLibrary
-  extends MooseX::Declare::Syntax::Keyword::Class
-  with CatalystX::Declare::DefaultSuperclassing {
+  extends OokOok::Declare::Base::ClassKeyword {
 
   use aliased 'OokOok::Declare::Keyword::Element' => 'ElementKeyword';
 
   around default_inner {
-    return [
-      ElementKeyword -> new( identifier => 'element' ),
+    [
+      @{$self -> $orig},
+      ElementKeyword -> new(  identifier => 'element' ),
       #AttributeKeyword -> new( identifier => 'attribute' ),
     ];
   }
+
+  method import_ookook_symbols_from (Object $ctx) { 'OokOok::Declare::Symbols::TagLibrary' }
+
+  method imported_ookook_symbols (Object $ctx) { qw(ns) }
 
   method default_superclasses { 'OokOok::Declare::Base::TagLibrary' }
 }

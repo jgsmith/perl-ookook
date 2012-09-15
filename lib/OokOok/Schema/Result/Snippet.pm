@@ -1,9 +1,9 @@
-use utf8;
-package OokOok::Schema::Result::Snippet;
+use OokOok::Declare;
+
+# PODNAME: OokOok::Schema::Result::Snippet
 
 # ABSTRACT: A snippet of content in a project
 
-use OokOok::VersionedResult;
-use namespace::autoclean;
+versioned_table OokOok::Schema::Result::Snippet {
 
-1;
+}

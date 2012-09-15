@@ -41,8 +41,7 @@ resource OokOok::Resource::ThemeAsset {
     source => sub { $_[0] -> source -> theme },
   );
 
-  after BAG ($bag) {
-    $bag -> add_meta( type => 'theme asset' );
+  after EXPORT ($bag) {
     # TODO: add asset content
   }
 

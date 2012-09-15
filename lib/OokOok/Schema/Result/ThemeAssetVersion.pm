@@ -1,39 +1,35 @@
-use utf8;
-package OokOok::Schema::Result::ThemeAssetVersion;
+use OokOok::Declare;
 
-=head1 NAME
+# PODNAME: OokOok::Schema::Result::ThemeAssetVersion;
 
-OokOok::Schema::Result::ThemeAssetVersion
+# ABSTRACT: Versions of a theme asset
 
-=cut
+table_version OokOok::Schema::Result::ThemeAssetVersion {
 
-use OokOok::ResultVersion;
-use namespace::autoclean;
+  is_publishable;
 
-is_publishable;
+  prop size => (
+    data_type => 'integer',
+    is_nullable => 1,
+  );
 
-prop size => (
-  data_type => 'integer',
-  is_nullable => 1,
-);
+  prop filename => (
+    data_type => 'char',
+    is_nullable => 0,
+    size => 20,
+    unique => 1,
+  );
 
-prop filename => (
-  data_type => 'char',
-  is_nullable => 0,
-  size => 20,
-  unique => 1,
-);
+  prop name => (
+    data_type => 'varchar',
+    is_nullable => 0,
+    size => 255,
+  );
 
-prop name => (
-  data_type => 'varchar',
-  is_nullable => 0,
-  size => 255,
-);
+  prop type => (
+    data_type => 'varchar',
+    is_nullable => 1,
+    size => 64,
+  );
 
-prop type => (
-  data_type => 'varchar',
-  is_nullable => 1,
-  size => 64,
-);
-
-1;
+}

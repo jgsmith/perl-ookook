@@ -1,13 +1,7 @@
-use utf8;
-package OokOok::Schema::Result::ThemeSnippet;
+use OokOok::Declare;
 
-=head1 NAME
+# PODNAME: OokOok::Schema::Result::ThemeSnippet
 
-OokOok::Schema::Result::ThemeSnippet
+versioned_table OokOok::Schema::Result::ThemeSnippet {
 
-=cut
-
-use OokOok::VersionedResult;
-use namespace::autoclean;
-
-1;
+}

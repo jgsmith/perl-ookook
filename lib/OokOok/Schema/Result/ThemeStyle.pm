@@ -1,15 +1,12 @@
-use utf8;
-package OokOok::Schema::Result::ThemeStyle;
+use OokOok::Declare;
 
-=head1 NAME
+# PODNAME: OokOok::Schema::Result::ThemeStyle
 
-OokOok::Schema::Result::ThemeStyle
+versioned_table OokOok::Schema::Result::ThemeStyle {
 
-=cut
+  $CLASS -> has_many( 
+    theme_layout_versions => 'OokOok::Schema::Result::ThemeLayoutVersion', 
+   'theme_style_id'
+  );
 
-use OokOok::VersionedResult;
-use namespace::autoclean;
-
-__PACKAGE__ -> has_many( theme_layout_versions => 'OokOok::Schema::Result::ThemeLayoutVersion', 'theme_style_id');
-
-1;
+}

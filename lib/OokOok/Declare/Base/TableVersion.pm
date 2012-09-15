@@ -1,10 +1,10 @@
 use MooseX::Declare;
 
-# PODNAME: OokOok::Base::ResultVersion
+# PODNAME: OokOok::Declare::Base::TableVersion
 
 # ABSTRACT: Base class for results attached to a versioned result
 
-class OokOok::Base::ResultVersion extends OokOok::Base::Result {
+class OokOok::Declare::Base::TableVersion extends OokOok::Declare::Base::Table {
 
   override update (HashRef $columns?) {
     $self -> set_inflated_columns($columns) if $columns;

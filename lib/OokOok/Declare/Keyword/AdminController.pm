@@ -19,5 +19,5 @@ class OokOok::Declare::Keyword::AdminController
     }
   }
 
-  method default_superclasses { 'OokOok::Base::Admin' }
+  method default_superclasses { 'OokOok::Declare::Base::Admin' }
 }

@@ -1,11 +1,11 @@
-use utf8;
-package OokOok::Schema::Result::LibraryTheme;
+use OokOok::Declare;
+
+# PODNAME: OokOok::Schema::Result::LibraryTheme
 
 # ABSTRACT: a library as used by a theme
 
-use OokOok::VersionedResult;
-use namespace::autoclean;
+versioned_table OokOok::Schema::Result::LibraryTheme {
 
-references library => 'OokOok::Schema::Result::Library';
+  references library => 'OokOok::Schema::Result::Library';
 
-1;
+}

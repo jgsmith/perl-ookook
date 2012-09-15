@@ -1,11 +1,11 @@
-use utf8;
-package OokOok::Schema::Result::Asset;
+use OokOok::Declare;
+
+# PODNAME: OokOok::Schema::Result::Asset
 
 # ABSTRACT: Project Asset database row
 
-use OokOok::VersionedResult;
-use namespace::autoclean;
+versioned_table OokOok::Schema::Result::Asset {
 
-owns_many attachments => 'OokOok::Schema::Result::Attachment';
+  owns_many attachments => 'OokOok::Schema::Result::Attachment';
 
-1;
+}

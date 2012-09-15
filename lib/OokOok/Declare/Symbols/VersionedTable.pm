@@ -1,4 +1,4 @@
-package OokOok::VersionedResult;
+package OokOok::Declare::Symbols::VersionedTable;
 
 # ABSTRACT: Declarative methods for versioned database results
 
@@ -10,14 +10,14 @@ use Lingua::EN::Inflect qw(PL_N);
 
 use Module::Load ();
 
-use OokOok::Base::VersionedResult;
-use OokOok::Meta::VersionedResult;
-use OokOok::Base::ResultVersion;
+use OokOok::Declare::Base::VersionedTable;
+use OokOok::Declare::Meta::VersionedTable;
+use OokOok::Declare::Base::TableVersion;
 
 Moose::Exporter->setup_import_methods(
   with_meta => [ 'references', 'owns_many' ],
   as_is => [ ],
-  also => 'Moose',
+  #also => 'Moose',
 );
 
 sub init_meta {
@@ -29,13 +29,13 @@ sub init_meta {
   Moose::Util::MetaRole::apply_metaroles(
     for => $args{for_class},
     class_metaroles => {
-      class => ['OokOok::Meta::VersionedResult'],
+      class => ['OokOok::Declare::Meta::VersionedTable'],
     }
   );
 
   my $meta = $args{for_class}->meta;
 
-  $meta -> superclasses("OokOok::Base::VersionedResult");
+  $meta -> superclasses("OokOok::Declare::Base::VersionedTable");
 
   my $package = $args{for_class};
   my $nom = $package;

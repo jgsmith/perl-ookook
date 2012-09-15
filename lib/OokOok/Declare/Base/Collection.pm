@@ -1,8 +1,8 @@
 use MooseX::Declare;
 
-# PODNAME: OokOok::Base::Collection
+# PODNAME: OokOok::Declare::Base::Collection
 
-class OokOok::Base::Collection {
+class OokOok::Declare::Base::Collection {
 
   use String::CamelCase qw(decamelize);
   use Lingua::EN::Inflect qw(PL_N);

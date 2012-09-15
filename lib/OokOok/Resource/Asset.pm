@@ -10,4 +10,7 @@ resource OokOok::Resource::Asset {
     isa => 'OokOok::Model::DB::Asset',
   );
 
+  after EXPORT ($bag) {
+    # add asset content
+  }
 }

@@ -7,19 +7,21 @@ use 5.008008;
 
 class OokOok::Declare extends CatalystX::Declare is dirty is mutable {
 
+  use aliased 'OokOok::Declare::Keyword::TagLibrary',     'TagLibraryKeyword';
   use aliased 'OokOok::Declare::Keyword::RESTController', 'RESTControllerKeyword';
   use aliased 'OokOok::Declare::Keyword::PlayController', 'PlayControllerKeyword';
   use aliased 'OokOok::Declare::Keyword::AdminController', 'AdminControllerKeyword';
   use aliased 'OokOok::Declare::Keyword::Resource',       'ResourceKeyword';
-  use aliased 'OokOok::Declare::Keyword::TagLibrary',     'TagLibraryKeyword';
-  #use aliased 'OokOok::Declare::Keyword::Collection',     'CollectionKeyword';
-  #use aliased 'OokOok::Declare::Keyword::Table',          'TableKeyword';
-  #use aliases 'OokOok::Declare::Keyword::EditionedTable', 'EditionedTableKeyword';
-  #use aliases 'OokOok::Declare::Keyword::VersionedTable', 'VersionedTableKeyword';
+  use aliased 'OokOok::Declare::Keyword::Collection',     'CollectionKeyword';
+  use aliased 'OokOok::Declare::Keyword::Table',          'TableKeyword';
+  use aliased 'OokOok::Declare::Keyword::EditionedTable', 'EditionedTableKeyword';
+  use aliased 'OokOok::Declare::Keyword::VersionedTable', 'VersionedTableKeyword';
+  use aliased 'OokOok::Declare::Keyword::TableEdition', 'TableEditionKeyword';
+  use aliased 'OokOok::Declare::Keyword::TableVersion', 'TableVersionKeyword';
 
   clean;
 
-  around keywords (ClassName $self:) {
+  around keywords (ClassName|Object $self:) {
     $self->$orig,
 
     RESTControllerKeyword->new( identifier => 'rest_controller' ),
@@ -27,10 +29,12 @@ class OokOok::Declare extends CatalystX::Declare is dirty is mutable {
     AdminControllerKeyword->new( identifier => 'admin_controller' ),
     ResourceKeyword->new(       identifier => 'resource' ),
     TagLibraryKeyword->new(     identifier => 'taglib' ),
-    #CollectionKeyword->new(     identifier => 'collection' ),
-    #TableKeyword->new(          identifier => 'table' ),
-    #EditionedTableKeyword->new( identifier => 'editioned_table' ),
-    #VersionedTableKeyword->new( identifier => 'versioned_table' ),
+    CollectionKeyword->new(     identifier => 'collection' ),
+    TableKeyword->new(          identifier => 'Table' ),
+    EditionedTableKeyword->new( identifier => 'editioned_table' ),
+    VersionedTableKeyword->new( identifier => 'versioned_table' ),
+    TableEditionKeyword->new(   identifier => 'table_edition'   ),
+    TableVersionKeyword->new(   identifier => 'table_version'   ),
   }
 }
 
@@ -86,11 +90,8 @@ class OokOok::Declare extends CatalystX::Declare is dirty is mutable {
 
  use OokOok::Declare;
 
- taglib OokOok::Template::TagLibrary::Abilities {
-   element foo => (
-     attributes => {
-     },
-   );
+ taglib OokOok::TagLibrary::Foo {
+   element foo (...) { ... }
  }
 
 =head1 DESCRIPTION
@@ -110,6 +111,12 @@ L<OokOok::Declare::Keyword::RESTController>
 L<OokOok::Declare::Keyword::PlayController>
 L<OokOok::Declare::Keyword::AdminController>
 L<OokOok::Declare::Keyword::Resource>
+L<OokOok::Declare::Keyword::TagLibrary>
+L<OokOok::Declare::Keyword::Table>
+L<OokOok::Declare::Keyword::VersionedTable>
+L<OokOok::Declare::Keyword::EditionedTable>
+L<OokOok::Declare::Keyword::TableVersion>
+L<OokOok::Declare::Keyword::TableEdition>
 
 =head1 SEE ALSO
 

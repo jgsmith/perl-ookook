@@ -1,30 +1,26 @@
-package OokOok::Collection::Snippet;
+use OokOok::Declare;
 
-use OokOok::Collection;
-use namespace::autoclean;
+# PODNAME: OokOok::Collection::Snippet
 
-sub constrain_collection {
-  my($self, $q, $deep) = @_;
+collection OokOok::Collection::Snippet {
 
-  if($self -> c -> stash -> {project}) {
-    $q = $q -> search({
-      'me.project_id' => $self -> c -> stash -> {project} -> source -> id
-    });
+  method constrain_collection ($q, $deep = 0) {
+    if($self -> c -> stash -> {project}) {
+      $q = $q -> search({
+        'me.project_id' => $self -> c -> stash -> {project} -> source -> id
+      });
+    }
+
+    $q;
   }
 
-  $q;
+  method can_POST {
+    if($self -> c -> stash -> {project}) {
+      $self -> c -> stash -> {project} -> can_PUT
+    }
+    else {
+      0;
+    }
+  }
+
 }
-
-sub can_POST {
-  my($self) = @_;
-
-  if($self -> c -> stash -> {project}) {
-    $self -> c -> stash -> {project} -> can_PUT
-  }
-  else {
-    0;
-  }
-}
-
-1;
-

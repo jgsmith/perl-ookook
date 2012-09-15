@@ -1,4 +1,4 @@
-package OokOok::Collection;
+package OokOok::Declare::Symbols::Collection;
 
 # ABSTRACT: Methods to describe resource collections
 
@@ -6,10 +6,10 @@ package OokOok::Collection;
 
 Declare the resource collection for Foo:
 
- package OokOok::Collection::Foo;
+ use OokOok::Declare;
 
- use OokOok::Collection;
- use namespace::autoclean;
+ collection OokOok::Collection::Foo {
+ }
 
 Use the collection:
 
@@ -26,8 +26,8 @@ use namespace::autoclean;
 
 use Carp;
 
-use OokOok::Base::Collection;
-use OokOok::Meta::Collection;
+use OokOok::Declare::Base::Collection;
+use OokOok::Declare::Meta::Collection;
 use String::CamelCase qw(decamelize);
 use Lingua::EN::Inflect qw(PL_N);
 use Module::Load ();
@@ -35,7 +35,7 @@ use Module::Load ();
 Moose::Exporter->setup_import_methods(
   with_meta => [ 'resource_class', 'resource_model' ],
   as_is     => [ ],
-  also       => 'Moose',
+  #also       => 'Moose',
 );
 
 sub init_meta {
@@ -47,13 +47,13 @@ sub init_meta {
   Moose::Util::MetaRole::apply_metaroles(
      for             => $args{for_class},
      class_metaroles => { 
-       class => ['OokOok::Meta::Collection'],
+       class => ['OokOok::Declare::Meta::Collection'],
      }
   );
 
   my $meta = $args{for_class}->meta();
 
-  $meta -> superclasses("OokOok::Base::Collection");
+  $meta -> superclasses("OokOok::Declare::Base::Collection");
 
   my $class = $args{for_class};
 

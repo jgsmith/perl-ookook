@@ -26,7 +26,7 @@ resource OokOok::Resource::PagePart {
     required => 0,
     type => 'Str',
     deep => 1,
-    archive_as_file => 'content',
+    export_as_file => 'content',
   );
 
   prop filter => (
@@ -40,10 +40,6 @@ resource OokOok::Resource::PagePart {
     is => 'ro',
     required => 1,
   );
-
-  #after BAG ($bag) {
-  #  $bag -> add_meta(type => 'page part');
-  #}
 
   method render (Object $context) {
     # first, we filter the content

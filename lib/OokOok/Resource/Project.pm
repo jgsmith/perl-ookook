@@ -75,10 +75,9 @@ resource OokOok::Resource::Project
     is => 'rw',
   );
 
-  after BAG ($bag) {
+  after EXPORT ($bag) {
     $bag -> add_meta(closed_on => $self -> source_version -> closed_on -> iso8601)
       if $self -> source_version -> closed_on;
-    $bag -> add_meta(type => 'project edition');
   }
 
   method can_PUT {

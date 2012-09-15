@@ -1,21 +1,21 @@
-use utf8;
-package OokOok::Schema::Result::ApiKey;
+use OokOok::Declare;
+
+# PODNAME: OokOok::Schema::Result::ApiKey
 
 # ABSTRACT: ApiKey database row
 
-use OokOok::Result;
-use namespace::autoclean;
+Table OokOok::Schema::Result::ApiKey {
 
-prop token => (
-  data_type => 'varchar',
-  is_nullable => 0,
-  size => 255,
-);
+  prop token => (
+    data_type => 'varchar',
+    is_nullable => 0,
+    size => 255,
+  );
 
-prop token_secret => (
-  data_type => 'varchar',
-  is_nullable => 0,
-  size => 255,
-);
+  prop token_secret => (
+    data_type => 'varchar',
+    is_nullable => 0,
+    size => 255,
+  );
 
-1;
+}

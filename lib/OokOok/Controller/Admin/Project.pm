@@ -250,7 +250,7 @@ admin_controller OokOok::Controller::Admin::Project {
     final action project_edition_download as 'archive' {
       my $uuid = $ctx -> stash -> {project} -> id;
       my $date = OokOok::DateTime::Parser -> format_datetime($ctx -> stash -> {project} -> date);
-      my $bag = $ctx -> stash -> {project} -> _BAG( $ctx -> response );
+      my $bag = $ctx -> stash -> {project} -> _EXPORT( $ctx -> response );
       $ctx -> response -> content_type('application/octet-stream');
       $ctx -> response -> header(
         'Content-Disposition', qq[attachment; filename="project-$uuid-$date.tgz"]

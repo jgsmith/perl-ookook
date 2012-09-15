@@ -56,7 +56,7 @@ themes.
 For example:
 
  <TagLibs>
-   <module OokOok::Template::TagLibrary::Core>
+   <module OokOok::TagLibrary::Core>
      namepsace uin:uuid:ypUv1ZbV4RGsjb63Mj8b
    </module>
  </TagLibs>
@@ -145,6 +145,10 @@ BEGIN {
                          sub_name => '_formatters',
                          require => 1,
                          max_depth => 3);
+  use Module::Pluggable (search_path => 'OokOok::TagLibrary', 
+                         sub_name => '_taglibs',
+                         require => 1,
+                         max_depth => 4);
 }
 
 1;

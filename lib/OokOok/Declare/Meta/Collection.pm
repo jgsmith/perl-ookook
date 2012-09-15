@@ -1,4 +1,4 @@
-package OokOok::Meta::Collection;
+package OokOok::Declare::Meta::Collection;
 
 use Moose::Role;
 

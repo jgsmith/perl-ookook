@@ -1,28 +1,22 @@
-package OokOok::Collection::Page;
+use OokOok::Declare;
 
-use OokOok::Collection;
-use namespace::autoclean;
+# PODNAME: OokOok::Collection::Page
 
-use OokOok::Resource::Page;
-use OokOok::Collection::PagePart;
+collection OokOok::Collection::Page {
 
-sub constrain_collection {
-  my($self, $q, $deep) = @_;
+  method constrain_collection ($q, $deep = 0) {
+    if($self -> c -> stash -> {project}) {
+      $q = $q -> search({
+        'me.project_id' => $self -> c -> stash -> {project} -> source -> id
+      });
+    }
 
-  if($self -> c -> stash -> {project}) {
-    $q = $q -> search({
-      'me.project_id' => $self -> c -> stash -> {project} -> source -> id
-    });
+    $q;
   }
 
-  $q;
+  method can_POST {
+    $self -> c -> stash -> {project} &&
+    $self -> c -> stash -> {project} -> can_PUT;
+  }
+
 }
-
-sub can_POST {
-  my($self) = @_;
-
-  $self -> c -> stash -> {project} &&
-  $self -> c -> stash -> {project} -> can_PUT;
-}
-
-1;

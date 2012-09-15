@@ -1,11 +1,10 @@
-use MooseX::Declare;
+use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::Project
 
 # ABSTRACT: Project REST collection
 
-class OokOok::Collection::Project {
-  use OokOok::Collection;
+collection OokOok::Collection::Project {
 
   method constrain_collection ($q, $deep) {
     if($self -> c -> user) {

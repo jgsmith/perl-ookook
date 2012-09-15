@@ -1,35 +1,29 @@
-use utf8;
-package OokOok::Schema::Result::ThemeSnippetVersion;
+use OokOok::Declare;
 
-=head1 NAME
+# PODNAME: OokOok::Schema::Result::ThemeSnippetVersion
 
-OokOok::Schema::Result::ThemeSnippetVersion
+table_version OokOok::Schema::Result::ThemeSnippetVersion {
 
-=cut
+  is_publishable;
 
-use OokOok::ResultVersion;
-use namespace::autoclean;
+  prop name => (
+    data_type => 'varchar',
+    default_value => '',
+    is_nullable => 0,
+    size => 255,
+  );
 
-is_publishable;
+  prop content => (
+    data_type => 'text',
+    is_nullable => 0,
+    default_value => '',
+  );
 
-prop name => (
-  data_type => 'varchar',
-  default_value => '',
-  is_nullable => 0,
-  size => 255,
-);
+  prop filter => (
+    data_type => 'varchar',
+    is_nullable => 0,
+    default_value => "HTML",
+    size => 64,
+  );
 
-prop content => (
-  data_type => 'text',
-  is_nullable => 0,
-  default_value => '',
-);
-
-prop filter => (
-  data_type => 'varchar',
-  is_nullable => 0,
-  default_value => "HTML",
-  size => 64,
-);
-
-1;
+}

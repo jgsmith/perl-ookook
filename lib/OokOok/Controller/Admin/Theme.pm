@@ -210,7 +210,7 @@ admin_controller OokOok::Controller::Admin::Theme {
       # provide all of the current edition theme assets as a tarball
       my $uuid = $ctx -> stash -> {theme} -> id;
       my $date = OokOok::DateTime::Parser -> format_datetime($ctx -> stash -> {theme} -> date);
-      my $bag = $ctx -> stash -> {theme} -> _BAG( $ctx -> response );
+      my $bag = $ctx -> stash -> {theme} -> _EXPORT( $ctx -> response );
       $ctx -> response -> content_type('application/octet-stream');
       $ctx -> response -> header(
         'Content-Disposition', qq[attachment; filename="theme-$uuid-$date.tgz"]

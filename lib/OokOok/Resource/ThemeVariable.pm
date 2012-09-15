@@ -53,9 +53,5 @@ resource OokOok::Resource::ThemeVariable {
     source => sub { $_[0] -> source -> theme },
   );
 
-  after BAG ($bag) {
-    $bag -> add_meta(type => 'theme variable');
-  }
-
   method can_PUT { $self -> theme -> can_PUT; }
 }

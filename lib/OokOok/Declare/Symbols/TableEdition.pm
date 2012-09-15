@@ -1,4 +1,4 @@
-package OokOok::ResultEdition;
+package OokOok::Declare::Symbols::TableEdition;
 
 # ABSTRACT: Methods for defining an edition attached to an editioned result
 
@@ -10,15 +10,14 @@ use DateTime::Format::Pg;
 
 use Module::Load ();
 
-use OokOok::Base::ResultEdition;
-use OokOok::Meta::ResultEdition;
+use OokOok::Declare::Meta::TableEdition;
 
 Moose::Exporter->setup_import_methods(
   with_meta => [
     'prop', 'owns_many', 'references', 'references_own',
   ],
   as_is => [ ],
-  also => 'Moose',
+  #also => 'Moose',
 );
 
 my $inflate_datetime = sub {
@@ -45,13 +44,13 @@ sub init_meta {
   Moose::Util::MetaRole::apply_metaroles(
     for => $args{for_class},
     class_metaroles => {
-      class => ['OokOok::Meta::ResultEdition'],
+      class => ['OokOok::Declare::Meta::TableEdition'],
     }
   );
 
   my $meta = $args{for_class}->meta;
 
-  $meta -> superclasses('OokOok::Base::ResultEdition');
+  $meta -> superclasses('OokOok::Declare::Base::TableEdition');
 
   my $package = $args{for_class};
   my $nom = $package;
@@ -59,7 +58,6 @@ sub init_meta {
   $nom = decamelize($nom);
 
   $meta -> foreign_key($nom . "_id");
-
 
   #$package -> load_components("InflateColumn::DateTime");
   $package -> table($nom);

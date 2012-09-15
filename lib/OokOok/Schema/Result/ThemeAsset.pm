@@ -1,13 +1,9 @@
-use utf8;
-package OokOok::Schema::Result::ThemeAsset;
+use OokOok::Declare;
 
-=head1 NAME
+# PODNAME: OokOok::Schema::Result::ThemeAsset;
 
-OokOok::Schema::Result::ThemeAsset
+# ABSTRACT: Asset associated with a theme
 
-=cut
+versioned_table OokOok::Schema::Result::ThemeAsset {
 
-use OokOok::VersionedResult;
-use namespace::autoclean;
-
-1;
+}

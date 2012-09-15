@@ -1,4 +1,4 @@
-package OokOok::Meta::ResultVersion;
+package OokOok::Declare::Meta::EditionedTable;
 
 use Moose::Role;
 use namespace::autoclean;

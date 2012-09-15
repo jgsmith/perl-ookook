@@ -1,28 +1,22 @@
-use utf8;
-package OokOok::Schema::Result::ThemeStyleVersion;
+use OokOok::Declare;
 
-=head1 NAME
+# PODNAME: OokOok::Schema::Result::ThemeStyleVersion
 
-OokOok::Schema::Result::ThemeStyleVersion
+table_version OokOok::Schema::Result::ThemeStyleVersion {
 
-=cut
+  is_publishable;
 
-use OokOok::ResultVersion;
-use namespace::autoclean;
+  prop name => (
+    data_type => 'varchar',
+    default_value => '',
+    is_nullable => 0,
+    size => 255,
+  );
 
-is_publishable;
+  prop styles => (
+    data_type => 'text',
+    is_nullable => 0,
+    default_value => '',
+  );
 
-prop name => (
-  data_type => 'varchar',
-  default_value => '',
-  is_nullable => 0,
-  size => 255,
-);
-
-prop styles => (
-  data_type => 'text',
-  is_nullable => 0,
-  default_value => '',
-);
-
-1;
+}

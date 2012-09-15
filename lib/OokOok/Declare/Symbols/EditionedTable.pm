@@ -1,4 +1,4 @@
-package OokOok::EditionedResult;
+package OokOok::Declare::Symbols::EditionedTable;
 
 # ABSTRACT: Declarative methods for editioned database results
 
@@ -12,16 +12,15 @@ use String::CamelCase qw(decamelize);
 
 use Module::Load ();
 
-use OokOok::Base::EditionedResult;
-use OokOok::Meta::EditionedResult;
-use OokOok::Base::ResultEdition;
+use OokOok::Declare::Meta::EditionedTable;
+use OokOok::Declare::Base::TableEdition;
 
 Moose::Exporter->setup_import_methods(
   with_meta => [
     'owns_many', 'has_editions', 'prop',
   ],
   as_is => [ ],
-  also => 'Moose',
+  #also => 'Moose',
 );
 
 sub init_meta {
@@ -33,13 +32,13 @@ sub init_meta {
   Moose::Util::MetaRole::apply_metaroles(
     for => $args{for_class},
     class_metaroles => {
-      class => ['OokOok::Meta::EditionedResult'],
+      class => ['OokOok::Declare::Meta::EditionedTable'],
     }
   );
 
   my $meta = $args{for_class}->meta;
 
-  $meta -> superclasses("OokOok::Base::EditionedResult");
+  $meta -> superclasses("OokOok::Declare::Base::EditionedTable");
 
   my $package = $args{for_class};
   my $nom = $package;
@@ -50,6 +49,7 @@ sub init_meta {
 
   # set up defaults
   #$package -> load_components("InflateColumn::DateTime");
+  
   $package -> table($nom);
   $package -> add_columns( 
     id => {
@@ -142,17 +142,3 @@ sub prop {
 }
 
 1;
-
-__END__
-
-=head1 SYNOPSIS
-
- package OokOok::Schema::Result::Project;
-
- use OokOok::EditionedResult;
- use namespace::autoclean;
-
- has_many pages => 'OokOok::Schema::Result::Page';
- has_many snippets => 'OOkOok::Schema::Result::Snippet';
-
- 

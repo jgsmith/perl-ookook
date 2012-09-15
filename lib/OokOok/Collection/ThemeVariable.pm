@@ -1,20 +1,17 @@
-package OokOok::Collection::ThemeVariable;
+use OokOok::Declare;
 
-use OokOok::Collection;
-use namespace::autoclean;
+# PODNAME: OokOok::Collection::ThemeVariable
 
-use OokOok::Resource::ThemeVariable;
+collection OokOok::Collection::ThemeVariable {
 
-sub constrain_collection {
-  my($self, $q, $deep) = @_;
+  method constrain_collection ($q, $deep = 0) {
+    if($self -> c -> stash -> {theme}) {
+      $q = $q -> search({
+        'me.theme_id' => $self -> c -> stash -> {theme} -> source -> id
+      });
+    }
 
-  if($self -> c -> stash -> {theme}) {
-    $q = $q -> search({
-      'me.theme_id' => $self -> c -> stash -> {theme} -> source -> id
-    });
+    $q;
   }
 
-  $q;
 }
-
-1;

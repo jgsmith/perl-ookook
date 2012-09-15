@@ -1,12 +1,7 @@
-package OokOok::Meta::EditionedResult;
+package OokOok::Declare::Meta::TableEdition;
 
 use Moose::Role;
 use namespace::autoclean;
-
-has edition_relation => (
-  is => 'rw',
-  isa => 'Str',
-);
 
 has foreign_key => (
   is => 'rw',
@@ -14,3 +9,4 @@ has foreign_key => (
 );
 
 1;
+

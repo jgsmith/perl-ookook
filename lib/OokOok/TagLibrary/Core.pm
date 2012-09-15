@@ -1,8 +1,10 @@
-package OokOok::Template::TagLibrary::Core;
+use OokOok::Declare;
 
-use OokOok::Template::TagLibrary;
+# PODNAME: OokOok::TagLibrary::Core
 
-my $SAMPLE_CONTENT = <<'EOHTML';
+taglib OokOok::TagLibrary::Core {
+
+  my $SAMPLE_CONTENT = <<'EOHTML';
 <p>The purpose of this HTML is to help determine what default settings are with CSS and to make sure that all possible HTML Elements are included in this HTML so as to not miss any possible Elements when designing a site.</p>
 <hr/>
 <h1>Heading 1</h1>
@@ -169,180 +171,124 @@ nunc. Morbi imperdiet augue
 </p></blockquote>
 EOHTML
 
-# processes content
-element 'snippet' => (
-  uses_content => 1, # we'll get the node for further processing
-  escape_text => 0,
-  attributes => {
-    "" => {
-      name => 'Str', # not an expression
-    }
-  },
-  impl => 'element_snippet',
-);
-
-# no child parts
-element 'content' => (
-  escape_text => 0,
-  attributes => {
-    "" => {
-      part => 'Str', # not an expression
-      inherit => 'Bool', # true/false
-    }
-  },
-  impl => 'element_content',
-);
-
-element 'if-content' => (
-  escape_text => 0,
-  uses_content => 1,
-  attributes => {
-    "" => {
-      part => 'Str', # not an expression
-      inherit => 'Bool',
-    }
-  },
-  impl => 'element_if_content',
-);
-  
-element 'unless-content' => (
-  escape_text => 0,
-  uses_content => 1,
-  attributes => {
-    "" => {
-      part => 'Str', # not an expression
-      inherit => 'Bool',
-    }
-  },
-  impl => 'element_unless_content',
-);
-  
-
-
-sub element_snippet {
-  my($self, $context, $attr) = @_;
-  my $name = $attr -> {"name"} -> [0];
-
-  if($context -> is_mockup) {
-    return <<EOS;
+  element snippet (Str :$name) returns HTML {
+    $name = $name -> [0];
+    if($ctx -> is_mockup) {
+      return <<EOS;
 <h1>$name</h1>
 <p>Snippet with the name "$name"</p>
 EOS
-  }
-
-  # we want to render the snippet with the current context
-  my $project = $context -> get_resource("project");
-  if($project) {
-    my $snippet = $project -> snippet($name);
-    if($snippet) {
-      return $snippet -> render($context);
     }
-    my $theme = $project -> theme;
-    if($theme) {
-      $snippet = $theme -> snippet($name);
+
+    # we want to render the snippet with the current context
+    my $project = $ctx -> get_resource("project");
+    if($project) {
+      my $snippet = $project -> snippet($name);
       if($snippet) {
-        return $snippet -> render($context);
+        return $snippet -> render($ctx);
       }
-    }
-  }
-
-  if(!defined($name)) { $name = 'unnamed' }
-
-  my $divClass = "snippet-$name";
-
-  return "<!-- Snippet '$name' not found. -->";
-}
-
-sub element_content {
-  my($self, $context, $attr) = @_;
-  my $name = $attr -> {"part"} -> [0];
-  if(!defined($name) || $name eq '') {
-    if($context -> has_var('content')) {
-      return $context -> get_var('content');
-    }
-    $name = 'body';
-  }
-
-  if($context -> is_mockup) {
-    return <<EOP
-<h3>$name</h3>
-
-$SAMPLE_CONTENT
-EOP
-  }
-
-  my $inherit = $attr -> {'inherit'};
-
-  # we want to render the page part with the current context
-  # if the current page doesn't have the named part, then we want
-  # to go up the current sitemap until we find it.
-  my $page = $context -> get_resource("page");
-  if($page) {
-    my $page_part = $page -> page_part( $name );
-    if($inherit) {
-      while($page && !$page_part) {
-        $page = $page -> parent_page;
-        if($page) {
-          $page_part = $page -> page_part( $name );
+      my $theme = $project -> theme;
+      if($theme) {
+        $snippet = $theme -> snippet($name);
+        if($snippet) {
+          return $snippet -> render($ctx);
         }
       }
     }
 
-    if($page_part) {
-      return $page_part -> render($context);
-    }
-  }
-  return "<!-- Page part '$name' not found. -->";
-}
+    if(!defined($name)) { $name = 'unnamed' }
 
-sub has_content_q {
-  my($self, $context, $attr) = @_;
-  my $name = $attr -> {"part"} -> [0];
-  my $has_content = $context -> is_mockup;
-  if(!defined($name) || $name eq '') {
-    if($context -> has_var('content')) {
-      $has_content = 1;
-    }
-    $name = 'body';
+    my $divClass = "snippet-$name";
+
+    return "<!-- Snippet '$name' not found. -->";
   }
 
-  if(!$has_content) {
-    my $inherit = $attr -> {'inherit'};
+  element content (Str :$part?, Bool :$inherit?) returns HTML {
+    $part = ${$part||[]}[0];
+    $inherit = ${$inherit||[]}[0];
+    if(!defined($part) || $part eq '') {
+      if($ctx -> has_var('content')) {
+        return $ctx -> get_var('content');
+      }
+      $part = 'body';
+    }
 
-    my $page = $context -> get_resource("page");
+    if($ctx -> is_mockup) {
+      return <<EOP
+<h3>$part</h3>
+
+$SAMPLE_CONTENT
+EOP
+    }
+
+    # we want to render the page part with the current context
+    # if the current page doesn't have the named part, then we want
+    # to go up the current sitemap until we find it.
+    my $page = $ctx -> get_resource("page");
     if($page) {
-      my $page_part = $page -> page_part( $name );
+      my $page_part = $page -> page_part( $part );
       if($inherit) {
         while($page && !$page_part) {
           $page = $page -> parent_page;
           if($page) {
-            $page_part = $page -> page_part( $name );
+            $page_part = $page -> page_part( $part );
           }
         }
       }
 
       if($page_part) {
-        $has_content = 1;
+        return $page_part -> render($ctx);
       }
     }
+    return "<!-- Page part '$part' not found. -->";
   }
-  return $has_content;
-}
 
-sub element_if_content {
-  my($self, $context, $attr, $yield) = @_;
-  if($self -> has_content_q($context, $attr)) {
-    return $yield->();
+  element if_content (Str :$part?, Bool :$inherit?) as "if-content" is yielding returns HTML {
+    $part = ${$part||[]}[0];
+    $inherit = ${$inherit||[]}[0];
+    if($self -> has_content_q($ctx, part => $part, inherit => $inherit)) {
+      return $yield->();
+    }
+    return '';
   }
-  return '';
-}
 
-sub element_unless_content {
-  my($self, $context, $attr, $yield) = @_;
-  if(!$self -> has_content_q($context, $attr)) {
-    return $yield->();
+  element unless_content (Str :$part?, Bool :$inherit?) as "unless-content" is yielding returns HTML {
+    $part = ${$part||[]}[0];
+    $inherit = ${$inherit||[]}[0];
+    if(!$self -> has_content_q($ctx, part => $part, inherit => $inherit)) {
+      return $yield->();
+    }
+    return '';
   }
-  return '';
-}
 
-1;
+  method has_content_q ($ctx, Str :$part?, Bool :$inherit?) {
+    my $has_content = $ctx -> is_mockup;
+    if(!defined($part) || $part eq '') {
+      if($ctx -> has_var('content')) {
+        $has_content = 1;
+      }
+      $part = 'body';
+    }
+
+    if(!$has_content) {
+      my $page = $ctx -> get_resource("page");
+      if($page) {
+        my $page_part = $page -> page_part( $part );
+        if($inherit) {
+          while($page && !$page_part) {
+            $page = $page -> parent_page;
+            if($page) {
+              $page_part = $page -> page_part( $part );
+            }
+          }
+        }
+
+        if($page_part) {
+          $has_content = 1;
+        }
+      }
+    }
+    return $has_content;
+  }
+
+}

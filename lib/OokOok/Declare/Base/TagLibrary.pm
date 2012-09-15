@@ -3,6 +3,7 @@ use MooseX::Declare;
 # PODNAME: OokOok::Declare::Base::TagLibrary
 
 class OokOok::Declare::Base::TagLibrary {
+
   use MooseX::Types::Moose qw( ArrayRef );
 
   has c => ( is => 'rw', isa => 'Maybe[Object]',);
@@ -23,34 +24,42 @@ class OokOok::Declare::Base::TagLibrary {
     for my $ns (keys %{$einfo->{attributes}}) {
       $xmlns = $ns;
       if($ns eq '') {
-        $xmlns = $self -> meta -> namespace;
+        $xmlns = $self -> meta -> taglib_namespace;
       }
       $xmlns = $context -> get_prefix($xmlns);
       for my $a (keys %{$einfo->{attributes}->{$ns}||{}}) {
         my $value = $node -> {attrs} -> {$xmlns} -> {$a};
-        if($einfo->{attributes}->{$ns}->{$a} eq 'Str') {
+        if($einfo->{attributes}->{$ns}->{$a}->{type} eq 'Str') {
           if(defined $value) {
             $attributes->{$a} = $value;
           }
         }
-        elsif($einfo->{attributes}->{$ns}->{$a} eq 'Bool') {
+        elsif($einfo->{attributes}->{$ns}->{$a}->{type} eq 'Bool') {
           if(defined($value)) {
             $attributes->{$a} = map {
               m{^\s*(yes|true|on|1)\s*$} ? 1 : 0
             } @{$value};
           }
         }
+        if($einfo->{attributes}->{$ns}->{$a} -> {required}) {
+          die "$a undefined by required" unless defined $attributes->{$a};
+        }
       }
     }
 
-    my $content;
+    my $yield;
     if($einfo -> {uses_content} && @{$node -> {children}||[]}) {
-      $content = sub { 
-        $context -> process_node( $node -> {children} || [''] );
+      $yield = sub { 
+        $yield -> process_node( $node -> {children} || [''] );
       };
     }
 
     my $impl = $einfo -> {impl};
-    $self -> $impl($context, $attributes, $content);
+    if($einfo -> {yields}) {
+      $self -> $impl($context, $yield, %$attributes);
+    }
+    else {
+      $self -> $impl($context, %$attributes);
+    }
   }
 }

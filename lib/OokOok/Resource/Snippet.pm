@@ -23,7 +23,7 @@ resource OokOok::Resource::Snippet {
     is => 'rw',
     type => 'Str',
     source => sub { $_[0] -> source_version -> content },
-    archive_as_file => 'content',
+    export_as_file => 'content',
   );
 
   prop filter => (
@@ -49,10 +49,6 @@ resource OokOok::Resource::Snippet {
     is => 'ro',
     source => sub { $_[0] -> source -> project },
   );
-
-  after BAG ($bag) {
-    $bag -> add_meta(type => 'snippet');
-  }
 
   method can_PUT { $self -> project -> can_PUT; }
 

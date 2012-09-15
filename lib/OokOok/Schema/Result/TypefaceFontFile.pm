@@ -1,26 +1,20 @@
-use utf8;
-package OokOok::Schema::Result::TypefaceFontFile;
+use OokOok::Declare;
 
-=head1 NAME
+# PODNAME: OokOok::Schema::Result::TypefaceFontFile
 
-OokOok::Schema::Result::TypefaceFontFile
+Table OokOok::Schema::Result::TypefaceFontFile {
 
-=cut
+  prop filename => (
+    data_type => 'char',
+    is_nullable => 0,
+    size => 20,
+    unique => 1,
+  );
 
-use OokOok::Result;
-use namespace::autoclean;
+  prop format => (
+    data_type => 'varchar',
+    is_nullable => 0,
+    size => 16,
+  );
 
-prop filename => (
-  data_type => 'char',
-  is_nullable => 0,
-  size => 20,
-  unique => 1,
-);
-
-prop format => (
-  data_type => 'varchar',
-  is_nullable => 0,
-  size => 16,
-);
-
-1;
+}

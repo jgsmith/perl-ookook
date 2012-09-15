@@ -1,9 +1,9 @@
-use utf8;
-package OokOok::Schema::Result::LibraryEdition;
+use OokOok::Declare;
+
+# PODNAME: OokOok::Schema::Result::LibraryEdition
 
 # ABSTRACT: an edition of a library
 
-use OokOok::ResultEdition;
-use namespace::autoclean;
+table_edition OokOok::Schema::Result::LibraryEdition {
 
-1;
+}

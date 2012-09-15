@@ -1,35 +1,34 @@
-package OokOok::Collection::BoardRank;
+use OokOok::Declare;
 
-use OokOok::Collection;
-use namespace::autoclean;
+# PODNAME: OokOok::Collection::BoardRank
 
-sub constrain_collection {
-  my($self, $q, $deep) = @_;
+collection OokOok::Collection::BoardRank {
 
-  if($self -> c -> stash -> {board}) {
-    $q = $q -> search({
-      'me.board_id' => $self -> c -> stash -> {board} -> source -> id
-    });
-  }
-  elsif($self -> c -> stash -> {project}) {
-    $q = $q -> search({
-      'me.board_id' => $self -> c -> stash -> {project} -> board -> source -> id
-    });
-  }
-  elsif($self -> c -> user) {
-    $q = $q -> search({
-      'board_members.user_id' => $self -> c -> user -> id,
-    }, {
-      join => { 'board' => 'board_members' },
-    });
-  }
-  else {
-    $q = $q -> search({
-      'me.id' => 0
-    });
+  method constrain_collection ($q, $deep = 0) {
+    if($self -> c -> stash -> {board}) {
+      $q = $q -> search({
+        'me.board_id' => $self -> c -> stash -> {board} -> source -> id
+      });
+    }
+    elsif($self -> c -> stash -> {project}) {
+      $q = $q -> search({
+        'me.board_id' => $self -> c -> stash -> {project} -> board -> source -> id
+      });
+    }
+    elsif($self -> c -> user) {
+      $q = $q -> search({
+        'board_members.user_id' => $self -> c -> user -> id,
+      }, {
+        join => { 'board' => 'board_members' },
+      });
+    }
+    else {
+      $q = $q -> search({
+        'me.id' => 0
+      });
+    }
+
+    $q;
   }
 
-  $q;
 }
-
-1;

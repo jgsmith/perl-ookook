@@ -56,6 +56,7 @@ resource OokOok::Resource::Page {
 
   has_many page_parts => "OokOok::Resource::PagePart", (
     link_fragment => 'page-part',
+    export => 0,
     source => sub {
       $_[0] -> source_version -> page_parts 
     },
@@ -63,18 +64,21 @@ resource OokOok::Resource::Page {
 
   has_many assets => "OokOok::Resource::Asset", (
     is => 'ro',
+    export => 0,
     source => sub { $_[0] -> source_version -> assets },
   );
 
-  after BAG ($bag) {
-    $bag -> add_meta(type => 'page');
+  after EXPORT ($bag) {
     $bag -> with_data_directory('page_parts', sub {
       for my $pp (@{$self -> page_parts}) {
         $bag -> with_data_directory($pp -> name, sub {
-          $pp -> BAG($bag);
+          $pp -> EXPORT($bag);
         });
       }
     });
+    # we want a list of associated assets
+    my @assets = map { $_ -> id } @{$self -> assets};
+    $bag -> add_meta( assets => [ @assets ] );
   }
 
   method slug_path {

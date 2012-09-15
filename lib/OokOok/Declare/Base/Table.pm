@@ -1,8 +1,8 @@
 use MooseX::Declare;
 
-# PODNAME: OokOok::Base::Result
+# PODNAME: OokOok::Declare::Base::Table
 
-class OokOok::Base::Result extends DBIx::Class::Core {
+class OokOok::Declare::Base::Table extends DBIx::Class::Core {
 
   use MooseX::NonMoose;
   use MooseX::MarkAsMethods autoclean => 1;

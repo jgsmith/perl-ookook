@@ -1,8 +1,12 @@
 use MooseX::Declare;
 
-# PODNAME: OokOok::Base::VersionedResult
+# PODNAME: OokOok::Declare::Base::VersionedTable
 
-class OokOok::Base::VersionedResult extends OokOok::Base::Result {
+use OokOok::Declare::Base::Table;
+
+class OokOok::Declare::Base::VersionedTable 
+      extends OokOok::Declare::Base::Table
+{
   use DateTime::Format::ISO8601;
   use OokOok::Exception;
 

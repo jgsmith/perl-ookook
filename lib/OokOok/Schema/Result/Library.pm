@@ -1,23 +1,23 @@
-use utf8;
-package OokOok::Schema::Result::Library;
+use OokOok::Declare;
+
+# PODNAME: OokOok::Schema::Result::Library
 
 # ABSTRACT: a library
 
-use OokOok::EditionedResult;
-use namespace::autoclean;
+editioned_table OokOok::Schema::Result::Library {
 
-prop new_project_prefix => (
-  data_type => 'varchar',
-  is_nullable => 1,
-  size => 32,
-);
+  prop new_project_prefix => (
+    data_type => 'varchar',
+    is_nullable => 1,
+    size => 32,
+  );
 
-prop new_theme_prefix => (
-  data_type => 'varchar',
-  is_nullable => 1,
-  size => 32,
-);
+  prop new_theme_prefix => (
+    data_type => 'varchar',
+    is_nullable => 1,
+    size => 32,
+  );
 
-has_editions;
+  has_editions;
 
-1;
+}

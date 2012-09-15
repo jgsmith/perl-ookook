@@ -5,7 +5,7 @@ use CatalystX::Declare;
 # ABSTRACT: Tracks meta-information about tag library classes
 
 role OokOok::Declare::Meta::TagLibrary {
-  has namespace => (
+  has taglib_namespace => (
     is => 'rw',
     isa => 'Str',
   );

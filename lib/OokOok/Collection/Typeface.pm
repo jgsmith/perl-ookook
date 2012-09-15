@@ -1,53 +1,47 @@
-package OokOok::Collection::Typeface;
+use OokOok::Declare;
 
-use OokOok::Collection;
-use namespace::autoclean;
+# PODNAME: OokOok::Collection::Typeface
 
-sub constrain_collection {
-  my($self, $q, $deep) = @_;
+collection OokOok::Collection::Typeface {
 
-  if($self -> c -> user) {
-    if($deep) {
-      # we want all publicly accessible projects and projects managed by
-      # this person
-      #$q = $q -> search({
-      #  'board_members.user_id' => $self -> c -> user -> id,
-      #}, {
-      #  join => { board => { board_ranks => 'board_members' } }
-      #});
+  method constrain_collection ($q, $deep = 0) {
+    if($self -> c -> user) {
+      if($deep) {
+        # we want all publicly accessible projects and projects managed by
+        # this person
+        #$q = $q -> search({
+        #  'board_members.user_id' => $self -> c -> user -> id,
+        #}, {
+        #  join => { board => { board_ranks => 'board_members' } }
+        #});
+      }
+      else {
+        # we only want projects managed/owned/edited by this person
+        #$q = $q -> search({
+        #  'board_members.user_id' => $self -> c -> user -> id,
+        #}, {
+        #  join => { board => { board_ranks => 'board_members' } }
+        #});
+      }
     }
     else {
-      # we only want projects managed/owned/edited by this person
-      #$q = $q -> search({
-      #  'board_members.user_id' => $self -> c -> user -> id,
-      #}, {
-      #  join => { board => { board_ranks => 'board_members' } }
-      #});
+      # we only want projects with a publicly available edition
+      $q = $q -> search({
+          "editions.closed_on" => { '!=' => undef },
+        }, {
+          join => [qw/editions/],
+        }
+      );
     }
-  }
-  else {
-    # we only want projects with a publicly available edition
-    $q = $q -> search({
-        "editions.closed_on" => { '!=' => undef },
-      }, {
-        join => [qw/editions/],
-      }
-    );
+  
+    $q;
   }
 
-  $q;
+  method can_POST {
+    if($self -> c -> user -> is_admin) {
+      return 1;
+    }
+    return 0;
+  }
+
 }
-
-sub can_POST {
-  my($self) = @_;
-
-  if($self -> c -> user -> is_admin) {
-    return 1;
-  }
-  return 0;
-}
-
-1;
-
-__END__
-

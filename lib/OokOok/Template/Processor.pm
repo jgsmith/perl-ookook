@@ -42,12 +42,15 @@ class OokOok::Template::Processor {
     if($@) {
       warn "Unable to load $taglib\n";
     }
+    if(!$taglib -> meta -> can("taglib_namespace")) {
+      warn "$taglib is not a valid tag library\n";
+    }
     else {
-      my $ns = $taglib -> meta -> namespace;
+      my $ns = $taglib -> meta -> taglib_namespace;
       if(!$ns) {
         # get NS from config
         $ns = $self -> c -> config -> {"TagLibs"} -> {module} -> {$taglib} -> {namespace};
-        $taglib -> meta -> namespace($ns); # save it for later
+        $taglib -> meta -> taglib_namespace($ns); # save it for later
       }
       if($ns) {
         $self -> _taglibs -> {$ns} = $taglib;

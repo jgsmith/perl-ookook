@@ -1,13 +1,7 @@
-use utf8;
-package OokOok::Schema::Result::TypefaceEdition;
+use OokOok::Declare;
 
-=head1 NAME
+# PODNAME: OokOok::Schema::Result::TypefaceEdition
 
-OokOok::Schema::Result::TypefaceEdition
+table_edition OokOok::Schema::Result::TypefaceEdition {
 
-=cut
-
-use OokOok::ResultEdition;
-use namespace::autoclean;
-
-1;
+}

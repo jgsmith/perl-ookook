@@ -1,13 +1,7 @@
-use utf8;
-package OokOok::Schema::Result::TypefaceFont;
+use OokOok::Declare;
 
-=head1 NAME
+# PODNAME: OokOok::Schema::Result::TypefaceFont
 
-OokOok::Schema::Result::TypefaceFont
+versioned_table OokOok::Schema::Result::TypefaceFont {
 
-=cut
-
-use OokOok::VersionedResult;
-use namespace::autoclean;
-
-1;
+}

@@ -50,20 +50,7 @@ and
 =cut
 
 class OokOok::Declare::Keyword::Resource
-  extends MooseX::Declare::Syntax::Keyword::Class 
-  with CatalystX::Declare::DefaultSuperclassing {
-
-  after add_namespace_customizations (Object $ctx, Str $package) {
-    $ctx -> add_preamble_code_parts(
-      sprintf 'use %s qw( %s )', $self -> import_ookook_symbols_from($ctx), join ' ', $self -> imported_ookook_symbols($ctx),
-    );
-
-    #my $model = $package;
-    #$model =~ s{^.*::}{OokOok::Model::DB::};
-    #$ctx -> add_preamble_code_parts(
-    #  sprintf q{has '+source' => ( isa => '%s' );}, $model
-    #);
-  }
+  extends OokOok::Declare::Base::ClassKeyword {
 
   method import_ookook_symbols_from (Object $ctx) {
     'OokOok::Declare::Symbols::Resource'

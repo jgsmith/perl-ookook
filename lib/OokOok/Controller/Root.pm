@@ -12,8 +12,6 @@ controller OokOok::Controller::Root {
   use OokOok::Collection::Library;
   use OokOok::Collection::Database;
 
-  use YAML::Any ();
-
   $CLASS -> config(
     namespace => '',
     map => {

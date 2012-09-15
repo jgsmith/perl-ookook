@@ -1,24 +1,22 @@
-package OokOok::Collection::User;
+use OokOok::Declare;
 
-use OokOok::Collection;
-use namespace::autoclean;
+# PODNAME: OokOok::Collection::User
 
-sub constrain_collection {
-  my($self, $q, $deep) = @_;
+collection OokOok::Collection::User {
 
-  if($self -> c -> user) {
-    $q = $q -> search({
-      'me.id' => $self -> c -> user -> id
-    });
+  method constrain_collection ($q, $deep = 0) {
+    if($self -> c -> user) {
+      $q = $q -> search({
+        'me.id' => $self -> c -> user -> id
+      });
+    }
+    else {
+      $q = $q -> search({
+        'me.id' => 0
+      });
+    }
+
+    $q;
   }
-  else {
-    $q = $q -> search({
-      'me.id' => 0
-    });
-  }
 
-  $q;
 }
-
-1;
-

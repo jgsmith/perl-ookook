@@ -1,33 +1,23 @@
-package OokOok::Result;
+package OokOok::Declare::Symbols::TableVersion;
 
-# ABSTRACT: Methods to define a database schema result
-
-# default props:
-#   id
-
-# optional:
-#   with_uuid
-# 
+# ABSTRACT: Methods to define a version of a versioned result
 
 use Moose ();
 use Moose::Exporter;
 use Moose::Util::MetaRole;
 use String::CamelCase qw(decamelize);
-use Lingua::EN::Inflect qw(PL_N);
-
-use MooseX::Types::Moose qw(ArrayRef);
 
 use Module::Load ();
 
-use OokOok::Base::Result;
-use OokOok::Meta::Result;
+use OokOok::Declare::Meta::TableVersion;
+use OokOok::Declare::Base::TableVersion;
 
 Moose::Exporter->setup_import_methods(
   with_meta => [
-    'prop', 'owns_many', 'with_uuid', 'references',
+    'prop', 'owns_many', 'is_publishable',
   ],
   as_is => [ ],
-  also => 'Moose',
+  #also => 'Moose',
 );
 
 sub init_meta {
@@ -39,13 +29,13 @@ sub init_meta {
   Moose::Util::MetaRole::apply_metaroles(
     for => $args{for_class},
     class_metaroles => {
-      class => ['OokOok::Meta::Result'],
+      class => ['OokOok::Declare::Meta::TableVersion'],
     }
   );
 
   my $meta = $args{for_class}->meta;
 
-  $meta -> superclasses("OokOok::Base::Result");
+  $meta -> superclasses('OokOok::Declare::Base::TableVersion');
 
   my $package = $args{for_class};
   my $nom = $package;
@@ -54,7 +44,6 @@ sub init_meta {
 
   $meta -> foreign_key($nom . "_id");
 
-  # set up defaults
   #$package -> load_components("InflateColumn::DateTime");
   $package -> table($nom);
   $package -> add_columns(
@@ -67,24 +56,23 @@ sub init_meta {
 
   $package -> set_primary_key('id');
 
-  return $meta;
+  $meta;
 }
 
-sub with_uuid {
+sub is_publishable {
   my($meta) = @_;
 
-  $meta -> {package} -> add_columns(
-    uuid => {
-      data_type => 'char',
+  prop($meta, 
+    status => (
+      data_type => 'integer',
+      default_value => 0,
       is_nullable => 0,
-      size => 20,
-    },
+    )
   );
-  $meta -> {package} -> add_unique_constraint(['uuid']);
 }
 
 sub prop {
-  my($meta, $method, %info) = @_;
+  my($meta,  $method, %info) = @_;
 
   $meta -> {package} -> add_columns( $method, \%info );
 
@@ -93,15 +81,6 @@ sub prop {
       inflate => $info{inflate},
       deflate => $info{deflate}
     });
-  }
-
-  if($info{unique}) {
-    if(is_ArrayRef($info{unique})) {
-      $meta -> {package} -> add_unique_constraint([@{$info{unique}}, $method]);
-    }
-    else {
-      $meta -> {package} -> add_unique_constraint([$method]);
-    }
   }
 }
 
@@ -114,42 +93,18 @@ sub owns_many {
     warn "Unable to load $class for $method\n";
   }
   else {
+    %options = (cascade_copy => 1, cascade_delete => 1, %options);
+
     $class -> add_columns( $meta -> foreign_key, {
       data_type => 'integer',
       is_nullable => 1,
     } );
     $class -> belongs_to(
-      $meta -> {package} -> table, $meta -> {package}, $meta -> foreign_key
+      $meta->{package} -> table, $meta -> {package}, $meta -> foreign_key
     );
+
     $meta -> {package} -> has_many(
       $method, $class, $meta -> foreign_key, \%options
-    );
-  }
-}
-
-sub references {
-  my($meta, $method, $class, %options) = @_;
-
-  eval { Module::Load::load($class) };
-
-  if($@) {
-    warn "unable to load $class for $method\n";
-  }
-  else {
-    $meta -> {package} -> add_columns( $class -> meta -> foreign_key, {
-      data_type => 'integer',
-      is_nullable => 1,
-    } );
-    $meta -> {package} -> belongs_to(
-      $method, 
-      $class, 
-      $class -> meta -> foreign_key, 
-    );
-    $class -> has_many(
-      PL_N($meta -> {package} -> table), 
-      $meta -> {package}, 
-      $class -> meta -> foreign_key,
-      \%options
     );
   }
 }

@@ -1,11 +1,10 @@
-use MooseX::Declare;
+use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::Theme
 
 # ABSTRACT: Theme REST collection
 
-class OokOok::Collection::Theme {
-  use OokOok::Collection;
+collection OokOok::Collection::Theme {
 
   method constrain_collection ($q, $deep) {
     if($self -> c -> user) {

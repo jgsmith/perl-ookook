@@ -1,8 +1,9 @@
 use MooseX::Declare;
 
-# PODNAME: OokOok::Base::ResultEdition
+# PODNAME: OokOok::Declare::Base::TableEdition
 
-class OokOok::Base::ResultEdition extends OokOok::Base::Result {
+class OokOok::Declare::Base::TableEdition 
+      extends OokOok::Declare::Base::Table {
 
   use DateTime;
   use OokOok::Exception;

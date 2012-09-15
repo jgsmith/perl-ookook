@@ -1,28 +1,24 @@
-package OokOok::Collection::ThemeStyle;
+use OokOok::Declare;
 
-use OokOok::Collection;
-use namespace::autoclean;
+# PODNAME: OokOok::Collection::ThemeStyle
 
-use OokOok::Resource::ThemeStyle;
+collection OokOok::Collection::ThemeStyle {
 
-sub constrain_collection {
-  my($self, $q, $deep) = @_;
+  method constrain_collection ($q, $deep = 0) {
+    if($self -> c -> stash -> {theme}) {
+      $q = $q -> search({
+        'me.theme_id' => $self -> c -> stash -> {theme} -> source -> id
+      });
+    }
 
-  if($self -> c -> stash -> {theme}) {
-    $q = $q -> search({
-      'me.theme_id' => $self -> c -> stash -> {theme} -> source -> id
-    });
+    $q;
   }
 
-  $q;
+  method can_POST {
+    return 0 unless $self -> c -> stash -> {theme};
+    return $self -> c -> stash -> {theme} -> can_PUT;
+  }
+
+  method may_POST { 1 }
+
 }
-
-sub can_POST {
-  my($self) = @_;
-
-  return 0 unless $self -> c -> stash -> {theme};
-  return $self -> c -> stash -> {theme} -> can_PUT;
-}
-sub may_POST { 1 }
-
-1;

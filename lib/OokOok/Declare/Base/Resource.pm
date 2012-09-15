@@ -147,32 +147,39 @@ class OokOok::Declare::Base::Resource {
   method can_PUT { $self -> is_development; }
   method can_DELETE { $self -> is_development; }
 
-  method _bag_resource ($bag, $r) {
+  method _export_resource ($bag, $r) {
     if($r -> source -> can("uuid")) {
       $bag -> with_data_directory( $r -> source -> uuid, sub {
-        $r -> BAG($bag);
+        $r -> EXPORT($bag);
       });
     }
   }
 
-  method _BAG {
+  method _EXPORT {
 
     my $bag = OokOok::Bag -> new;
-    $self -> BAG($bag);
+    $self -> EXPORT($bag);
     $bag -> write;
   }
 
-  method BAG ($bag) {
+  method EXPORT ($bag) {
 
     if($self -> source -> can('uuid')) {
       $bag -> add_meta(uuid => $self -> source -> uuid);
     }
 
+    my $default_type = ref($self) || $self;
+    $default_type =~ s{^.*::}{};
+    $default_type = decamelize($default_type);
+    $default_type =~ tr{_}{ };
+    $bag -> add_meta( type => $default_type );
+
     for my $key ($self -> meta -> get_prop_list) {
       next if $key eq 'id'; # we use uuid for this
       my $pinfo = $self -> meta -> get_prop($key);
-      if($pinfo -> {archive_as_file}) {
-        $bag -> add_data($pinfo -> {archive_as_file}, $self -> $key);
+      next if defined($pinfo->{export}) && !$pinfo->{export};
+      if($pinfo -> {export_as_file}) {
+        $bag -> add_data($pinfo -> {export_as_file}, $self -> $key);
       }
       else {
         $bag -> add_meta($key, $self -> $key);
@@ -180,6 +187,7 @@ class OokOok::Declare::Base::Resource {
     }
     for my $key ($self -> meta -> get_hasa_list) {
       my $hinfo = $self -> meta -> get_hasa($key);
+      next if defined($hinfo->{export}) && !$hinfo->{export};
       my $h = $self -> $key;
       if($h) {
         $bag -> add_meta($key, $h -> source -> uuid);
@@ -190,9 +198,11 @@ class OokOok::Declare::Base::Resource {
     }
 
     for my $key ($self -> meta -> get_embedded_list) {
+      my $einfo = $self -> meta -> get_embedded($key);
+      next if defined($einfo->{export}) && !$einfo->{export};
       next if $key eq 'editions'; # we don't do these here
       $bag -> with_data_directory( $key, sub {
-        $self -> _bag_resource( $bag, $_ ) for (@{$self -> $key});
+        $self -> _export_resource( $bag, $_ ) for (@{$self -> $key});
       });
     }
 

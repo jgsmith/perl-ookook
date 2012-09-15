@@ -28,5 +28,8 @@ resource OokOok::Resource::Library
     source => sub { $_[0] -> source -> editions },
   );
 
+  after EXPORT ($bag) {
+  }
+
   method can_PUT { 0 }
 }

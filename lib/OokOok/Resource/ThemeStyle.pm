@@ -39,14 +39,10 @@ resource OokOok::Resource::ThemeStyle {
     isa => 'Str',
     required => 1,
     source => sub { $_[0] -> source_version -> styles },
-    archive_as_file => 'content'
+    export_as_file => 'content'
   );
 
   method can_PUT { $self -> theme -> can_PUT; }
-
-  after BAG ($bag) {
-    $bag -> add_meta( type => 'theme style' );
-  }
 
   method render (Object $context?) {
     $self -> styles;

@@ -1,9 +1,7 @@
-package OokOok::Collection::Library;
+use OokOok::Declare;
 
-use OokOok::Collection;
-use namespace::autoclean;
+# PODNAME: OokOok::Collection::Library
 
-1;
+collection OokOok::Collection::Library {
 
-__END__
-
+}

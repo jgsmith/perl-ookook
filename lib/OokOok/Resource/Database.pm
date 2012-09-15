@@ -24,4 +24,7 @@ resource OokOok::Resource::Database
     source => sub { $_[0] -> source_version -> description },
   );
 
+  after EXPORT ($bag) {
+    # now we want all of the data in a compact form
+  }
 }

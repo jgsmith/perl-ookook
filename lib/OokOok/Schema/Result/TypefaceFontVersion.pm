@@ -1,31 +1,25 @@
-use utf8;
-package OokOok::Schema::Result::TypefaceFontVersion;
+use OokOok::Declare;
 
-=head1 NAME
+# PODNAME: OokOok::Schema::Result::TypefaceFontVersion
 
-OokOok::Schema::Result::TypefaceFontVersion
+table_version OokOok::Schema::Result::TypefaceFontVersion {
 
-=cut
+  is_publishable;
 
-use OokOok::ResultVersion;
-use namespace::autoclean;
+  prop weight => (
+    data_type => 'varchar',
+    default_value => 'normal',
+    is_nullable => 0,
+    size => 32
+  );
 
-is_publishable;
+  prop style => (
+    data_type => 'varchar',
+    default_value => 'normal',
+    is_nullable => 0,
+    size => 64
+  );
 
-prop weight => (
-  data_type => 'varchar',
-  default_value => 'normal',
-  is_nullable => 0,
-  size => 32
-);
+  owns_many typeface_font_files => 'OokOok::Schema::Result::TypefaceFontFile';
 
-prop style => (
-  data_type => 'varchar',
-  default_value => 'normal',
-  is_nullable => 0,
-  size => 64
-);
-
-owns_many typeface_font_files => 'OokOok::Schema::Result::TypefaceFontFile';
-
-1;
+}

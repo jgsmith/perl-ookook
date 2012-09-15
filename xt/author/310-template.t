@@ -8,7 +8,7 @@ BEGIN {
 
   use_ok( 'OokOok::Template::Processor' );
   use_ok( 'OokOok::Template::Document' );
-  use_ok( 'OokOok::Template::TagLibrary::Core' );
+  use_ok( 'OokOok::TagLibrary::Core' );
 }
 
 use OokOok;
@@ -26,8 +26,8 @@ my $processor = OokOok::Template::Processor -> new(
   }
 );
 
-$processor -> register_taglib('OokOok::Template::TagLibrary::Core');
-my $ns = OokOok::Template::TagLibrary::Core -> meta -> namespace;
+$processor -> register_taglib('OokOok::TagLibrary::Core');
+my $ns = OokOok::TagLibrary::Core -> meta -> namespace;
 
 my $doc = $processor -> parse( <<EOXML );
 <foo>

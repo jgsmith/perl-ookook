@@ -1,28 +1,26 @@
-package OokOok::Collection::Board;
+use OokOok::Declare;
 
-use OokOok::Collection;
-use namespace::autoclean;
+# PODNAME: OokOok::Collection::Board
 
-use OokOok::Collection::BoardRank;
-use OokOok::Collection::BoardMember;
+collection OokOok::Collection::Board {
 
-sub constrain_collection {
-  my($self, $q, $deep) = @_;
+  use OokOok::Collection::BoardRank;
+  use OokOok::Collection::BoardMember;
 
-  if($self -> c -> user) {
-    $q = $q -> search({
-      'board_members.user_id' => $self -> c -> user -> id
-    }, {
-      join => ['board_members']
-    });
+  method constrain_collection ($q, $deep = 0) {
+    if($self -> c -> user) {
+      $q = $q -> search({
+        'board_members.user_id' => $self -> c -> user -> id
+      }, {
+        join => ['board_members']
+      });
+    }
+    else {
+      $q = $q -> search({
+        'me.id' => 0
+      });
+    }
+
+    $q;
   }
-  else {
-    $q = $q -> search({
-      'me.id' => 0
-    });
-  }
-
-  $q;
 }
-
-1;

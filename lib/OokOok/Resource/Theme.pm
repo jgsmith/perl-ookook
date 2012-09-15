@@ -11,8 +11,6 @@ resource OokOok::Resource::Theme
   use OokOok::Resource::ThemeAsset;
   use OokOok::Collection::ThemeAsset;
 
-  use YAML::Any;
-
   prop name => (
     required => 1,
     type => 'Str',
@@ -56,10 +54,9 @@ resource OokOok::Resource::Theme
     source => sub { $_[0] -> source -> editions },
   );
 
-  after BAG ($bag) {
+  after EXPORT ($bag) {
     $bag -> add_meta(closed_on => $self -> source_version -> closed_on)
       if $self -> source_version -> closed_on;
-    $bag -> add_meta(type => 'theme edition');
   }
 
   method libraries {
