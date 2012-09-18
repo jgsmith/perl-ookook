@@ -8,10 +8,6 @@ resource OokOok::Resource::Snippet {
 
   use Moose::Util::TypeConstraints qw(enum);
 
-  #has '+source' => (
-  #  isa => 'OokOok::Model::DB::Snippet',
-  #);
-
   prop name => (
     required => 1,
     type => 'Str',

@@ -12,6 +12,7 @@ class OokOok::Bag {
   use File::Temp ();
   use Carp;
   use YAML::Any qw/Dump/;
+  use Number::Bytes::Human ();
 
   has md5data => (
     is => 'rw',
@@ -49,6 +50,12 @@ class OokOok::Bag {
     default => sub { ['data'] }
   );
 
+  has _size => (
+    is => 'rw',
+    isa => 'Int',
+    default => 0
+  );
+
   #method _create_tmp_dir { File::Temp -> newdir }
 
   method _write_file ($file, $content) {
@@ -73,6 +80,7 @@ class OokOok::Bag {
     push @{$self -> md5data}, md5_hex($content) . " $dir/$name";
     push @{$self -> sha1data}, sha1_hex($content) . " $dir/$name";
     $self -> _write_file("$dir/$name", $content);
+    $self -> _size( $self -> _size + length($content) );
   }
 
   method get_data ($name) {
@@ -105,23 +113,31 @@ class OokOok::Bag {
 
   method write {
 
+    # add resource metadata at top-level data directory
     my $meta = shift @{$self -> _meta_info};
     if($meta && keys %$meta) {
-      $self -> _write_file("META.yml", Dump( $meta ));
+      $self -> add_data("META.yml", Dump( $meta ));
     }
 
-    # add metadata pieces at top-level of bag
+    # add bag metadata pieces at top-level of bag
     pop @{$self -> _data_dir};
     $self -> _write_file("manifest-md5.txt", encode('utf-8', join("\n", @{$self -> md5data})));
     $self -> _write_file("manifest-sha1.txt", encode('utf-8', join("\n", @{$self -> sha1data})));
 
     $self -> _write_file("bagit.txt", encode('utf-8', <<EOF));
-BagIt-version: 0.97
+BagIt-Version: 0.97
 Tag-File-Character-Encoding: UTF-8
 EOF
     my $version = $OokOok::VERSION || 'dev';
+    my $date = DateTime -> now -> ymd;
+    my $size = $self -> _size;
+    my $count = scalar(@{$self -> md5data});
+    my $hsize = Number::Bytes::Human::format_bytes($size);
     $self -> _write_file("package-info.txt", encode('utf-8', <<EOF));
 Bag-Software-Agent: OokOok $version (http://search.cpan.org/dist/OokOok)
+Bagging-Date: $date
+Bag-Size: $hsize
+Payload-Oxum: ${size}.${count}
 EOF
 
     my $tempfile = File::Temp->new(UNLINK => 0, SUFFIX => ".tgz");

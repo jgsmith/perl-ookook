@@ -4,10 +4,6 @@ use OokOok::Declare;
 
 resource OokOok::Resource::Board {
 
-  #has '+source' => (
-  #  isa => 'OokOok::Model::DB::Board'
-  #);
-
   prop name => (
     required => 1,
     type => 'Str',
