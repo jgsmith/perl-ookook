@@ -20,21 +20,21 @@ To install the database schema, set the proper connection information in
 the ookook.conf file. Then, run the following commands to prepare and install
 the schema:
 
-% ./script/ookook_migration.pl prepare
-% ./script/ookook_migration.pl install
+    % ./script/ookook_migration.pl prepare
+    % ./script/ookook_migration.pl install
 
 You will need to run the following insert statements to get the core taglib:
 
- INSERT INTO "library" 
-     (uuid, new_project_prefix, new_theme_prefix)
- VALUES 
-     ('ypUv1ZbV4RGsjb63Mj8b', 'r', 'r');
+     INSERT INTO "library" 
+         (uuid, new_project_prefix, new_theme_prefix)
+     VALUES 
+         ('ypUv1ZbV4RGsjb63Mj8b', 'r', 'r');
 
- INSERT INTO "library_edition"
-     (library_id, name, description, created_on, closed_on, published_for)
- VALUES 
-     (1, 'Core', 'Core tags', now(), now(), tsrange(now()::timestamp, 
-      NULL::timestamp, '[)'));
+     INSERT INTO "library_edition"
+         (library_id, name, description, created_on, closed_on, published_for)
+     VALUES 
+         (1, 'Core', 'Core tags', now(), now(), tsrange(now()::timestamp, 
+          NULL::timestamp, '[)'));
 
 Once the database is in place, you can run script/ookook_server.pl 
 to test the application.
