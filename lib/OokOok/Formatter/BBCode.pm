@@ -22,6 +22,16 @@ class OokOok::Formatter::BBCode {
     );
   }
 
+=method extension
+
+ bbcode
+
+Returns the extension used by BBCode-formatted content in archives.
+
+=cut
+
+  method extension { 'bbcode' }
+
 =method format (Str $text)
 
 Formats the provided BBCode string as HTML.

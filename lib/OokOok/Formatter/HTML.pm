@@ -6,6 +6,14 @@ use MooseX::Declare;
 
 class OokOok::Formatter::HTML {
 
+=method extension
+
+ html
+
+=cut
+
+  method extension { 'html' }
+
 =method format (Str $text)
 
 Returns the text as-is since this is a no-op formatter.

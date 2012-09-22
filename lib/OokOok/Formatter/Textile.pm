@@ -24,6 +24,14 @@ class OokOok::Formatter::Textile {
     $ob;
   }
 
+=method extension
+
+ textile
+
+=cut
+
+  method extension { 'textile' }
+
 =method format (Str $text)
 
 Formats the given text using Textile, returning HTML.
