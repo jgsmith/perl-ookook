@@ -45,18 +45,18 @@ OokOok is under active development. We expect to develop the following
 features along the rough timeline as noted.
 
 * 2012
-** Simple CMS (project pages, snippets; theme layouts, styles)
-** Assets
-** Social management (boards)
+    - Simple CMS (project pages, snippets; theme layouts, styles)
+    - Assets
+    - Social management (boards)
 
 * 2013
-** Annotation databases
-** Simple triple store databases
-** Simple presentations of annotations and triple store data
-** Algorithms
+    - Annotation databases
+    - Simple triple store databases
+    - Simple presentations of annotations and triple store data
+    - Algorithms
 
 * 2014
-** User-defined processes and presentations
-** Applications
-** Workflows
+    - User-defined processes and presentations
+    - Applications
+    - Workflows
 
