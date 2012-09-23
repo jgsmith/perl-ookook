@@ -87,14 +87,69 @@ play_controller OokOok::Controller::View {
         #$root .= "../";
       }
       local $URI::ABS_REMOTE_LEADING_DOTS = 1;
+      my $root_uri = $ctx -> uri_for("/");
       my $url = URI->new($root
               . $date -> ymd('') . $date -> hms('') 
               .  "/v/$project_uuid/" . ($page -> slug_path || ''))
-          -> abs($ctx -> uri_for("/"));
-      $ctx -> stash -> {canonical_url} = $url -> as_string;
+          -> abs($root_uri) -> as_string;
+      $ctx -> stash -> {canonical_url} = $url;
+
+      # now get other relevant dates for this page
+      $ctx -> stash -> {canonical_versions} = [
+        map { +{
+                 link => URI->new(
+                           $root . $_ -> date 
+                                 . "/v/$project_uuid/" 
+                                 . ($_ -> slug_path || '')
+                         ) -> abs($root_uri)
+                           -> as_string,
+                 date => $self -> _relativeDate( $_ -> date ),
+                 full_date => $_ -> date -> format_cldr('y MMM dd hh:mm:ss a'),
+              }
+            }
+        map { OokOok::Resource::Page -> new(
+                c => $ctx,
+                date => $_ -> edition -> closed_on,
+                source => $_ -> owner,
+                is_development => 0,
+                source_version => $_
+              )
+            } 
+        grep { defined $_ -> edition -> closed_on }
+        $page -> source -> versions
+      ];
     }
 
     $ctx -> stash -> {template} = 'view/play.tt2';
     $ctx -> forward( $ctx -> view('HTML') );
+  }
+
+    my @dt_methods = qw(
+      years a_year_ago
+      months a_month_ago
+      weeks a_week_ago
+      days yesterday
+      hours an_hour_ago
+      minutes a_minute_ago
+    );
+
+    @dt_methods = map { $_ =~ s/_/ /g; $_ } @dt_methods;
+
+  method _relativeDate ($date) {
+    my $dur = ($date - DateTime -> now) -> inverse;
+
+    my $i = 0;
+    while($i < @dt_methods) {
+      my $m = $dt_methods[$i];
+      my $v = $dur -> $m;
+      if($v > 1) {
+        return $v . " " . $dt_methods[$i] . " ago";
+      }
+      if($v == 1) {
+        return $dt_methods[$i+1];
+      }
+      $i += 2;
+    }
+    return "less than " . $dt_methods[$#dt_methods];
   }
 }

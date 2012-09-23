@@ -34,7 +34,11 @@ Formats the provided text as Markdown, returning HTML.
 
 =cut
 
-  method format (Str $text) { $self -> _formatter -> markdown($text); }
+  # we prepend the "\n" to fix a problem with markdown and initial hashes
+  # otherwise, anything with an initial hash might be seen as metadata or
+  # something - it doesn't get rendered, and with the "\n", it does get
+  # rendered.
+  method format (Str $text) { $self -> _formatter -> markdown("\n" . $text); }
 }
 
 =head1 SEE ALSO

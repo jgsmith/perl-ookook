@@ -149,6 +149,9 @@ BEGIN {
                          sub_name => '_taglibs',
                          require => 1,
                          max_depth => 4);
+
+  $CLASS -> _formatters;
+  #print STDERR "Formatters: \n  ", join("\n  ", $CLASS -> _formatters), "\n";
 }
 
 1;

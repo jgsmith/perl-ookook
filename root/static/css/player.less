@@ -1,0 +1,133 @@
+/* CSS for the player apparatus - not part of the project theme */
+
+/* we assume the project page is up to 960px wide - everything else after
+   that is available for us */
+
+/* if we are less than 1200 px wide, then we don't show the apparatus.
+   otherwise, we do, with annotations showing up in-place if we're more
+   than 1360px wide.
+ */
+
+body {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#ookook-rendering {
+  max-width: 960px;
+}
+
+#ookook-apparatus { 
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: #ccc;
+  line-height: 120%;
+}
+
+#ookook-apparatus-handle {
+  float: right;
+  background-color: #666;
+  color: #ccc;
+  font-size: 75%;
+  border: 1px solid #666;
+  border-bottom-left-radius: 0.5em;
+  border-bottom-right-radius: 0.5em;
+  padding-right: 0.5em;
+  padding-left: 0.5em;
+  margin-right: 0.5em;
+}
+
+#ookook-apparatus-handle a {
+  color: #ccc;
+}
+
+#ookook-apparatus-handle a:hover {
+  color: #ccc;
+  text-decoration: none;
+}
+
+#ookook-apparatus-body {
+  background-color: #ccc;
+  border-bottom: 1px solid #666;
+  border-left: 1px solid #666;
+  width: 240px;
+  font-size: 75%;
+  opacity: 0.75;
+  padding-left: 0.25em;
+  padding-bottom: 0.25em;
+  color: #000;
+}
+
+#ookook-apparatus-body h1 {
+  font-size: 133.33%;
+  border-bottom: 1px solid #666;
+  font-weight: bold;
+  margin: 0;
+  padding: 0;
+}
+
+#ookook-apparatus-body a, #ookook-apparatus-body a:hover {
+  color: #000;
+  text-decoration: none;
+}
+
+#ookook-apparatus-body strong {
+  font-weight: bold;
+}
+
+#ookook-container {
+  margin: auto;
+}
+
+.paragraph-counter {
+  float: right;
+  margin-left: 0.25em;
+  color: #ccc;
+  font-size: 1.1em;
+}
+  
+@media only screen
+and (min-width: 960px)
+and (max-width: 1039px) {
+  /* display handle that can pull out options and such */
+  #ookook-container {
+    width: 960px;
+  }
+}
+
+@media only screen 
+and (min-width : 1040px) 
+and (max-width : 1199px) {
+  /* only display some icons offering options */
+  #ookook-container {
+    width: 1040px;
+  }
+}
+
+@media only screen
+and (min-width: 1200px) {
+  /* display full management apparatus */
+  #ookook-container {
+    width: 1200px;
+  }
+}
+
+@media only screen
+and (min-width: 1360px) {
+  #ookook-container {
+    width: 1360px;
+  }
+  /* display full annotations */
+  .annotations {
+    min-width: 230px;
+    border: 1px solid black;
+    height: 100%;
+  }
+}
+
+@media only print {
+  /* make sure the apparatus disappears */
+  #ookook-apparatus { display: none; }
+  #ookook-container { width: 960px; }
+}
