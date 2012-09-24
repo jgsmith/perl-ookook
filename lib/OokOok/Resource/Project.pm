@@ -81,19 +81,15 @@ resource OokOok::Resource::Project
   }
 
   method can_PUT {
-    return 1 if $self -> c -> model('DB') -> schema -> is_development;
-
     # the user has to be in a rank that can modify the project itself
     # if we get here, we have a user
     # we pull out the top rank held by the user
-    my $rank = $self -> board -> source -> board_members -> find({
-      user_id => $self -> c -> user -> id
-    });
-
-    return 0 unless $rank;
-
-    return 1 if $rank -> rank == 0; # top rank can always do stuff
-
+    if($self -> c -> user) {
+      return $self -> c -> user -> has_permission(
+        $self -> source -> board,
+        'project.settings',
+      );
+    }
     return 0;
   }
 
@@ -102,18 +98,12 @@ resource OokOok::Resource::Project
 
     return 1 if $self -> source_version -> is_closed;
 
-    return 1 if $self -> c -> model('DB') -> schema -> is_development;
-
-    # make sure the logged in user is a member of the board
-    return 0 unless $self -> c -> user;
-
-    return 1 if $self -> c -> user -> is_admin;
-
-    my $memberq = $self -> board -> source -> board_members -> search({
-      user_id => $self -> c -> user -> id
-    }) -> count;
-
-    return 1 if $memberq;
+    if($self -> c -> user) {
+      return 1 if $self -> c -> user -> is_admin;
+      return 1 if $self -> c -> user -> board_membership(
+        $self -> source -> board
+      );
+    }
 
     return 0;
   }

@@ -130,6 +130,12 @@ The following methods are provided for collections.
   method may_POST { 1 } 
 
   method _GET ($deep = 0) {
+    if(!$self -> c -> model('DB') -> schema -> is_development) {
+      OokOok::Exception::GET -> forbidden(
+        message => "Unable to GET"
+      )  unless $self -> can_GET;
+    }
+
     $self -> GET($deep);
   }
 
@@ -154,17 +160,19 @@ The following methods are provided for collections.
 
   method _POST (HashRef $json) {
 
-    OokOok::Exception::POST -> forbidden(
-      message => "Unable to POST unless authenticated"
-    ) unless $self -> c -> user;
+    if(!$self -> c -> model('DB') -> schema -> is_development) {
+      OokOok::Exception::POST -> forbidden(
+        message => "Unable to POST unless authenticated"
+      ) unless $self -> c -> user;
 
-    OokOok::Exception::POST -> forbidden(
-      message => "Unable to POST"
-    )  unless $self -> can_POST;
+      OokOok::Exception::POST -> forbidden(
+        message => "Unable to POST"
+      )  unless $self -> can_POST;
 
-    OokOok::Exception::POST -> forbidden(
-      message => "Unable to POST at the moment"
-    )  unless $self -> may_POST;
+      OokOok::Exception::POST -> forbidden(
+        message => "Unable to POST at the moment"
+      )  unless $self -> may_POST;
+    }
 
     my $guard = $self -> c -> model('DB') -> txn_scope_guard;
 

@@ -6,16 +6,8 @@ use OokOok::Declare;
 
 Table OokOok::Schema::Result::BoardMember {
 
-  prop rank => (
-    data_type => 'integer',
-    default_value => 0,
-    is_nullable => 0,
-  );
+  method rank { $self -> board_rank -> position }
 
   owns_many board_member_applicants => 'OokOok::Schema::Result::BoardMemberApplicant';
-
-  method board_rank {
-    $self -> board -> board_ranks -> find({ position => $self -> rank });
-  }
 
 }

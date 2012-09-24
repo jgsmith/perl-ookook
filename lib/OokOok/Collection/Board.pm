@@ -12,7 +12,7 @@ collection OokOok::Collection::Board {
       $q = $q -> search({
         'board_members.user_id' => $self -> c -> user -> id
       }, {
-        join => ['board_members']
+        join => {board_ranks => 'board_members'}
       });
     }
     else {

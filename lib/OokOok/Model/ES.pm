@@ -21,6 +21,6 @@ model OokOok::Model::ES {
     }
     $self = $class -> next::method($app, $arg);
 
-    return ElasticSearch->new($class->config||{});
+    return ElasticSearch->new($class->config->{connect_info}||{});
   }
 }

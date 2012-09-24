@@ -44,6 +44,9 @@ to test the application.
 OokOok is under active development. We expect to develop the following 
 features along the rough timeline as noted.
 
+At the moment:
+    - Boards and permissions
+
 * 2012
     - Simple CMS (project pages, snippets; theme layouts, styles)
     - Assets

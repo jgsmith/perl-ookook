@@ -44,8 +44,21 @@ admin_controller OokOok::Controller::Admin::Board {
 
     action board_applicants_base as 'applicant';
 
+    action board_ranks_base as 'rank';
+
     action settings;
   }
+
+  under board_ranks_base {
+    action board_rank_base ($uuid) as '' {
+      my $rank = $ctx -> stash -> {board} -> rank($uuid);
+      if(!$rank) {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+      $ctx -> stash -> {board_rank} = $rank;
+    }
+  }
+      
 
   under board_members_base {
     action board_member_base ($uuid) as '' {
@@ -234,6 +247,39 @@ admin_controller OokOok::Controller::Admin::Board {
         };
       }
       $ctx -> stash -> {template} = "/admin/board/settings/settings/application";
+    }
+
+    final action board_permissions as 'permissions' {
+      $ctx -> stash -> {template} = "/admin/board/settings/permissions";
+
+      if($ctx -> request -> method eq 'POST') {
+use Data::Dumper;
+        if($ctx -> user) {
+          if($ctx -> user -> is_admin || $ctx -> user -> has_permission($ctx -> stash -> {board}, "board.admin")) {
+            my %ranks = map {
+              $_ -> id => 1
+            } @{$ctx -> stash -> {board} -> board_ranks};
+
+            my $p = $ctx -> request -> params;
+            my @keys = grep { /,/ } keys %{$ctx -> request -> params};
+            my %params = map {
+              my $k = $_; $k =~ tr/,/./;
+              ($k => $p->{$_})
+            } @keys;
+            # delete ranks not part of this board
+            # TODO: move this check to the resource
+            @keys = grep { !$ranks{$params{$_}} } keys %params;
+            delete @params{@keys};
+            $self -> PUT( $ctx,
+              resource => $ctx -> stash -> {board},
+              params => { permissions => \%params },
+            );
+          }
+        }
+      }
+      else {
+        $ctx -> stash -> {form_data} = {permissions => $ctx -> stash -> {board} -> permissions};
+      }
     }
 
   }

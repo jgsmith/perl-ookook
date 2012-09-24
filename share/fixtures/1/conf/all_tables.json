@@ -1,0 +1,181 @@
+{
+   "sets" : [
+      {
+         "quantity" : "all",
+         "class" : "TypefaceFont"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Board"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Library"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Theme"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ThemeVariable"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ThemeSnippetVersion"
+      },
+      {
+         "quantity" : "all",
+         "class" : "BoardApplicant"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Email"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ThemeAssetVersion"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Typeface"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Snippet"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Asset"
+      },
+      {
+         "quantity" : "all",
+         "class" : "TypefaceFontVersion"
+      },
+      {
+         "quantity" : "all",
+         "class" : "PageVersion"
+      },
+      {
+         "quantity" : "all",
+         "class" : "TypefaceEdition"
+      },
+      {
+         "quantity" : "all",
+         "class" : "LibraryProjectVersion"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ThemeStyle"
+      },
+      {
+         "quantity" : "all",
+         "class" : "LibraryProject"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ThemeSnippet"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ThemeLayout"
+      },
+      {
+         "quantity" : "all",
+         "class" : "PagePart"
+      },
+      {
+         "quantity" : "all",
+         "class" : "User"
+      },
+      {
+         "quantity" : "all",
+         "class" : "BoardMemberApplicant"
+      },
+      {
+         "quantity" : "all",
+         "class" : "SnippetVersion"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Page"
+      },
+      {
+         "quantity" : "all",
+         "class" : "LibraryTheme"
+      },
+      {
+         "quantity" : "all",
+         "class" : "LibraryThemeVersion"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ThemeLayoutVersion"
+      },
+      {
+         "quantity" : "all",
+         "class" : "OauthIdentity"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ThemeStyleVersion"
+      },
+      {
+         "quantity" : "all",
+         "class" : "LibraryEdition"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ApiKey"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ThemeEdition"
+      },
+      {
+         "quantity" : "all",
+         "class" : "AssetVersion"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Attachment"
+      },
+      {
+         "quantity" : "all",
+         "class" : "BoardRank"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Edition"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ThemeVariableVersion"
+      },
+      {
+         "quantity" : "all",
+         "class" : "BoardMember"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Project"
+      },
+      {
+         "quantity" : "all",
+         "class" : "TypefaceFontFile"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ThemeAsset"
+      }
+   ],
+   "might_have" : {
+      "fetch" : 0
+   },
+   "belongs_to" : {
+      "fetch" : 0
+   },
+   "has_many" : {
+      "fetch" : 0
+   }
+}

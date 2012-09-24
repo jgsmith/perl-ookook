@@ -8,7 +8,7 @@ use MooseX::MarkAsMethods autoclean => 1;
 extends 'DBIx::Class::Schema';
 
 # the schema version - not the OokOok package version
-our $VERSION = 2;
+our $VERSION = 1;
 
 __PACKAGE__->load_namespaces;
 
@@ -49,6 +49,13 @@ after connection => sub {
     }
   }
   if($dsn eq 'dbi:Pg:dbname=ookook_testing') {
+    $self->storage->dbh_do(
+      sub {
+        my ($storage, $dbh, @args) = @_;
+        $dbh->do("SET client_min_messages=error");
+      }
+    );
+
     $self -> deploy({
       add_drop_table => 1,
     });

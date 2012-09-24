@@ -32,12 +32,7 @@ resource OokOok::Resource::BoardRank {
 
   has_many board_members => 'OokOok::Resource::BoardMember', (
     is => 'ro',
-    source => sub {
-      my($self) = @_;
-      $self -> source -> board -> board_members -> search({
-        rank => $self -> source -> position
-      })
-    },
+    source => sub { $_[0] -> source -> board_members },
   );
 
   method can_GET { $self -> board -> can_GET }

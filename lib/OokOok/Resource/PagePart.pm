@@ -49,6 +49,9 @@ resource OokOok::Resource::PagePart {
     my $formatter = eval {
       "OokOok::Formatter::$filter" -> new
     };
+    if($@) {
+      $self -> c -> log -> warn("Unable to create formatter: $@");
+    }
     if($formatter && !$@) {
       $content = $formatter -> format($content);
     }

@@ -20,6 +20,7 @@ class OokOok::Declare::Base::Resource {
   has is_development => (
     is => 'rw',
     isa => 'Bool',
+    lazy => 1,
     default => sub {
       $_[0] -> c -> stash -> {development}
     },
@@ -61,6 +62,7 @@ class OokOok::Declare::Base::Resource {
     is => 'rw',
     isa => 'Maybe[Object]',
     predicate => 'has_source_version',
+    lazy => 1,
     default => sub { 
       if($_[0] -> source) {
         $_[0] -> _get_source_version( $_[0] -> source );
@@ -145,6 +147,7 @@ class OokOok::Declare::Base::Resource {
   }
 
   method can_PUT { $self -> is_development; }
+  method filter_PUT (HashRef $json) { $json; }
   method can_DELETE { $self -> is_development; }
 
   method _export_resource ($bag, $r) {
@@ -209,14 +212,18 @@ class OokOok::Declare::Base::Resource {
   }
 
   method _GET ($deep = 0) { 
-    OokOok::Exception::GET -> forbidden(
-      message => 'Unable to GET resource'
-    ) unless $self -> can_GET;
+    if(!$self -> c -> model('DB') -> schema -> is_development) {
+      OokOok::Exception::GET -> forbidden(
+        message => 'Unable to GET resource'
+      ) unless $self -> can_GET;
+    }
 
     my $guard = $self -> c -> model('DB') -> txn_scope_guard;
 
     my $r = $self -> GET($deep);
+
     $guard -> commit;
+
     return $r;
   }
 
@@ -287,17 +294,22 @@ class OokOok::Declare::Base::Resource {
   }
 
   method _DELETE {
-    OokOok::Exception::DELETE -> forbidden(
-      message => "Unable to DELETE unless authenticated"
-    ) unless $self -> c -> user;
+    if(!$self -> c -> model('DB') -> schema -> is_development) {
+      OokOok::Exception::DELETE -> forbidden(
+        message => "Unable to DELETE unless authenticated"
+      ) unless $self -> c -> user;
 
-    OokOok::Exception::DELETE -> forbidden(
-      message =>  "Unable to DELETE"
-    ) unless $self -> can_DELETE;
+      OokOok::Exception::DELETE -> forbidden(
+        message =>  "Unable to DELETE"
+      ) unless $self -> can_DELETE;
+    }
 
     my $guard = $self -> c -> model('DB') -> txn_scope_guard;
+
     my $r = $self -> DELETE;
+
     $guard -> commit;
+
     return $r;
   }
 
@@ -310,13 +322,17 @@ class OokOok::Declare::Base::Resource {
   }
 
   method _PUT ($json) {
-    OokOok::Exception::PUT -> forbidden(
-      message => 'Unable to PUT unless authenticated'
-    ) unless defined $self -> c -> user;
+    if(!$self -> c -> model('DB') -> schema -> is_development) {
+      OokOok::Exception::PUT -> forbidden(
+        message => 'Unable to PUT unless authenticated'
+      ) unless defined $self -> c -> user;
 
-    OokOok::Exception::PUT -> forbidden(
-      message => 'Unable to PUT'
-    ) unless $self -> can_GET && $self -> can_PUT;
+      OokOok::Exception::PUT -> forbidden(
+        message => 'Unable to PUT'
+      ) unless $self -> can_GET && $self -> can_PUT;
+    }
+
+    $json = $self -> filter_PUT($json);
 
     my $guard = $self -> c -> model('DB') -> txn_scope_guard;
 
@@ -410,7 +426,9 @@ class OokOok::Declare::Base::Resource {
     $json -> {_nested} = {};
   
     my $r = $self -> PUT($json);
+
     $guard -> commit;
+
     return $r;
   }
   
@@ -454,7 +472,7 @@ class OokOok::Declare::Base::Resource {
     if($self -> is_development) {
       $self -> meta -> _get_source_version($thing);
     }
-    else {
+    else { # if(defined $self -> date) {
       $self -> meta -> _get_source_version($thing, $self -> date);
     }
   }

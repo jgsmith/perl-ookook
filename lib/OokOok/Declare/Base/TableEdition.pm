@@ -31,6 +31,11 @@ class OokOok::Declare::Base::TableEdition
     return $next;
   }
 
+  method is_published {
+    defined($self -> published) &&
+    defined($self -> published -> [0])
+  }
+
   # a closed edition that has no succeeding closed edition that is published
   # may be published. The currently published edition will be marked as no
   # longer published

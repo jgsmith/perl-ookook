@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Schema::Result::User
 
+# ABSTRACT: User record in the relational database
+
 Table OokOok::Schema::Result::User {
 
   with_uuid;
@@ -48,6 +50,45 @@ Table OokOok::Schema::Result::User {
 
   $CLASS -> many_to_many( board_ranks => 'board_members', 'board_rank' );
 
+  method board_membership (Object $board) {
+    $self -> board_members -> find({
+      board_id => $board -> id
+    });
+  }
+
+=method may_design ()
+
+Returns true if the user may create themes. Since themes have special
+requirements, designing new themes is restricted.
+
+=cut
+
   method may_design { $self -> is_admin; }
 
+=method has_permission ($board, Str $permission)
+
+Returns true if the user has the appropriate permission with the given
+board.
+
+If the user is a system administrator, then they have all permissions.
+
+If the user is not a member of the board, then they will have no
+permissions. Resources that should be publicly available should not
+require any permissions.
+
+See L<OokOok::Schema::Result::BoardRank> for more information.
+
+=cut
+
+  method has_permission (Object $board, Str $permission) {
+    # admins can do anything
+    return 1 if $self -> is_admin;
+
+    # need to find membership, then do query
+    my $membership = $self -> board_membership;
+
+    return 0 unless $membership;
+
+    return $membership -> board_rank -> has_permission($permission);
+  }
 }

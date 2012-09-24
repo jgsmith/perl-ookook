@@ -14,6 +14,7 @@ use Moose::Exporter;
 use Moose::Util::MetaRole;
 use String::CamelCase qw(decamelize);
 use Lingua::EN::Inflect qw(PL_N);
+use JSON;
 
 use MooseX::Types::Moose qw(ArrayRef);
 
@@ -28,6 +29,21 @@ Moose::Exporter->setup_import_methods(
   as_is => [ ],
   #also => 'Moose',
 );
+
+my $inflate_datetime = sub {
+  my $date = DateTime::Format::Pg->parse_datetime(shift);
+  $date -> set_formatter('OokOok::DateTime::Parser');
+  $date;
+};
+
+my $deflate_datetime = sub {
+  my $dt = shift;
+
+  if(!ref $dt) {
+    $dt = DateTime::Format::ISO8601 -> parse_datetime($dt);
+  }
+  DateTime::Format::Pg->format_datetime($dt);
+};
 
 sub init_meta {
   shift;
@@ -56,9 +72,10 @@ sub init_meta {
   # set up defaults
   #$package -> load_components("InflateColumn::DateTime");
   $package -> table($nom);
+
   $package -> add_columns(
     id => {
-      data_type => "integer",
+      data_type => 'integer',
       is_auto_increment => 1,
       is_nullable => 0,
     },
@@ -84,6 +101,16 @@ sub with_uuid {
 
 sub prop {
   my($meta, $method, %info) = @_;
+
+  # PostgreSQL supports the json column type - we just add the inflate/deflate
+  if($info{data_type} eq 'json') {
+    $info{inflate} ||= sub { decode_json shift };
+    $info{deflate} ||= sub { encode_json shift };
+  }
+  elsif($info{data_type} eq 'datetime') {
+    $info{inflate} ||= $inflate_datetime;
+    $info{deflate} ||= $deflate_datetime;
+  }
 
   $meta -> {package} -> add_columns( $method, \%info );
 

@@ -6,10 +6,6 @@ use OokOok::Declare;
 
 resource OokOok::Resource::BoardApplicant {
 
-  #has '+source' => (
-  #  isa => 'OokOok::Model::DB::BoardApplicant'
-  #);
-
   prop id => (
     type => 'Str',
     is => 'ro',

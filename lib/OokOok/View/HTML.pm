@@ -23,6 +23,7 @@ view OokOok::View::HTML is mutable
       $ctx -> stash -> {data} = $ctx -> stash -> {$stash_key};
     }
   }
+
 }
 
 =head1 DESCRIPTION

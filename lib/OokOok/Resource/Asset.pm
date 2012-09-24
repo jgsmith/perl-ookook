@@ -13,4 +13,5 @@ resource OokOok::Resource::Asset {
   after EXPORT ($bag) {
     # add asset content
   }
+
 }

@@ -58,7 +58,7 @@ collection OokOok::Collection::BoardMember {
 
     my $user = $self -> c -> user;
 
-    my $membership = $board -> source -> board_members -> search({
+    my $membership = $board -> source -> board_ranks -> board_members -> search({
       user_id => $user -> id
     }) -> first;
 

@@ -47,6 +47,27 @@ class OokOok::Declare::Base::EditionedTable extends OokOok::Declare::Base::Table
     }
   }
 
+=method has_permission ($user, Str $permission)
+
+Returns true if the user has the appropriate permission for the given board.
+
+If the editioned resource is locked, then the permission has C<locked.>
+prepended. Otherwise, C<unlocked.> is prepended.
+
+See L<OokOok::Schema::Result::BoardRank> and
+L<OokOok::Schema::Result::User> for more information.
+
+=cut
+
+  method has_permission (Object $user, Str $permission) {
+    if($self -> is_locked) {
+      return $user -> has_permission($self -> board, "locked." . $permission);
+    }
+    else {
+      return $user -> has_permission($self -> board, "unlocked." . $permission);
+    }
+  }
+
   method relation_for_date (Str $relation, Str $uuid, $date?) {
     my $join_table = $self -> editions -> result_source -> from;
     my $target_key = $self -> result_source -> from . "_id";

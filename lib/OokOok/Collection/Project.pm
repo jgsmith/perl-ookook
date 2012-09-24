@@ -14,7 +14,7 @@ collection OokOok::Collection::Project {
         $q = $q -> search({
           'board_members.user_id' => $self -> c -> user -> id,
         }, {
-          join => { board => 'board_members' }
+          join => { board => { 'board_ranks' => 'board_members' } }
         });
       }
       else {
@@ -22,7 +22,7 @@ collection OokOok::Collection::Project {
         $q = $q -> search({
           'board_members.user_id' => $self -> c -> user -> id,
         }, {
-          join => { board => 'board_members' }
+          join => { board => { 'board_ranks' => 'board_members' } }
         });
       }
     }
@@ -63,9 +63,8 @@ collection OokOok::Collection::Project {
       name => 'Administrator',
       position => 0,
     });
-    $board -> create_related('board_members', {
+    $rank -> create_related('board_members', {
       user_id => $owner -> id,
-      rank => 0,
     });
 
     $project -> source -> update({

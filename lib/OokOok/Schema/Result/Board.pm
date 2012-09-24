@@ -20,7 +20,20 @@ Table OokOok::Schema::Result::Board {
     is_nullable => 0,
   );
 
+  prop permissions => (
+    data_type => 'json',
+    default_value => '{}',
+    is_nullable => 0,
+  );
+
   owns_many board_ranks => 'OokOok::Schema::Result::BoardRank';
-  owns_many board_members => 'OokOok::Schema::Result::BoardMember';
   owns_many board_applicants => 'OokOok::Schema::Result::BoardApplicant';
+
+  method board_members {
+    $self -> result_source -> schema -> resultset('BoardMember') -> search({
+      'board_rank.board_id' => $self -> id,
+    }, {
+      join => 'board_rank',
+    });
+  }
 }

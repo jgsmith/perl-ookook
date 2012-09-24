@@ -89,7 +89,7 @@ resource OokOok::Resource::Theme
 
     return 0 unless $self -> board;
 
-    my $memberq = $self -> board -> source -> board_members -> search({
+    my $memberq = $self -> board -> source -> board_ranks -> board_members -> search({
       user_id => $self -> c -> user -> id
     }) -> count;
 

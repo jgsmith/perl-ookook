@@ -7,6 +7,7 @@ use Moose::Exporter;
 use Moose::Util::MetaRole;
 use String::CamelCase qw(decamelize);
 use DateTime::Format::Pg;
+use JSON;
 
 use Module::Load ();
 
@@ -59,7 +60,6 @@ sub init_meta {
 
   $meta -> foreign_key($nom . "_id");
 
-  #$package -> load_components("InflateColumn::DateTime");
   $package -> table($nom);
   $package -> add_columns(
     id => {
@@ -120,6 +120,16 @@ sub init_meta {
 
 sub prop {
   my($meta, $method, %info) = @_;
+
+  # PostgreSQL supports the json column type - we just add the inflate/deflate
+  if($info{data_type} eq 'json') {
+    $info{inflate} ||= sub { decode_json shift };
+    $info{deflate} ||= sub { encode_json shift };
+  }
+  elsif($info{data_type} eq 'datetime') {
+    $info{inflate} ||= $inflate_datetime;
+    $info{deflate} ||= $deflate_datetime;
+  }
 
   $meta -> {package} -> add_columns( $method, \%info );
 

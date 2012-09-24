@@ -7,6 +7,7 @@ use Moose::Exporter;
 use Moose::Util::MetaRole;
 use String::CamelCase qw(decamelize);
 use Lingua::EN::Inflect qw(PL_N);
+use JSON;
 
 use Module::Load ();
 
