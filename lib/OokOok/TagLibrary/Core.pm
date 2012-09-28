@@ -4,6 +4,14 @@ use OokOok::Declare;
 
 taglib OokOok::TagLibrary::Core {
 
+  documentation <<'EOD'; # for r:parent
+Page attribute tags inside this tag refer to the parent of the current page.
+
+Usage
+
+    <%tag%>...</%tag%>
+EOD
+
   element parent is yielding returns HTML {
     my $page = $ctx -> get_resource('page');
     $page = $page ? $page -> parent_page : $page;
@@ -14,15 +22,39 @@ taglib OokOok::TagLibrary::Core {
     $yield -> ($new_ctx);
   }
 
+  documentation <<'EOD'; # for r:title
+Renders the title attribute of the current page.
+
+Usage
+
+    <%tag%/>
+EOD
+
   element title returns Str {
     my $page = $ctx -> get_resource('page');
     $page ? $page -> title : '';
   }
 
+  documentation <<'EOD'; # for r:slug
+Renders the slug attribute of the current page.
+
+Usage
+
+    <%tag%/>
+EOD
+
   element slug returns Str {
     my $page = $ctx -> get_resource('page');
     $page ? $page -> slug : '';
   }
+
+  documentation <<'EOD';
+Renders the URL attribute of the current page.
+
+Usage
+
+    <%tag%/>
+EOD
 
   # TODO: take into account the date of the resource
   element url returns Str {
@@ -30,22 +62,65 @@ taglib OokOok::TagLibrary::Core {
     $page ? $page -> slug_path : '';
   }
 
+  documentation <<'EOD';
+Causes the tags referring to a page’s attributes to refer to the current page.
+
+Usage
+
+    <%tag%>...</%tag%>
+EOD
+
   # TODO: make sure context stores the actual page we're rendering
   element page is yielding returns HTML {
     return '';
   }
 
-  element has_parent as "has-parent" is yielding returns HTML {
+  documentation <<'EOD';
+Renders the contained elements only if the current contextual page has
+a parent, i.e. is not the root page.
+
+Usage
+
+   <%tag%>...</%tag%>
+EOD
+
+  element if_parent as "if-parent" is yielding returns HTML {
     my $page = $ctx -> get_resource('page');
     $page && $page -> parent_page ? $yield->() : '';
   }
-      
+
+  documentation <<'EOD';
+Renders the contained elements only if the current contextual page has
+no parent, i.e. is the root page.
+
+Usage
+
+    <%tag%>...</%tag%>
+EOD
+
   element unless_parent as "unless-parent" is yielding returns HTML {
     my $page = $ctx -> get_resource('page');
     $page ? ($page -> parent_page ? '' : $yield->()) : '';
   }
 
-  element link is yielding returns HTML {
+  documentation <<'EOD';
+Renders a link to the page. When used as a single tag it uses the page’s title
+for the link name. When used as a double tag the part in between both tags will
+be used as the link text. If the `anchor` attribute is passed to the tag it 
+will append a pound sign (#) followed by the value of the attribute to
+the `href` attribute of the HTML `a` tag—effectively making an HTML anchor.
+
+Usage
+
+    <%tag% [anchor="name"]/>
+
+or
+
+    <%tag% [anchor="name"]>click here</%tag%>
+EOD
+
+  # TODO: handle anchor attribute
+  element link (Str :$anchor?) is yielding returns HTML {
     my $text = $yield -> ();
     my $page = $ctx -> get_resource('page');
     if($page) {
@@ -60,8 +135,30 @@ taglib OokOok::TagLibrary::Core {
     return '';
   }
 
+  documentation <<'EOD';
+Nothing inside a set of comment tags is rendered.
+
+Usage
+
+    <%tag%>...</%tag%>
+EOD
+
   element comment returns HTML { '' }
   
+  documentation <<'EOD';
+Renders the snippet specified in the name attribute within the context 
+of a page.
+
+Usage
+
+    <%tag% name="snippet_name"/>
+
+When used as a double tag, the part in between both tags may be used 
+within the snippet itself, being substituted in place of <%ns%:yield/>.
+EOD
+
+  # TODO: support <r:yield/>
+
   element snippet (Str :$name) is yielding returns HTML {
     $name = $name -> [0];
 

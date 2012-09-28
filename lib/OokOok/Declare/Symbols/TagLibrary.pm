@@ -10,7 +10,7 @@ use OokOok::Declare::Meta::TagLibrary;
 use namespace::autoclean;
 
 Moose::Exporter -> setup_import_methods(
-  with_meta => [ 'ns' ],
+  with_meta => [ 'ns', 'documentation' ],
   as_is => [ ],
   #also => 'Moose',
 );
@@ -39,6 +39,12 @@ sub ns {
   my($meta, $ns) = @_;
 
   $meta -> taglib_namespace($ns);
+}
+
+sub documentation {
+  my($meta, $d) = @_;
+
+  $meta -> set_documentation($d);
 }
 
 #sub element {

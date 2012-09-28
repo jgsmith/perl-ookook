@@ -13,6 +13,10 @@ use MooseX::Declare;
                           # taglib element - way to set something on a
                           # somewhat global level
 
+   documentation <<EOD;
+     ...
+   EOD
+
    element bar (Str :$baz) {
      # we have $ctx => OokOok::Template::Context
      #         $self => taglib class instance
@@ -37,7 +41,7 @@ class OokOok::Declare::Keyword::TagLibrary
 
   method import_ookook_symbols_from (Object $ctx) { 'OokOok::Declare::Symbols::TagLibrary' }
 
-  method imported_ookook_symbols (Object $ctx) { qw(ns) }
+  method imported_ookook_symbols (Object $ctx) { qw(ns documentation) }
 
   method default_superclasses { 'OokOok::Declare::Base::TagLibrary' }
 }
