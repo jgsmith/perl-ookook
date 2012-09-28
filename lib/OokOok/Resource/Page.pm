@@ -94,6 +94,8 @@ resource OokOok::Resource::Page {
   method child_pages {
     # we want all of the pages which have a version in the current edition
     # (or most recent edition) pointing to the id of this page
+    return unless defined wantarray;
+
     my %seen;
     my @children = 
       grep {

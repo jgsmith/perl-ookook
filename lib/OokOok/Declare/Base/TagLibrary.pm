@@ -50,8 +50,12 @@ class OokOok::Declare::Base::TagLibrary {
     my $yield;
     if($einfo -> {yields} && @{$node -> {children}||[]}) {
       $yield = sub { 
-        $context -> process_node( $node -> {children} || [''] );
+        my $ctx = @_ ? $_[0] : $context;
+        $ctx -> process_node( $node -> {children} || [''] );
       };
+    }
+    else {
+      $yield = sub { '' };
     }
 
     my $impl = $einfo -> {impl};
