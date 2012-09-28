@@ -21,6 +21,7 @@ resource OokOok::Resource::Board {
   prop permissions => (
     is => 'rw',
     type => 'HashRef',
+    permission => 'board.admin',
     source => sub { $_[0] -> source -> permissions },
   );
 
@@ -39,11 +40,24 @@ resource OokOok::Resource::Board {
     source => sub { $_[0] -> source -> board_applicants },
   );
 
+  # $r: project, theme, typeface
+  #     These are resources that the board is trusted to manage in a way
+  #     that will allow forward maintenance.
+  #     For now, this is only 'project'
+  method may_have_resource (Str $r) {
+    $r eq 'project' ? 1 : 0;
+  }
+
   method can_PUT {
-    return 1;
+    $self -> c -> user &&
+    $self -> c -> user -> has_permission( $self -> source, 'board.admin' );
   }
 
   method can_GET {
-    return 1;
+    # must be a member
+    $self -> c -> user && (
+      $self -> c -> user -> is_admin ||
+      $self -> c -> user -> board_membership( $self -> source )
+    );
   }
 }

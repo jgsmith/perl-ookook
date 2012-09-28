@@ -34,6 +34,7 @@ resource OokOok::Resource::LibraryEdition {
     $self -> collection -> link . '/edition';
   }
 
+  # changes go through the library
   method can_PUT { 0 }
 
 }

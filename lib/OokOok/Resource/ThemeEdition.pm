@@ -33,4 +33,7 @@ resource OokOok::Resource::ThemeEdition {
   method link {
     $self -> collection -> link . '/edition';
   }
+
+  # modification is through the theme
+  method can_PUT { 0 }
 }

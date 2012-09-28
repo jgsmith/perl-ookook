@@ -31,6 +31,12 @@ resource OokOok::Resource::Project
     source => sub { $_[0] -> source_version -> description },
   );
 
+  prop is_locked => (
+    type => 'Bool',
+    source => sub { $_[0] -> source -> is_locked },
+    permission => 'project.lock',
+  );
+
   has_many pages => 'OokOok::Resource::Page', (
     is => 'ro',
     source => sub { $_[0] -> source -> pages },
@@ -84,13 +90,16 @@ resource OokOok::Resource::Project
     # the user has to be in a rank that can modify the project itself
     # if we get here, we have a user
     # we pull out the top rank held by the user
-    if($self -> c -> user) {
-      return $self -> c -> user -> has_permission(
-        $self -> source -> board,
-        'project.settings',
-      );
-    }
-    return 0;
+    $self -> has_permission( 'project.settings' );
+  }
+
+  method can_GET {
+    # for now, all projects are publicly readable if they are published
+    return 1 unless $self -> is_development;
+
+    return 0 unless $self -> c -> user;
+
+    return 1 if $self -> c -> user -> board_membership($self -> source -> board);
   }
 
   method can_PLAY {

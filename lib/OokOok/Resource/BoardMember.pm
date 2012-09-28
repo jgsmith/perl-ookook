@@ -53,7 +53,9 @@ resource OokOok::Resource::BoardMember {
     )
   }
 
-  method filter_PUT (HashRef $json) {
+  override filter_PUT (HashRef $json) {
+    $json = super;
+
     my $is_admin = $self -> c -> user -> is_admin;
     my $user_membership = $self -> c -> user -> board_membership(
       $self -> source -> board

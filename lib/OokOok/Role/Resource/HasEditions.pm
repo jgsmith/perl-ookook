@@ -16,4 +16,13 @@ role OokOok::Role::Resource::HasEditions {
       source => $self -> source -> current_edition,
     );
   }
+
+  method has_permission (Str $permission) {
+    return 0 unless $self -> c -> user;
+
+    $self -> source -> has_permission(
+      $self -> c -> user,
+      $permission
+    );
+  }
 }

@@ -46,9 +46,26 @@ resource OokOok::Resource::Snippet {
     source => sub { $_[0] -> source -> project },
   );
 
-  method can_PUT { $self -> project -> can_PUT; }
+  method can_PUT { 
+    $self -> project -> has_permission('project.snippet.edit'); 
+  }
 
-  method can_DELETE { $self -> project -> can_PUT; }
+  method can_DELETE { 
+    $self -> project -> has_permission('project.snippet.revert');
+  }
+
+  override filter_PUT (HashRef $json) {
+    $json = super;
+    if(exists($json->{status}) && defined($json->{status})) {
+      if(!$self -> project -> has_permission('project.snippet.status')) {
+        # make sure the status is not 'approved'
+        if($json->{status} == 0) {
+          delete $json->{status};
+        }
+      }
+    }
+    $json;
+  }
 
   method render (Object $context) {
     # first, we filter the content

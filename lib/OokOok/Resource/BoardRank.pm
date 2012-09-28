@@ -6,10 +6,6 @@ use OokOok::Declare;
 
 resource OokOok::Resource::BoardRank {
 
-  #has '+source' => (
-  #  isa => 'OokOok::Model::DB::BoardRank'
-  #);
-
   prop id => (
     is => 'ro',
     source => sub { $_[0] -> source -> board -> uuid . "-r" . $_[0] -> source -> position }

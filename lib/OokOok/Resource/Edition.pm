@@ -52,6 +52,7 @@ resource OokOok::Resource::Edition {
     $self -> collection -> link . '/edition';
   }
 
+  # changes go through the project
   method can_PUT { 0 }
 }
 

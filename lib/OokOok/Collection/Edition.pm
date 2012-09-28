@@ -13,7 +13,8 @@ collection OokOok::Collection::Edition {
 
   method can_POST {
     # we need to make sure the current logged in person is owner of the project
-    1;
+    return 0 unless $self -> project;
+    $self -> project -> has_permission('project.edition.publish');
   }
 
   method may_POST {

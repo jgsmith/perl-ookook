@@ -53,5 +53,12 @@ resource OokOok::Resource::ThemeVariable {
     source => sub { $_[0] -> source -> theme },
   );
 
-  method can_PUT { $self -> theme -> can_PUT; }
+  method can_PUT {
+    $self -> theme -> has_permission('theme.variable.edit');
+  }
+
+  method can_DELETE {
+    $self -> theme -> has_permission('theme.variable.revert');
+  }
+
 }

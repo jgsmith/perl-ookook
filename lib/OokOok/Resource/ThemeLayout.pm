@@ -10,10 +10,6 @@ resource OokOok::Resource::ThemeLayout {
   use OokOok::Template::Document;
   use OokOok::Template::Context;
 
-  #has '+source' => (
-  #  isa => 'OokOok::Model::DB::ThemeLayout',
-  #);
-
   belongs_to 'theme' => 'OokOok::Resource::Theme', (
     is => 'ro',
     required => 1,
@@ -51,7 +47,13 @@ resource OokOok::Resource::ThemeLayout {
     export_as_file => 'content',
   );
 
-  method can_PUT { $self -> theme -> can_PUT; }
+  method can_PUT { 
+    $self -> theme -> has_permission('theme.layout.edit');
+  }
+
+  method can_DELETE {
+    $self -> theme -> has_permission('theme.layout.revert');
+  }
 
   method stylesheets (Object $layout:) {
     my @stylesheets;

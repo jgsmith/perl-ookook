@@ -30,4 +30,11 @@ resource OokOok::Resource::Profile {
   has_many identities => 'OokOok::Resource::OauthIdentity', (
     source => sub { $_[0] -> source -> oauth_identities }
   );
+
+  method can_GET {
+    $self -> c -> user && (
+      $self -> c -> user -> is_admin ||
+      $self -> c -> user == $self -> source
+    );
+  }
 }

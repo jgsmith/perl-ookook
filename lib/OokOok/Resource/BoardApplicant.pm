@@ -14,6 +14,7 @@ resource OokOok::Resource::BoardApplicant {
 
   prop status => (
     type => 'Str',
+    permission => 'board.member.add',
   );
 
   belongs_to board => 'OokOok::Resource::Board', (

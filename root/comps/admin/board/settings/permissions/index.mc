@@ -15,14 +15,75 @@ $.rank_names => sub { +{ map { $_->id => $_->name } @{$_[0] -> board -> board_ra
 %   }}
 %   $.IndexBody {{
       <% $.IndexPermissionGroup("Board") %>
+
       <% $.IndexPermission("Promote Member", "board.member.promote") %>
       <% $.IndexPermission("Demote Member", "board.member.demote") %>
       <% $.IndexPermission("Induct Member", "board.member.add") %>
       <% $.IndexPermission("Dismiss Member", "board.member.remove") %>
+
       <% $.IndexPermissionGroup("Projects") %>
+
       <% $.IndexPermission("Toggle Project Lock", "project.lock") %>
-      <% $.IndexPermission("Publish Editions", "project.edition.POST") %>
+      <% $.IndexPermission("Publish Editions", "project.edition.publish") %>
+
+      <% $.IndexPermission("Modify Pages", "project.page.edit") %>
       <% $.IndexPermission("Approve Page Changes", "project.page.status") %>
+      <% $.IndexPermission("Revert Page Changes", "project.page.revert") %>
+
+      <% $.IndexPermission("Modify Snippets", "project.snippet.edit") %>
+      <% $.IndexPermission("Approve Snippet Changes", "project.snippet.status") %>
+      <% $.IndexPermission("Revert Snippet Changes", "project.snippet.revert") %>
+
+%     if($.board -> may_have_resource('theme')) {
+        <% $.IndexPermissionGroup("Themes") %>
+
+        <% $.IndexPermission("Toggle Theme Lock", "theme.lock") %>
+        <% $.IndexPermission("Publish Editions", "theme.edition.publish") %>
+
+        <% $.IndexPermission("Modify Layouts", "theme.layout.edit") %>
+        <% $.IndexPermission("Approve Layout Changes", "theme.layout.status") %>
+        <% $.IndexPermission("Revert Layout Changes", "theme.layout.revert") %>
+
+        <% $.IndexPermission("Modify Snippets", "theme.snippet.edit") %>
+        <% $.IndexPermission("Approve Snippet Changes", "theme.snippet.status") %>
+        <% $.IndexPermission("Revert Snippet Changes", "theme.snippet.revert") %>
+%     }
+%   }}
+% }}
+% # we also need to know which ranks can manage which resource types
+% $.IndexTable {{
+%   $.IndexHead {{
+      <% $.IndexHeadName("Rank") %>
+      <% $.IndexHeadCol("", "Projects") %>
+% if($.board -> may_have_resource('theme')) {
+      <% $.IndexHeadCol("", "Themes") %>
+% }
+% if($.board -> may_have_resource('typeface')) {
+      <% $.IndexHeadCol("", "Typefaces") %>
+% }
+%   }}
+%   $.IndexBody {{
+%     for my $rank (@{$.ranks}) {
+%       next if !$rank -> position;
+%       $.IndexItem {{
+%         $.IndexItemName("", "") {{
+            <% $rank -> name | H %>
+%         }}
+%         $.IndexItemCol("") {{
+            <input type="checkbox" name="allowed.project" value="<% $rank->id %>" />
+%         }}
+%         if($.board -> may_have_resource('theme')) {
+%           $.IndexItemCol("") {{
+              <input type="checkbox" name="allowed.theme" value="<% $rank->id %>" />
+%           }}
+%         }
+%         if($.board -> may_have_resource('typeface')) {
+%           $.IndexItemCol("") {{
+              <input type="checkbox" name="allowed.typeface" value="<% $rank->id %>" />
+%           }}
+%         }
+%       }}
+%     }
 %   }}
 % }}
 % if($.is_admin) {

@@ -52,7 +52,9 @@ Table OokOok::Schema::Result::User {
 
   method board_membership (Object $board) {
     $self -> board_members -> find({
-      board_id => $board -> id
+      'board_rank.board_id' => $board -> id
+    }, {
+      join => 'board_rank'
     });
   }
 

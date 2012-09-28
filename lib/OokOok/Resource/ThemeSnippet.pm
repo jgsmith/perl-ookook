@@ -35,7 +35,14 @@ resource OokOok::Resource::ThemeSnippet {
     source => sub { $_[0] -> source -> theme },
   );
 
-  method can_PUT { $self -> theme -> can_PUT; }
+  method can_PUT {
+    $self -> theme -> has_permission('theme.snippet.edit');
+  }
+
+  method can_DELETE {
+    $self -> theme -> has_permission('theme.snippet.revert');
+  }
+
 
   method render (Object $context) {
     # first, we filter the content

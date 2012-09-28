@@ -71,8 +71,7 @@ resource OokOok::Resource::Theme
   }
 
   method can_PUT {
-    $self -> c -> user &&
-    $self -> c -> user -> is_admin;
+    $self -> has_permission( 'theme.settings' );
   }
 
   method can_PLAY {
@@ -80,20 +79,15 @@ resource OokOok::Resource::Theme
 
     return 1 if $self -> source_version -> is_closed;
 
+    if($self -> c -> user) {
+      return 1 if $self -> c -> user -> is_admin;
+      return 1 if $self -> source -> board &&
+        $self -> c -> user -> board_membership(
+          $self -> source -> board
+        );
+    }
+
     return 1 if $self -> c -> model('DB') -> schema -> is_development;
-
-    # make sure the logged in user is a member of the board
-    return 0 unless $self -> c -> user;
-
-    return 1 if $self -> c -> user -> is_admin;
-
-    return 0 unless $self -> board;
-
-    my $memberq = $self -> board -> source -> board_ranks -> board_members -> search({
-      user_id => $self -> c -> user -> id
-    }) -> count;
-
-    return 1 if $memberq;
 
     return 0;
   }

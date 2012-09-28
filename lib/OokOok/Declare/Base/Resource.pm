@@ -147,8 +147,19 @@ class OokOok::Declare::Base::Resource {
   }
 
   method can_PUT { $self -> is_development; }
-  method filter_PUT (HashRef $json) { $json; }
   method can_DELETE { $self -> is_development; }
+
+  method filter_PUT (HashRef $json) {
+    # look for things that have a 'permission' key
+    for my $key ($self -> meta -> get_prop_list) {
+      my $pinfo = $self -> meta -> get_prop($key);
+      next unless $pinfo->{permission};
+      next unless exists($json -> {$key}) && defined($json->{$key});
+      next if $self -> has_permission($pinfo->{permission});
+      delete $json->{$key};
+    }
+    $json;
+  }
 
   method _export_resource ($bag, $r) {
     if($r -> source -> can("uuid")) {

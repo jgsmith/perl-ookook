@@ -6,10 +6,6 @@ use OokOok::Declare;
 
 resource OokOok::Resource::ThemeStyle {
 
-  #has '+source' => (
-  #  isa => 'OokOok::Model::DB::ThemeStyle',
-  #);
-
   belongs_to 'theme' => 'OokOok::Resource::Theme', (
     is => 'ro',
     required => 1,
@@ -42,7 +38,14 @@ resource OokOok::Resource::ThemeStyle {
     export_as_file => 'content'
   );
 
-  method can_PUT { $self -> theme -> can_PUT; }
+  method can_PUT {
+    $self -> theme -> has_permission('theme.style.edit');
+  }
+
+  method can_DELETE {
+    $self -> theme -> has_permission('theme.style.revert');
+  }
+
 
   method render (Object $context?) {
     $self -> styles;

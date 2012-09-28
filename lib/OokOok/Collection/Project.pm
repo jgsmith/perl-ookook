@@ -45,6 +45,8 @@ collection OokOok::Collection::Project {
 
   method may_POST { 1; }
 
+  # TODO: allow a project to be created and assigned to an existing board
+
   around POST (@rest) {
     my $owner = $self -> c -> user;
 

@@ -39,7 +39,6 @@ resource OokOok::Resource::Page {
   prop status => (
     is => 'rw',
     type => 'Int',
-    permission => 'status.pages',
     source => sub { $_[0] -> source_version -> status },
   );
 
@@ -149,9 +148,30 @@ resource OokOok::Resource::Page {
     }
   }
 
-  method can_PUT { $self -> project -> can_PUT; }
+  override filter_PUT (HashRef $json) {
+    $json = super;
+    if(exists($json->{status}) && defined($json->{status})) {
+      if(!$self -> project -> has_permission('project.page.status')) {
+        # make sure the status is not 'approved'
+        if($json->{status} == 0) {
+          delete $json->{status};
+        }
+      }
+    }
+    $json;
+  }
 
-  method can_DELETE { $self -> project -> can_PUT; }
+  method can_PUT { 
+    $self -> project -> has_permission('project.page.edit'); 
+  }
+
+  method can_DELETE { 
+    $self -> project -> has_permission('project.page.revert'); 
+  }
+
+  override can_GET {
+    super && $self -> project -> can_GET;
+  }
 
   method stylesheets {
     my $layout = $self -> get_layout;
