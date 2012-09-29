@@ -2,9 +2,43 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::TagLibrary::Core
 
+# ABSTRACT: Core tags for layouts, pages, and such
+
 taglib OokOok::TagLibrary::Core {
 
-  documentation <<'EOD'; # for r:parent
+  documentation <<'EOD';
+Used within a snippet as a placeholder for substitution of child content, when
+the snippet is called as a double tag.
+
+Usage (within a snippet):
+
+    <div id="outer">
+      <p>before</p>
+      <%tag%/>
+      <p>after</p>
+    </div>
+
+If the above snippet was named “yielding”, you could call it from any Page,
+Layout or Snippet as follows:
+
+    <%ns%:snippet name="yielding">Content within</%ns%:snippet>
+
+Which would output the following:
+
+    <div id="outer">
+      <p>before</p>
+      Content within
+      <p>after</p>
+    </div>
+
+When called in the context of a Page or a Layout, <%tag%/> outputs nothing.
+EOD
+
+  element yield returns HTML {
+    $ctx -> yield;
+  }
+
+  documentation <<'EOD';
 Page attribute tags inside this tag refer to the parent of the current page.
 
 Usage
@@ -22,7 +56,7 @@ EOD
     $yield -> ($new_ctx);
   }
 
-  documentation <<'EOD'; # for r:title
+  documentation <<'EOD';
 Renders the title attribute of the current page.
 
 Usage
@@ -35,7 +69,7 @@ EOD
     $page ? $page -> title : '';
   }
 
-  documentation <<'EOD'; # for r:slug
+  documentation <<'EOD';
 Renders the slug attribute of the current page.
 
 Usage
@@ -157,12 +191,11 @@ When used as a double tag, the part in between both tags may be used
 within the snippet itself, being substituted in place of <%ns%:yield/>.
 EOD
 
-  # TODO: support <r:yield/>
-
   element snippet (Str :$name) is yielding returns HTML {
     $name = $name -> [0];
 
     # we want to render the snippet with the current context
+    $ctx -> set_yield($yield);
     my $project = $ctx -> get_resource("project");
     if($project) {
       my $snippet = $project -> snippet($name);
@@ -194,6 +227,10 @@ EOD
       }
       $part = 'body';
     }
+
+    # rendering the page part won't provide access to any content for
+    # <r:yield/> that might come from an enclosing element
+    $ctx -> yield_nothing;
 
     # we want to render the page part with the current context
     # if the current page doesn't have the named part, then we want
@@ -235,6 +272,16 @@ EOD
     return '';
   }
 
+  documentation <<'EOD';
+Escapes angle brackets, etc. for rendering in an HTML document.
+
+Usage
+
+    <%tag%>...</%tag%>
+EOD
+
+  # By declaring that we return a non-HTML string, we'll get
+  # everything escaped
   element escape_html as "escape-html" is yielding returns Str {
     $yield -> ();
   }

@@ -2,6 +2,8 @@ use MooseX::Declare;
 
 # PODNAME: OokOok::Template::Context
 
+# ABSTRACT: Context container for rendering content
+
 class OokOok::Template::Context {
   use MooseX::Types::Moose qw/CodeRef ArrayRef Str HashRef/;
 
@@ -41,6 +43,12 @@ class OokOok::Template::Context {
     is => 'ro',
     default => sub { +{ } },
     lazy => 1,
+  );
+
+  has _yield => (
+    isa => 'Maybe[CodeRef]',
+    is => 'rw',
+    predicate => 'has_yield',
   );
 
 =method localize ()
@@ -102,6 +110,22 @@ becomes the parent of the returned context.
     return $self -> parent -> has_var($key);
   }
 
+  method set_yield (CodeRef $code) {
+    $self -> _yield($code);
+  }
+
+  # this is used to partition off the yield stack
+  method yield_nothing { $self -> _yield(sub{ '' }) }
+
+  method yield(Object $ctx?) {
+    if($self -> has_yield) {
+      return $self -> _yield -> ($ctx || $self);
+    }
+    elsif($self -> has_parent) {
+      return $self -> parent -> yield($ctx);
+    }
+  }
+      
   method get_namespace ($prefix) {
     if(!exists($self -> namespaces -> {$prefix})) {
       if($self -> has_parent) {
