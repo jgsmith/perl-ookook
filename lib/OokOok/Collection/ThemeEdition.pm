@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::ThemeEdition
 
+# ABSTRACT: REST collection of theme editions
+
 collection OokOok::Collection::ThemeEdition {
 
   has theme => (

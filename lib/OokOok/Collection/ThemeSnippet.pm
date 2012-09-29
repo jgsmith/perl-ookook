@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::ThemeSnippet
 
+# ABSTRACT: REST collection of theme snippets
+
 collection OokOok::Collection::ThemeSnippet {
 
   method constrain_collection ($q, $deep = 0) {

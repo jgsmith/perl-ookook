@@ -1,5 +1,8 @@
+use MooseX::Declare;
 
 # PODNAME: OokOok::Declare::Keyword::Table
+
+# ABSTRACT: Provides the Table keyword
 
 class OokOok::Declare::Keyword::Table
   extends OokOok::Declare::Base::ClassKeyword {

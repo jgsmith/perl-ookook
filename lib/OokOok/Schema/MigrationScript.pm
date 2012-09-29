@@ -1,5 +1,7 @@
 package OokOok::Schema::MigrationScript;
 
+# ABSTRACT: Script for installing PostgreSQL database schema
+
 use Moose;
 use OokOok;
 

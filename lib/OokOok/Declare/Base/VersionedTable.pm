@@ -2,6 +2,8 @@ use MooseX::Declare;
 
 # PODNAME: OokOok::Declare::Base::VersionedTable
 
+# ABSTRACT: Base class for versioned resource tables
+
 use OokOok::Declare::Base::Table;
 
 class OokOok::Declare::Base::VersionedTable 

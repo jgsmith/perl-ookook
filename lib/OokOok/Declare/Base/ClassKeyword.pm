@@ -2,6 +2,8 @@ use MooseX::Declare;
 
 # PODNAME: OokOok::Declare::Base::ClassKeyword
 
+# ABSTRACT: Base class for class-type keywords
+
 class OokOok::Declare::Base::ClassKeyword 
   extends MooseX::Declare::Syntax::Keyword::Class
   with CatalystX::Declare::DefaultSuperclassing {

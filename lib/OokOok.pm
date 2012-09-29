@@ -3,6 +3,8 @@ use 5.012;
 
 # PODNAME: OokOok
 
+# ABSTRACT: Temporal Content and Data Management System
+
 =head1 SYNOPSIS
 
     script/ookook_server.pl
@@ -31,8 +33,6 @@ application OokOok
   with StackTrace
   with OokOok::Authentication
 {
-
-# ABSTRACT: Temporal Content and Data Management System
 
   use CatalystX::RoleApplicator;
   use DateTime;

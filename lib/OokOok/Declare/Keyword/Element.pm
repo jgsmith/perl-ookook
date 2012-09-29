@@ -81,6 +81,7 @@ class OokOok::Declare::Keyword::Element
       name => substr($attributes{ElementName}, 1, -1),
       impl => substr($attributes{Subname}, 1, -1),
       yields => $attributes{Flags}{yielding},
+      returns => $attributes{Returns},
     );
 
     # for now, we care about attributes like 'Type :$name'

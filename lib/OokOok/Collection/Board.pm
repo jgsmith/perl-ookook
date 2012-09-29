@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::Board
 
+# ABSTRACT: REST collection of boards
+
 collection OokOok::Collection::Board {
 
   use OokOok::Collection::BoardRank;

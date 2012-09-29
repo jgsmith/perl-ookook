@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::Page
 
+# ABSTRACT: REST collection of project pages
+
 collection OokOok::Collection::Page {
 
   method constrain_collection ($q, $deep = 0) {

@@ -1,5 +1,8 @@
+use MooseX::Declare;
 
 # PODNAME: OokOok::Declare::Keyword::TableVersion
+
+# ABSTRACT: Provides the table_version keyword
 
 class OokOok::Declare::Keyword::TableVersion
   extends OokOok::Declare::Base::ClassKeyword {

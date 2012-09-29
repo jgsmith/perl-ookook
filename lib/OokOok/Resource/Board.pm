@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Resource::Board
 
+# ABSTRACT: REST board resource
+
 resource OokOok::Resource::Board {
 
   prop name => (

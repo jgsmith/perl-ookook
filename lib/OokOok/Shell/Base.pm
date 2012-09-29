@@ -1,5 +1,7 @@
 package OokOok::Shell::Base;
 
+# ABSTRACT: Base class for shell command sets
+
 use OokOok::Shell::CommandSet;
 
 command '?' => sub {

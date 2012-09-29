@@ -1,5 +1,8 @@
+use MooseX::Declare;
 
 # PODNAME: OokOok::Declare::Keyword::TableEdition
+
+# ABSTRACT: Provides the table_edition keyword
 
 class OokOok::Declare::Keyword::TableEdition
   extends OokOok::Declare::Base::ClassKeyword {

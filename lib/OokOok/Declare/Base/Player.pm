@@ -2,6 +2,8 @@ use CatalystX::Declare;
 
 # PODNAME: OokOok::Declare::Base::Player
 
+# ABSTRACT: Base class for player-style controllers
+
 controller OokOok::Declare::Base::Player
    extends Catalyst::Controller::REST
 {

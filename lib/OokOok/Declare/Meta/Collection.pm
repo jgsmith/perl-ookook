@@ -1,5 +1,7 @@
 package OokOok::Declare::Meta::Collection;
 
+# ABSTRACT: Provides meta-class info for REST collections
+
 use Moose::Role;
 
 use namespace::autoclean;

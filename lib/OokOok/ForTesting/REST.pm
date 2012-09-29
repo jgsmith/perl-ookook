@@ -1,5 +1,7 @@
 package OokOok::ForTesting::REST;
 
+# ABSTRACT: Convenience methods for testing REST interface
+
 use Catalyst::Test 'OokOok';
 
 use Exporter;

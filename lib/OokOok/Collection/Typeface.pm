@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::Typeface
 
+# ABSTRACT: REST collection of typefaces
+
 collection OokOok::Collection::Typeface {
 
   method constrain_collection ($q, $deep = 0) {

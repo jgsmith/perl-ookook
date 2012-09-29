@@ -2,9 +2,13 @@ use MooseX::Declare;
 
 # PODNAME: OokOok::Declare::Base::TagLibrary
 
+# ABSTRACT: Base class for tag libraries
+
 class OokOok::Declare::Base::TagLibrary {
 
   use MooseX::Types::Moose qw( ArrayRef );
+
+  use feature 'switch';
 
   has c => ( is => 'rw', isa => 'Maybe[Object]',);
 
@@ -59,11 +63,27 @@ class OokOok::Declare::Base::TagLibrary {
     }
 
     my $impl = $einfo -> {impl};
+    my $value;
     if($einfo -> {yields}) {
-      $self -> $impl($context, $yield, %$attributes);
+      $value = $self -> $impl($context, $yield, %$attributes);
     }
     else {
-      $self -> $impl($context, %$attributes);
+      $value = $self -> $impl($context, %$attributes);
     }
+
+    # if not specified, or HTML, we do nothing with the value
+    given($einfo->{returns}) {
+      when ('Str') {
+        for ($value) {
+          s/&/&amp;/g;
+          s/</&lt;/g;
+          s/>/&gt;/g;
+          s/"/&quot;/g;
+          s/'/&#39;/g;
+        }
+      }
+    }
+
+    return $value;
   }
 }

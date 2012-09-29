@@ -1,5 +1,7 @@
 package OokOok::DateTime::Parser;
 
+# ABSTRACT: Parser and formatter for OokOok datetime format
+
 use Moose;
 
 use DateTime::Format::Builder (

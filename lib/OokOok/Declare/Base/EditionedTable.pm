@@ -2,6 +2,8 @@ use MooseX::Declare;
 
 # PODNAME: OokOok::Declare::Base::EditionedTable
 
+# ABSTRACT: Base class for editioned resource tables
+
 class OokOok::Declare::Base::EditionedTable extends OokOok::Declare::Base::Table {
   use DateTime::Format::ISO8601;
   use OokOok::Exception;

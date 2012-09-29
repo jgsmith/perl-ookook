@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::Edition
 
+# ABSTRACT: REST collection of project editions
+
 collection OokOok::Collection::Edition {
 
   has project => (

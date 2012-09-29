@@ -2,6 +2,8 @@ use MooseX::Declare;
 
 # PODNAME: OokOok::Declare::Base::Collection
 
+# ABSTRACT: Base class for REST collection classes
+
 class OokOok::Declare::Base::Collection {
 
   use String::CamelCase qw(decamelize);

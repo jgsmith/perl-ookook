@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::PagePart
 
+# ABSTRACT: REST collection of page parts
+
 collection OokOok::Collection::PagePart {
 
   use OokOok::Resource::PagePart;

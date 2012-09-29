@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::ThemeLayout
 
+# ABSTRACT: REST collection of theme layouts
+
 collection OokOok::Collection::ThemeLayout {
 
   method constrain_collection ($q, $deep = 0) {

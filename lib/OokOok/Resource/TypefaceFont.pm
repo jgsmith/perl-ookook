@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Resource::TypefaceFont
 
+# ABSTRACT: Typeface Font REST resource
+
 resource OokOok::Resource::TypefaceFont {
 
   prop id => (

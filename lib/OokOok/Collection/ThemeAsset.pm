@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::ThemeAsset
 
+# ABSTRACT: REST collection of theme assets
+
 collection OokOok::Collection::ThemeAsset {
 
   method constrain_collection ($q, $deep = 0) {

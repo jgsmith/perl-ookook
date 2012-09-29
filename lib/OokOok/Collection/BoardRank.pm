@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::BoardRank
 
+# ABSTRACT: REST collection of board ranks
+
 collection OokOok::Collection::BoardRank {
 
   method constrain_collection ($q, $deep = 0) {

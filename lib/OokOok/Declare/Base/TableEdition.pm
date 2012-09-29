@@ -2,6 +2,8 @@ use MooseX::Declare;
 
 # PODNAME: OokOok::Declare::Base::TableEdition
 
+# ABSTRACT: Base class for resource edition tables
+
 class OokOok::Declare::Base::TableEdition 
       extends OokOok::Declare::Base::Table {
 

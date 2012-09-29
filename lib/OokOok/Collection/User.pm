@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Collection::User
 
+# ABSTRACT: REST collection of users
+
 collection OokOok::Collection::User {
 
   method constrain_collection ($q, $deep = 0) {

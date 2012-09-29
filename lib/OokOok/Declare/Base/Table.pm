@@ -2,6 +2,8 @@ use MooseX::Declare;
 
 # PODNAME: OokOok::Declare::Base::Table
 
+# ABSTRACT: Base class for DB tables
+
 class OokOok::Declare::Base::Table extends DBIx::Class::Core {
 
   use MooseX::NonMoose;
