@@ -117,7 +117,7 @@ becomes the parent of the returned context.
   # this is used to partition off the yield stack
   method yield_nothing { $self -> _yield(sub{ '' }) }
 
-  method yield(Object $ctx?) {
+  method yield(Maybe[Object] $ctx?) {
     if($self -> has_yield) {
       return $self -> _yield -> ($ctx || $self);
     }

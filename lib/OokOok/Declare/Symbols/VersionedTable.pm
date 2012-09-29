@@ -67,7 +67,10 @@ sub init_meta {
 
   my $version_pkg = $package . "Version";
   eval { Module::Load::load($version_pkg) };
-  if(!$@) {
+  if($@) {
+    warn "Unable to load $version_pkg: $@\n";
+  }
+  else {
     $version_pkg -> add_columns( $meta -> foreign_key, {
       data_type => 'integer',
       is_nullable => 0,

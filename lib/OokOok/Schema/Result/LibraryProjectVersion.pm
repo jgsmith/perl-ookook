@@ -17,4 +17,10 @@ table_version OokOok::Schema::Result::LibraryProjectVersion {
     size => 32,
   );
 
+  before insert {
+    if(!$self -> library_date) {
+      $self -> library_date(DateTime->now);
+    }
+  }
+
 }

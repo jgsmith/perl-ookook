@@ -129,24 +129,19 @@ sub has_editions {
   if(!$class) {
     $class = $meta -> {package} . "Edition";
   }
-  eval { Module::Load::load($class) };
-  if($@) {
-    warn "Unable to load editions class $class\n";
-  }
-  else {
-    $class -> add_columns( $meta -> foreign_key, {
-      data_type => "integer",
-      is_nullable => 0,
-    } );
-    my $nom = $meta -> {package} -> table;
-    $class -> belongs_to(
-      $nom, $meta -> {package}, $meta -> foreign_key
-    );
-    $meta -> {package} -> has_many(
-      editions => $class, $meta -> foreign_key
-    );
-    $class -> meta -> add_method( owner => sub { $_[0] -> $nom } );
-  }
+  Module::Load::load($class);
+  $class -> add_columns( $meta -> foreign_key, {
+    data_type => "integer",
+    is_nullable => 0,
+  } );
+  my $nom = $meta -> {package} -> table;
+  $class -> belongs_to(
+    $nom, $meta -> {package}, $meta -> foreign_key
+  );
+  $meta -> {package} -> has_many(
+    editions => $class, $meta -> foreign_key
+  );
+  $class -> meta -> add_method( owner => sub { $_[0] -> $nom } );
 }
 
 sub prop {

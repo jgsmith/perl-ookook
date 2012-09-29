@@ -26,33 +26,28 @@ ok $uuid, "Theme has an id";
 is $json->{name}, "Test Theme", "Right name";
 is $json->{description}, "Theme for testing.", "Right description";
 
-my $snippet_layout = <<EOXML;
+sub create_layout {
+  my($name, $layout) = @_;
+
+  my $j = POST_ok("/theme/$uuid/theme-layout", {
+    name => $name,
+    layout => $layout,
+  }, "Create a snippet layout ($name)");
+
+  my $layout_uuid = $j->{id};
+  ok $layout_uuid, "Snippet layout ($name) has a uuid";
+  is $j->{name}, $name, "Right name";
+  is $j->{layout}, $layout, "Right layout";
+  return $layout_uuid;
+}
+
+my $snippet_layout_uuid = create_layout( "Snippet", <<EOXML );
 <r:snippet r:name="header" />
 EOXML
 
-$json = POST_ok("/theme/$uuid/theme-layout", {
-  name => 'Snippet',
-  layout => $snippet_layout,
-}, "Create a snippet layout");
-
-my $snippet_layout_uuid = $json->{id};
-ok $snippet_layout_uuid;
-is $json->{name}, "Snippet", "Right name";
-is $json->{layout}, $snippet_layout, "Right layout";
-
-my $body_layout = <<EOXML;
+my $body_layout_uuid = create_layout( "Body", <<EOXML );
 <r:content r:part="body" />
 EOXML
-
-$json = POST_ok("/theme/$uuid/theme-layout", {
-  name => 'Body',
-  layout => $body_layout,
-}, "Create a body layout");
-
-my $body_layout_uuid = $json->{id};
-ok $body_layout_uuid;
-is $json->{name}, "Body", "Right name";
-is $json->{layout}, $body_layout, "Right layout";
 
 # now make sure the theme lists both layouts
 
@@ -110,10 +105,14 @@ like $content, qr/<p>Page Body<\/p>/, "Right content";
 # Now try snippets
 #
 
-POST_ok("/project/$project_uuid/snippet", {
+$json = POST_ok("/project/$project_uuid/snippet", {
   name => "header",
   content => "<p>Heading</p>"
 }, "Add header snippet");
+
+my $header_snippet_uuid = $json -> {id};
+
+ok $header_snippet_uuid, "Snippet 'header' has a uuid";
 
 $json = PUT_ok($page_url, {
   layout => $snippet_layout_uuid,
@@ -128,5 +127,37 @@ ok( $req->is_success, "Get page");
 $content = $req -> content;
 
 like $content, qr/<p>Heading<\/p>/, "Right content";
+
+#
+# Now test some tags in the core taglib
+#
+
+PUT_ok("/snippet/$header_snippet_uuid", {
+  content => "<p><r:yield /></p>"
+});
+
+my $yield_layout = create_layout( "Yield-Layout", <<EOXML );
+<r:snippet r:name="header">FooBarBaz</r:snippet>
+EOXML
+
+POST_ok("/theme/$uuid/edition", {}, "Close theme edition");
+
+sleep(1);
+
+PUT_ok("/project/$project_uuid", {
+  theme_date => DateTime->now->iso8601
+}, "Update project theme date");
+
+$json = PUT_ok($page_url, {
+  layout => $yield_layout,
+}, "Set layout for page");
+
+$req = request("/dev/v/$project_uuid/");
+ok( $req->is_success, "Get page");
+
+# diag $req -> content;
+$content = $req -> content;
+
+like $content, qr/<p>FooBarBaz<\/p>/, "Right content";
 
 done_testing();

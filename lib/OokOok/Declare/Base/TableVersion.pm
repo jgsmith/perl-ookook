@@ -22,7 +22,7 @@ class OokOok::Declare::Base::TableVersion extends OokOok::Declare::Base::Table {
     if($dirty_columns{$self -> owner -> result_source -> from . "_id"}) {
       $self -> discard_changes();
       OokOok::Exception::PUT -> forbidden(
-        message => "Unable to update an object's edition"
+        message => "Unable to update an object's owner"
       );
     }
 

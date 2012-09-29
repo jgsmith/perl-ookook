@@ -144,26 +144,21 @@ sub prop {
 sub owns_many {
   my($meta, $method, $class, %options) = @_;
 
-  eval { Module::Load::load($class) };
+  Module::Load::load($class);
 
-  if($@) {
-    warn "Unable to load $class for $method\n";
-  }
-  else {
-    %options = (cascade_copy => 0, cascade_delete => 1, %options);
+  %options = (cascade_copy => 0, cascade_delete => 1, %options);
 
-    $class -> add_columns( $meta -> foreign_key, {
-      data_type => 'integer',
-      is_nullable => 1,
-    } );
-    $class -> belongs_to(
-      edition => $meta -> {package}, $meta -> foreign_key
-    );
+  $class -> add_columns( $meta -> foreign_key, {
+    data_type => 'integer',
+    is_nullable => 1,
+  } );
+  $class -> belongs_to(
+    edition => $meta -> {package}, $meta -> foreign_key
+  );
 
-    $meta -> {package} -> has_many(
-      $method, $class, $meta -> foreign_key, \%options
-    );
-  }
+  $meta -> {package} -> has_many(
+    $method, $class, $meta -> foreign_key, \%options
+  );
 }
 
 sub references {

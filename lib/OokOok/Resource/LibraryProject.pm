@@ -1,10 +1,10 @@
 use OokOok::Declare;
 
-# PODNAME: OokOok::Resource::LibraryTheme
+# PODNAME: OokOok::Resource::LibraryProject
 
-# ABSTRACT: REST resource associating a library with a theme
+# ABSTRACT: REST resource associating a library with a project
 
-resource OokOok::Resource::LibraryTheme {
+resource OokOok::Resource::LibraryProject {
 
   prop id => (
     type => 'Str',
@@ -25,10 +25,10 @@ resource OokOok::Resource::LibraryTheme {
     date => sub { $_[0] -> source_version -> library_date },
   );
 
-  belongs_to theme => 'OokOok::Resource::Theme', (
+  belongs_to project => 'OokOok::Resource::Project', (
     required => 1,
     is => 'ro',
-    source_version => sub { $_[0] -> source -> theme },
+    source_version => sub { $_[0] -> source -> project },
   );
 
   method can_PUT { 0 }

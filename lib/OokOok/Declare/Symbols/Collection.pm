@@ -59,8 +59,7 @@ sub init_meta {
 
   $class =~ s{::Collection::}{::Resource::};
 
-  eval { Module::Load::load($class) };
-  $meta -> resource_class($class) unless $@;
+  eval { $meta -> resource_class($class) };
 
   $class =~ s{^.*::Resource::}{DB::};
 
@@ -78,8 +77,7 @@ sub init_meta {
 sub resource_class {
   my($meta, $class) = @_;
 
-  eval { Module::Load::load($class) };
-  croak $@ if $@;
+  Module::Load::load($class);
   $meta -> resource_class($class);
 }
   

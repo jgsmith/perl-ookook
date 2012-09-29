@@ -11,8 +11,26 @@ editioned_table OokOok::Schema::Result::Project {
   owns_many pages    => 'OokOok::Schema::Result::Page';
   owns_many snippets => 'OokOok::Schema::Result::Snippet';
 
+  owns_many library_projects => 'OokOok::Schema::Result::LibraryProject';
+
   after insert {
     my $ce = $self -> current_edition;
+  
+    # now add libraries that should be included automatically
+    my @libs = $self -> result_source -> schema-> resultset('Library') -> all;
+    for my $lib (@libs) {
+      # we should filter out any libraries without a published edition
+      next unless $lib -> new_project_prefix && $lib -> has_public_edition;
+
+      my $pl = $self -> create_related('library_projects', {
+        library_id => $lib -> id
+      });
+      $pl -> insert_or_update;
+      $pl -> current_version -> update({
+        prefix => $lib -> new_project_prefix
+      });
+    }
+
     my $home_page = $self -> create_related('pages', { });
 
     $home_page -> current_version -> update({
@@ -27,21 +45,6 @@ editioned_table OokOok::Schema::Result::Project {
 
     while($ce -> is_changed) {
       $ce -> update_or_insert;
-    }
-  
-    # now add libraries that should be included automatically
-    my @libs = $self -> result_source->schema-> resultset('Library') -> search({
-      new_project_prefix => { '!=' => undef }
-    });
-    for my $lib (@libs) {
-      # we should filter out any libraries without a published edition
-      #my $pl = $self -> create_related('library_projects', {
-      #  library_id => $lib -> id
-      #});
-      #$pl -> insert_or_update;
-      #$pl -> current_version -> update({
-      #  prefix => $lib -> new_project_prefix
-      #});
     }
     
     $self;

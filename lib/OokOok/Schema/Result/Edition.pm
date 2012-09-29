@@ -28,6 +28,8 @@ table_edition OokOok::Schema::Result::Edition {
   owns_many page_versions => "OokOok::Schema::Result::PageVersion";
   owns_many snippet_versions => "OokOok::Schema::Result::SnippetVersion";
 
+  owns_many library_project_versions => "OokOok::Schema::Result::LibraryProjectVersion";
+
   around close {
     my $next = $self->$orig(@_);
     return unless $next;

@@ -46,6 +46,23 @@ resource OokOok::Resource::PagePart {
     my $content = $self -> content;
     my $filter = $self -> filter;
 
+    # TODO: make the processor be a property of the project somehow
+    #       especially if we can cache the project resource object
+    #       for a request
+    my %ns;
+    for my $lib ($self -> page -> project -> libraries) {
+      my $prefix = $lib -> prefix;
+      my $uin = "uin:uuid:" . $lib -> id;
+      $ns{$prefix} = $uin;
+    }
+
+    my $processor = OokOok::Template::Processor -> new(
+      c => $self -> c,
+      namespaces => \%ns,
+    );
+
+    $content = $processor -> parse($content) -> render($context);
+
     my $formatter = eval {
       "OokOok::Formatter::$filter" -> new
     };

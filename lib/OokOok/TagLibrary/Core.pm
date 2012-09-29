@@ -18,7 +18,7 @@ Usage (within a snippet):
       <p>after</p>
     </div>
 
-If the above snippet was named “yielding”, you could call it from any Page,
+If the above snippet was named "yielding", you could call it from any Page,
 Layout or Snippet as follows:
 
     <%ns%:snippet name="yielding">Content within</%ns%:snippet>

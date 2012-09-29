@@ -7,11 +7,9 @@ use OokOok::Declare;
 resource OokOok::Resource::Project
   with OokOok::Role::Resource::HasEditions {
 
-  method edition_resource_class { 'OokOok::Resource::Edition' }
+  use OokOok::Resource::LibraryProject;
 
-  #has '+source' => (
-  #  isa => 'OokOok::Model::DB::Project',
-  #);
+  method edition_resource_class { 'OokOok::Resource::Edition' }
 
   prop name => (
     required => 1,
@@ -115,6 +113,17 @@ resource OokOok::Resource::Project
     }
 
     return 0;
+  }
+
+  method libraries {
+    map {
+      OokOok::Resource::LibraryProject -> new(
+        c => $self -> c,
+        source => $_,
+        is_development => $self -> is_development,
+        date => $self -> date
+      )
+    } $self -> source -> library_projects;
   }
 
   method page (Str $uuid) {
