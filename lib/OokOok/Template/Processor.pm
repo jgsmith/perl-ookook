@@ -22,21 +22,25 @@ class OokOok::Template::Processor {
 
   has _taglibs => ( is => 'rw', isa => 'HashRef', default => sub { +{ } });
 
-  has _parser => ( is => 'rw', isa => 'OokOok::Template::Parser' );
+  has _parser => ( is => 'rw', isa => 'OokOok::Template::Parser', lazy => 1, builder => '_build_parser' );
 
   method BUILD {
     for my $taglib (keys %{$self -> c -> config -> {'TagLibs'} -> {module} || {}}) {
-      $self -> register_taglib($taglib);
+      $self -> register_taglib(taglib => $taglib);
     }
-
-    $self -> _parser(
-      OokOok::Template::Parser -> new(
-        prefixes => [ keys %{$self -> namespaces} ],
-      )
-    );
   }
 
-  method register_taglib ($taglib) {
+  method _build_parser {
+    OokOok::Template::Parser -> new(
+      prefixes => [ keys %{$self -> namespaces} ],
+    )
+  }
+
+=method register_taglib (Str :$prefix, Str :$taglib)
+
+=cut
+
+  method register_taglib (Str :$prefix, Str :$taglib) {
     eval { Module::Load::load $taglib };
 
     if($@) {
@@ -54,6 +58,9 @@ class OokOok::Template::Processor {
       }
       if($ns) {
         $self -> _taglibs -> {$ns} = $taglib;
+        if($prefix) {
+          $self -> namespaces -> {$prefix} = $ns;
+        }
       }
     }
   }
@@ -89,3 +96,20 @@ Parses and renders the provided template content.
     $doc;
   }
 }
+
+=head1 SYNOPSIS
+
+ my $processor = OokOok::Template::Processor -> new(
+   c => $ctx,
+   namespaces => \%ns,
+ );
+
+ my $content = $processor -> parse($template) -> render($context);
+
+=head1 DESCRIPTION
+
+This class provides the high-level interface for managing template
+rendering. 
+
+=cut
+

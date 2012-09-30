@@ -65,6 +65,9 @@ sub init_meta {
 
   $package -> set_primary_key('id');
 
+  # This avoids an extraneous warning when testing with Dist::Zilla
+  return $meta if $package eq 'Test::UseAllModules';
+
   my $version_pkg = $package . "Version";
   eval { Module::Load::load($version_pkg) };
   if($@) {

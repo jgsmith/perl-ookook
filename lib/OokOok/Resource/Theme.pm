@@ -54,11 +54,6 @@ resource OokOok::Resource::Theme
     source => sub { $_[0] -> source -> editions },
   );
 
-  after EXPORT ($bag) {
-    $bag -> add_meta(closed_on => $self -> source_version -> closed_on)
-      if $self -> source_version -> closed_on;
-  }
-
   method libraries {
     map {
       OokOok::Resource::LibraryTheme -> new(
@@ -139,4 +134,23 @@ resource OokOok::Resource::Theme
     }
   }
 
+  after EXPORT ($bag) {
+    $bag -> add_meta(
+      closed_on => $self -> source_version -> closed_on -> iso8601
+    ) if $self -> source_version -> closed_on;
+
+    # add meta info about libraries and prefixes
+    my %prefixes;
+    for my $lib ($self -> libraries) {
+      my $lib_ob = $lib -> library;
+      $prefixes{$lib -> prefix} = +{
+        library => $lib -> id,
+        namespace => 'uin:uuid:' . $lib -> id,
+        date => $lib_ob -> date,
+        name => $lib_ob -> name,
+        description => $lib_ob -> description,
+      };
+    }
+    $bag -> add_meta('libraries', \%prefixes);
+  }
 }

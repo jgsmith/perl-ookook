@@ -1,5 +1,7 @@
 package OokOok::Declare::Meta::TableVersion;
 
+# ABSTRACT: Meta information for table version classes
+
 use Moose::Role;
 use namespace::autoclean;
 

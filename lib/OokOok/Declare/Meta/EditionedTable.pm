@@ -1,5 +1,7 @@
 package OokOok::Declare::Meta::EditionedTable;
 
+# ABSTRACT: Meta information about editioned table classes
+
 use Moose::Role;
 use namespace::autoclean;
 

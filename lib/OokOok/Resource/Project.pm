@@ -79,11 +79,6 @@ resource OokOok::Resource::Project
     is => 'rw',
   );
 
-  after EXPORT ($bag) {
-    $bag -> add_meta(closed_on => $self -> source_version -> closed_on -> iso8601)
-      if $self -> source_version -> closed_on;
-  }
-
   method can_PUT {
     # the user has to be in a rank that can modify the project itself
     # if we get here, we have a user
@@ -164,4 +159,25 @@ resource OokOok::Resource::Project
       );
     }
   }
+
+  after EXPORT ($bag) {
+    $bag -> add_meta(
+      closed_on => $self -> source_version -> closed_on -> iso8601
+    ) if $self -> source_version -> closed_on;
+
+    # add meta info about libraries and prefixes
+    my %prefixes;
+    for my $lib ($self -> libraries) {
+      my $lib_ob = $lib -> library;
+      $prefixes{$lib -> prefix} = +{
+        library => $lib -> id,
+        namespace => 'uin:uuid:' . $lib -> id,
+        date => $lib_ob -> date,
+        name => $lib_ob -> name,
+        description => $lib_ob -> description,
+      };
+    }
+    $bag -> add_meta('libraries', \%prefixes);
+  }
+
 }

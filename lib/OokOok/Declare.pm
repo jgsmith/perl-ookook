@@ -107,16 +107,17 @@ below the C<OokOok::Declare::Keyword::> namespace. Here are the manual pages
 you will be interested in to familiarize yourself with this module's syntax
 extensions:
 
-L<OokOok::Declare::Keyword::RESTController>
-L<OokOok::Declare::Keyword::PlayController>
-L<OokOok::Declare::Keyword::AdminController>
-L<OokOok::Declare::Keyword::Resource>
-L<OokOok::Declare::Keyword::TagLibrary>
-L<OokOok::Declare::Keyword::Table>
-L<OokOok::Declare::Keyword::VersionedTable>
-L<OokOok::Declare::Keyword::EditionedTable>
-L<OokOok::Declare::Keyword::TableVersion>
-L<OokOok::Declare::Keyword::TableEdition>
+=for :list
+* L<OokOok::Declare::Keyword::RESTController>
+* L<OokOok::Declare::Keyword::PlayController>
+* L<OokOok::Declare::Keyword::AdminController>
+* L<OokOok::Declare::Keyword::Resource>
+* L<OokOok::Declare::Keyword::TagLibrary>
+* L<OokOok::Declare::Keyword::Table>
+* L<OokOok::Declare::Keyword::VersionedTable>
+* L<OokOok::Declare::Keyword::EditionedTable>
+* L<OokOok::Declare::Keyword::TableVersion>
+* L<OokOok::Declare::Keyword::TableEdition>
 
 =head1 SEE ALSO
 

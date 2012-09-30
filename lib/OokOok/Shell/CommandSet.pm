@@ -39,7 +39,7 @@ sub prefix {
 sub command {
   my($meta, $name, $code) = @_;
 
-  print STDERR "Adding command $name\n";
+  #print STDERR "Adding command $name\n";
 
   $meta -> {package} -> instance -> commands -> {$name} = $code;
 }

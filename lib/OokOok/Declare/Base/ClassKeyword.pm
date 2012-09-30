@@ -9,10 +9,12 @@ class OokOok::Declare::Base::ClassKeyword
   with CatalystX::Declare::DefaultSuperclassing {
 
   after add_namespace_customizations (Object $ctx, Str $package) {
-    $ctx -> add_preamble_code_parts( 'use CLASS;' );
-    $ctx -> add_preamble_code_parts(
-      sprintf 'use %s qw( %s )', $self -> import_ookook_symbols_from($ctx), join ' ', $self -> imported_ookook_symbols($ctx),
-    ) if $self -> import_ookook_symbols_from($ctx);
+    my $code = "use CLASS"; 
+    if($self -> import_ookook_symbols_from($ctx)) {
+      $code .= 
+        sprintf "; use %s qw( %s )", $self -> import_ookook_symbols_from($ctx), join ' ', $self -> imported_ookook_symbols($ctx),
+    }
+    $ctx -> add_preamble_code_parts( $code );
   }
 
   method import_ookook_symbols_from (Object $ctx) { ... }

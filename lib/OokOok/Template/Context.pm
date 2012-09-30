@@ -7,6 +7,20 @@ use MooseX::Declare;
 class OokOok::Template::Context {
   use MooseX::Types::Moose qw/CodeRef ArrayRef Str HashRef/;
 
+=method new (%options)
+
+The constructor takes the following options:
+
+=for :list
+* parent (OokOok::Template::Context)
+* document (OokOok::Template::Document)
+* namespaces (HashRef)
+* vars (HashRef)
+* is_mockup (Bool)
+* resources (HashRef)
+
+=cut
+
   has parent => (
     isa => 'Maybe[OokOok::Template::Context]',
     is => 'ro',
@@ -67,12 +81,29 @@ becomes the parent of the returned context.
     );
   }
 
+=method delocalize ()
+
+Returns the parent of the context if the context has a parent. Otherwise,
+it returns itself.
+
+This is useful if you need to climb up the stack of localizations.
+
+=cut
+
   method delocalize {
     if($self -> has_parent) { return $self -> parent; }
     else                    { return $self;           }
   }
 
-  method get_resource ($key) {
+=method get_resource (Str $key)
+
+Returns the resource associated with the given key. If the resource
+is not in the current context, then the request is passed to the
+context's parent context if it has one.
+
+=cut
+
+  method get_resource (Str $key) {
     if(!exists($self -> resources -> {$key}) && $self -> parent) {
       $self -> parent -> get_resource($key);
     }
@@ -81,15 +112,31 @@ becomes the parent of the returned context.
     }
   }
 
-  method set_resource ($key, $value) {
+=method set_resource (Str $key, Object $value)
+
+Associates the given resource object with the key in the current context.
+
+=cut
+
+  method set_resource (Str $key, Object $value) {
     $self -> resources -> {$key} = $value;
   }
+
+=method set_var (Str $key, Any $val)
+
+Associates the given value with the key in the current context.
+
+=cut
 
   method set_var ($key, $val) {
     $self -> vars -> {$key} = $val;
   }
 
-  method get_var ($key) {
+=method get_var (Str $key)
+
+=cut
+
+  method get_var (Str $key) {
     if(!exists($self -> vars -> {$key})) {
       if($self -> has_parent) {
         return $self -> parent -> get_var($key);
@@ -102,6 +149,10 @@ becomes the parent of the returned context.
     return $val;
   }
 
+=method has_var (Str $key)
+
+=cut
+
   method has_var ($key) {
     return 1 if exists($self -> vars -> {$key});
 
@@ -110,23 +161,44 @@ becomes the parent of the returned context.
     return $self -> parent -> has_var($key);
   }
 
+=method set_yield (CodeRef $code)
+
+=cut
+
   method set_yield (CodeRef $code) {
     $self -> _yield($code);
   }
 
+=method yield_nothing ()
+
+=cut
+
   # this is used to partition off the yield stack
   method yield_nothing { $self -> _yield(sub{ '' }) }
 
-  method yield(Maybe[Object] $ctx?) {
+=method yield (Object $ctx?)
+
+=cut
+
+  method yield(Object $ctx?) {
     if($self -> has_yield) {
       return $self -> _yield -> ($ctx || $self);
     }
     elsif($self -> has_parent) {
-      return $self -> parent -> yield($ctx);
+      if($ctx) {
+        return $self -> parent -> yield($ctx);
+      }
+      else {
+        return $self -> parent -> yield;
+      }
     }
   }
-      
-  method get_namespace ($prefix) {
+
+=method get_namespace (Str $prefix)
+
+=cut
+
+  method get_namespace (Str $prefix) {
     if(!exists($self -> namespaces -> {$prefix})) {
       if($self -> has_parent) {
         return $self -> parent -> get_namespace($prefix);
@@ -135,7 +207,11 @@ becomes the parent of the returned context.
     return $self -> namespaces -> {$prefix};
   }
 
-  method get_prefix ($ns) {
+=method get_prefix (Str $ns)
+
+=cut
+
+  method get_prefix (Str $ns) {
     for my $p (keys %{$self -> namespaces}) {
       return $p if $self -> namespaces -> {$p} eq $ns;
     }
@@ -143,7 +219,11 @@ becomes the parent of the returned context.
       if $self -> has_parent;
   }
 
-  method process_node ($node) {
+=method process_node (Str|HashRef|ArrayRef $node)
+
+=cut
+
+  method process_node (Str|HashRef|ArrayRef $node) {
     if(is_Str($node)) {
       return $node;
     }
@@ -158,7 +238,7 @@ becomes the parent of the returned context.
       }
       return ''; # unrecognized tag/namespace
     }
-    elsif(is_ArrayRef($node)) {
+    else { # if(is_ArrayRef($node)) {
       return join '', map {
         $self -> process_node($_)
       } @{$node};
