@@ -33,13 +33,6 @@ admin_controller OokOok::Controller::Admin::Board {
   }
 
   under board_base {
-    final action board_view as '' {
-      my $uuid = $ctx -> stash -> {board} -> id;
-      $ctx -> response -> redirect(
-        $ctx -> uri_for("/admin/board/$uuid/member")
-      );
-    }
-
     action board_members_base as 'member';
 
     action board_applicants_base as 'applicant';
@@ -47,6 +40,15 @@ admin_controller OokOok::Controller::Admin::Board {
     action board_ranks_base as 'rank';
 
     action settings;
+  }
+
+  under board_base {
+    final action board_view as '' {
+      my $uuid = $ctx -> stash -> {board} -> id;
+      $ctx -> response -> redirect(
+        $ctx -> uri_for("/admin/board/$uuid/member")
+      );
+    }
   }
 
   under board_ranks_base {
@@ -58,7 +60,6 @@ admin_controller OokOok::Controller::Admin::Board {
       $ctx -> stash -> {board_rank} = $rank;
     }
   }
-      
 
   under board_members_base {
     action board_member_base ($uuid) as '' {
@@ -77,6 +78,52 @@ admin_controller OokOok::Controller::Admin::Board {
         $ctx -> detach(qw/Controller::Root default/);
       }
       $ctx -> stash -> {board_application} = $application;
+    }
+  }
+
+  under board_ranks_base {
+
+    final action board_ranks as '' {
+      $ctx -> stash -> {ranks} = [
+        sort {
+          $a -> position <=> $b -> position
+        } @{$ctx -> stash -> {board} -> board_ranks || []}
+      ];
+      $ctx -> stash -> {template} = "/admin/board/settings/rank";
+    }
+
+  }
+
+  under board_rank_base {
+    final action board_rank_child as 'child' {
+      $ctx -> stash -> {parent_rank} = $ctx -> stash -> {board_rank};
+      if($ctx -> request -> method eq 'POST') {
+        $self -> POST($ctx,
+          collection => 'OokOok::Collection::BoardRank',
+        );
+      }
+      $ctx -> stash -> {template} = "/admin/board/settings/rank/new";
+    }
+
+    final action board_rank_edit as 'edit' {
+      my $rank = $ctx -> stash -> {board_rank};
+      if($ctx -> request -> method eq 'POST') {
+        $self -> PUT($ctx,
+          resource => $rank,
+        );
+      }
+      else {
+        $ctx -> stash -> {form_data} = {
+          name => $rank -> name,
+        };
+      }
+      $ctx -> stash -> {template} = "/admin/board/settings/rank/edit";
+    }
+
+    final action board_rank_discard as 'delete' {
+      if($ctx -> request -> method eq 'POST') {
+      }
+      $ctx -> stash -> {template} = "/admin/board/settings/rank/discard";
     }
   }
 
@@ -219,15 +266,6 @@ admin_controller OokOok::Controller::Admin::Board {
   }
 
   under board_base {
-    final action board_ranks as 'rank' {
-      $ctx -> stash -> {ranks} = [
-        sort {
-          $a -> position <=> $b -> position
-        } @{$ctx -> stash -> {board} -> board_ranks || []}
-      ];
-      $ctx -> stash -> {template} = "/admin/board/settings/rank";
-    }
-
     final action board_application as 'application' {
       my $board = $ctx -> stash -> {board};
 
@@ -281,6 +319,5 @@ use Data::Dumper;
         $ctx -> stash -> {form_data} = {permissions => $ctx -> stash -> {board} -> permissions};
       }
     }
-
   }
 }

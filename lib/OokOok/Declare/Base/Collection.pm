@@ -226,9 +226,16 @@ The following methods are provided for collections.
   
     my $results = $self -> verify('POST', $json);
     delete @$results{grep { !exists $json->{$_} } keys %$results};
+
+    $self -> c -> log -> debug("POSTing for " . (ref $self || $self));
   
-    my $r = $self -> POST($results);
-    $guard -> commit;
+    my $r = eval { $self -> POST($results) };
+    if($@) {
+      $self -> c -> log -> debug("Error POSTing: $@\n");
+    }
+    else {
+      $guard -> commit;
+    }
     return $r;
   }
   
@@ -236,6 +243,8 @@ The following methods are provided for collections.
     my $c = $self -> c;
     my $resource_class = $self -> resource_class;
     my $q = $self -> c -> model($self -> resource_model);
+
+    $c -> log -> debug("In POST for " . (ref $self || $self));
 
     # not to worry about constraints just yet
     # we want to use any columns in $json that are appropriate for
@@ -268,6 +277,7 @@ The following methods are provided for collections.
       source => $new_resource,
     );
   
+    $c -> log -> debug("PUTting to " . (ref $resource || $resource));
     $resource -> PUT($json);
   }
   

@@ -6,8 +6,19 @@ use OokOok::Declare;
 
 resource OokOok::Resource::Asset {
 
-  has '+source' => (
-    isa => 'OokOok::Model::DB::Asset',
+  prop id => (
+    is => 'ro',
+    source => sub { $_[0] -> source -> uuid },
+  );
+
+  prop media_format => (
+    is => 'rw',
+    source => sub { $_[0] -> source_version -> media_format },
+  );
+
+  prop name => (
+    is => 'rw',
+    source => sub { $_[0] -> source_version -> name },
   );
 
   after EXPORT ($bag) {
@@ -15,3 +26,10 @@ resource OokOok::Resource::Asset {
   }
 
 }
+
+=head1 DESCRIPTION
+
+Assets are used in the theme and layout of a project site. Assets are not
+considered objects of study.
+
+=cut

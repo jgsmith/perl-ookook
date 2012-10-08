@@ -181,7 +181,7 @@ admin_controller OokOok::Controller::Admin::Project {
       my $project = $ctx -> stash -> {project};
 
       if($ctx -> request -> method eq 'POST') {
-        my $guard = $ctx -> model('DB') -> txn_scope_guard;
+        my $guard = $ctx -> transaction_guard;
         my $page = $self -> POST($ctx, 
           collection => 'OokOok::Collection::Page',
           redirect => 0,

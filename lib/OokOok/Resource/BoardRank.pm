@@ -21,6 +21,11 @@ resource OokOok::Resource::BoardRank {
     type => 'Int',
   );
 
+  belongs_to parent_rank => 'OokOok::Resource::BoardRank', (
+    is => 'rw',
+    source => sub { $_[0] -> source -> parent_rank },
+  );
+
   belongs_to board => 'OokOok::Resource::Board', (
     is => 'ro',
     required => 1,

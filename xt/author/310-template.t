@@ -33,6 +33,14 @@ my $doc = $processor -> parse( <<EOXML );
 <foo>
   <bar/>
   <r:snippet r:name="bar" />
+  <r:theme:asset:image r:name="foo" />
+  <r:theme:asset:link r:name="foo" />
+  <r:theme>
+    <r:asset r:name="foo">
+      <r:link />
+      <r:image />
+    </r:asset>
+  </r:theme>
   <!-- comment -->
 </foo>
 EOXML

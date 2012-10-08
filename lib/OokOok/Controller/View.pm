@@ -64,15 +64,17 @@ play_controller OokOok::Controller::View {
   }
 
   method play_GET ($ctx, @path) {
+    my $page = $ctx -> stash -> {page};
+
+    # TODO: intervene with cache of rendered page content
     my $context = OokOok::Template::Context -> new(
       c => $ctx
     );
 
-    my $page = $ctx -> stash -> {page};
     $context -> set_resource(page => $page);
     $context -> set_resource(project => $ctx -> stash -> {project});
-
     $ctx -> stash -> {rendering} = $page -> render($context);
+
     my $project_uuid = $page -> project -> source -> uuid;
     $ctx -> stash -> {stylesheets} = [ map {
       $ctx -> uri_for( "/s/$project_uuid/style/$_" )

@@ -42,10 +42,14 @@ controller OokOok::Declare::Base::Admin {
           $ctx -> stash -> {error_msg} = $e -> message;
           $ctx -> stash -> {missing} = $e -> missing;
           $ctx -> stash -> {invalid} = $e -> invalid;
+          $ctx -> log -> debug("PUT error: " . $e -> message);
+          $ctx -> log -> debug("missing: " . join(", ", @{$e -> missing}));
+          $ctx -> log -> debug("invalid: " . join(", ", @{$e -> invalid}));
           return;
         }
         if($e -> isa('OokOok::Exception')) {
           $ctx -> stash -> {error_msg} = $e -> message;
+          $ctx -> log -> debug("PUT error: " . $e -> message);
           return;
         }
       }

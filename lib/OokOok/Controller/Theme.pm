@@ -52,7 +52,6 @@ rest_controller OokOok::Controller::Theme {
     );
   }
 
-
   method styles_GET  ($ctx) { $self -> collection_GET($ctx); }
   method styles_POST ($ctx) { $self -> collection_POST($ctx); }
 

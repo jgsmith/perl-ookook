@@ -53,6 +53,23 @@ play_controller OokOok::Controller::Style {
 
       $ctx -> stash -> {resource} = $style;
     }
+
+    action tasset_base ($uuid) as 'asset' {
+      my $theme = $ctx -> stash -> {theme};
+
+      if(!$theme -> can_PLAY) {
+        $ctx -> log -> info("Can't play theme");
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+
+      my $asset = $theme -> asset($uuid);
+
+      if(!$asset) {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+
+      $ctx -> stash -> {resource} = $asset;
+    }
   }
 
   under tstyle_base {
@@ -78,6 +95,25 @@ play_controller OokOok::Controller::Style {
 
       $ctx -> stash -> {resource} = $style;
     }
+
+    action asset_base ($uuid) as 'asset' {
+      # closed editions are considered published (i.e., publicly readable)
+      # the edition resource
+      if(!$ctx -> stash -> {project} -> can_PLAY) {
+        $ctx -> log -> info("Can't play project");
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+
+      my $theme = $ctx -> stash -> {project} -> theme;
+      my $asset = $theme -> asset($uuid);
+
+      if(!$asset) {
+        $ctx -> detach(qw/Controller::Root default/);
+      }
+
+
+      $ctx -> stash -> {resource} = $asset;
+    }
   }
 
   under style_base {
@@ -93,5 +129,27 @@ play_controller OokOok::Controller::Style {
 
   method tstyle_GET ($ctx) {
     $self -> style_GET($ctx);
+  }
+
+  under asset_base {
+    final action asset as '' isa REST;
+  }
+
+  method asset_GET ($ctx) {
+    my $asset = $ctx -> stash -> {resource};
+    my $gridfs_file = $ctx -> model('MongoDB') -> get_file(
+      $asset -> file_id
+    );
+    if(!$gridfs_file) {
+      $ctx -> detach(qw/Controller::Root default/);
+    }
+    $ctx -> response -> status(200);
+    $ctx -> response -> content_type( $asset -> mime_type );
+    $ctx -> response -> content_length( $asset -> size );
+    $ctx -> response -> body( $gridfs_file -> slurp ); # safest for now
+  }
+
+  method tasset_GET ($ctx) {
+    $self -> asset_GET($ctx);
   }
 }

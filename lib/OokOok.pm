@@ -75,6 +75,18 @@ For example:
     },
   );
 
+=method transaction_guard ()
+
+Returns a guard object. If the object goes out of scope before its
+C<commit> method is called, then the transaction will be rolled back.
+This only works with the PostgreSQL database for now.
+
+=cut
+
+  method transaction_guard {
+    $self -> model('DB') -> txn_scope_guard;
+  }
+
 =method prepare_path ()
 
 OokOok will check the first component of the request path. If it

@@ -186,6 +186,29 @@ admin_controller OokOok::Controller::Admin::Theme {
       $ctx -> stash -> {template} = "/admin/theme/content/variable";
     }
 
+    final action theme_asset_new as 'asset/new' {
+      if($ctx -> request -> method eq 'POST') {
+        $ctx -> log -> debug("POSTing new theme asset");
+        my $guard = $ctx -> transaction_guard;
+        my $asset = $self -> POST($ctx,
+          collection => 'OokOok::Collection::ThemeAsset',
+          redirect => 0,
+        );
+        $ctx -> log -> debug("Uploads: " . join(", ", keys %{$ctx -> request->uploads}));
+        if($asset && $ctx -> request -> upload('raw')) {
+          $asset -> PUT_raw($ctx -> request -> upload('raw'));
+          $guard -> commit;
+        }
+        my $url = $ctx -> request -> uri;
+        my $path = $url -> path;
+        $path =~ s{new$}{};
+        $url -> path($path);
+        $ctx -> response -> redirect( $url );
+        $ctx -> detach;
+      }
+      $ctx -> stash -> {template} = "/admin/theme/content/asset/new";
+    }
+
     final action theme_layout_new as 'layout/new' {
       if($ctx -> request -> method eq 'POST') {
         $self -> POST($ctx, 
