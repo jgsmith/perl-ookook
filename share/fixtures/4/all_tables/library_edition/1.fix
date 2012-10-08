@@ -1,0 +1,14 @@
+$HASH1 = {
+           closed_on
+                    => '2012-10-05 19:17:12.528942',
+           created_on
+                    => '2012-10-05 19:17:12.528942',
+           description
+                    => 'Core tags',
+           id       => 1,
+           library_id
+                    => 1,
+           name     => 'Core',
+           published_for
+                    => '["2012-10-05 19:17:12.528942",)'
+         };

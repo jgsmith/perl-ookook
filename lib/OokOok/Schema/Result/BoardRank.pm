@@ -21,6 +21,23 @@ Table OokOok::Schema::Result::BoardRank {
 
   owns_many board_members => 'OokOok::Schema::Result::BoardMember';
 
+  prop parent_rank_id => (
+    data_type => 'integer',
+    is_nullable => 1,
+  );
+
+  $CLASS -> belongs_to(
+    parent_rank => 'OokOok::Schema::Result::BoardRank', 'parent_rank_id'
+  );
+
+  $CLASS -> has_many(
+    children => 'OokOok::Schema::Result::BoardRank', 'parent_rank_id'
+  );
+
+  method all_children {
+    map { ($_, $_ -> all_children) } $self -> children;
+  }
+
 =method has_permission (Str $permission)
 
 Returns true if the board rank has the given permission.
@@ -38,16 +55,12 @@ segments.
 =cut
 
   method has_permission (Str $p) {
-    # we check to see if our rank is less than or equal to the rank
-    # required for the particular permission
-    my $position = $self -> position;
+    return 1 unless $self -> parent_rank; # top rank can do anything
 
-    return 1 if $position == 0; # top rank always can do anything
+    my %ranks = map { ($_ -> uuid => 1) } $self -> all_children;
+    $ranks{$self -> uuid} = 1;
 
-    my $board = $self -> board;
-    my %ranks = map { $_ -> uuid => $_ -> position } $self -> board -> board_ranks;
-
-    my $perms = $board -> permissions;
+    my $perms = $self -> board -> permissions;
 
     while($p) {
       my $rp = $p;
@@ -55,10 +68,7 @@ segments.
       $rp =~ s{\*\\\.}{[^.]*\\.}g;
       $rp =~ s{\*\*\\\.}{.*\\.}g;
       $rp = qr/^$rp(\..*)?$/;
-      return 1 if 
-        grep { defined($perms -> {$_}) &&
-               $ranks{$perms->{$_}} >= $position
-             }
+      return 1 if @{$ranks{@{$perms->{$_}||[]}}};
         grep { $_ =~ $rp } 
         keys %{$perms}
       ;

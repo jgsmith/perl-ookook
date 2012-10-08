@@ -156,6 +156,9 @@ sub prop {
     $info{inflate} ||= $inflate_datetime;
     $info{deflate} ||= $deflate_datetime;
   }
+  elsif($info{data_type} eq 'varchar') {
+    $info{data_type} = 'text';
+  }
 
   $meta -> {package} -> add_columns( $method, \%info );
 

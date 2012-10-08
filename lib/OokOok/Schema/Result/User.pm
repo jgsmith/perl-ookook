@@ -43,6 +43,18 @@ Table OokOok::Schema::Result::User {
     is_nullable => 1,
   );
 
+  prop experience => (
+    data_type => 'integer',
+    is_nullable => 0,
+    default_value => 0,
+  );
+
+  prop spendable_karma => (
+    data_type => 'integer',
+    is_nullable => 0,
+    default_value => 0,
+  );
+
   owns_many oauth_identities => 'OokOok::Schema::Result::OauthIdentity';
   owns_many board_members    => 'OokOok::Schema::Result::BoardMember';
   owns_many board_applicants => 'OokOok::Schema::Result::BoardApplicant';
@@ -67,7 +79,7 @@ requirements, designing new themes is restricted.
 
   method may_design { $self -> is_admin; }
 
-=method has_permission ($board, Str $permission)
+=method has_permission (Maybe[Object] $board, Str $permission)
 
 Returns true if the user has the appropriate permission with the given
 board.
@@ -82,9 +94,11 @@ See L<OokOok::Schema::Result::BoardRank> for more information.
 
 =cut
 
-  method has_permission (Object $board, Str $permission) {
+  method has_permission (Maybe[Object] $board, Str $permission) {
     # admins can do anything
     return 1 if $self -> is_admin;
+
+    return 0 unless $board;
 
     # need to find membership, then do query
     my $membership = $self -> board_membership;
