@@ -43,17 +43,20 @@ by a L<OokOok::Template::Document> instance.
         $self -> characters($c);
         $text = substr($text, length($c));
       }
-      if($text =~ m{\A<(/?)$prefix_regex(\S+)}s) {
+      if($text =~ m{\A<(/?)$prefix_regex([-A-Za-z0-9:_]+)}s) {
         my($ending, $prefix, $local) = ($1, $2, $3);
         $text = substr($text, length($prefix) + length($local) 
                                               + ($ending ? 3 : 2));
         if($ending) {
+          if(!($text =~ s{\A\s*>}{}s)) {
+            # error parsing
+          }
           $self -> end_element( $prefix, $local );
         }
         else {
           $self -> start_element( $prefix, $local );
           # now parse attributes
-          while($text && $text =~ m{\A(\s*$prefix_regex(\S+)\s*=\s*)}s) {
+          while($text && $text =~ m{\A(\s*$prefix_regex([-A-Za-z0-9_]+)\s*=\s*)}s) {
             my($ent, $aprefix, $attr) = ($1, $2, $3);
             $text = substr($text, length($ent));
             # now parse out balanced quotation
@@ -87,8 +90,10 @@ by a L<OokOok::Template::Document> instance.
 =cut
 
   method start_element (Str $prefix, Str $el) {
-    push @{$self -> _el_stack -> [0] -> {children}}, $self -> _buffer;
-    $self -> _buffer('');
+    if($self -> _buffer ne '') {
+      push @{$self -> _el_stack -> [0] -> {children}}, $self -> _buffer;
+      $self -> _buffer('');
+    }
     unshift @{$self -> _el_stack}, { prefix => $prefix, local => $el, attrs => {}, children => [] };
   }
 
@@ -111,6 +116,32 @@ by a L<OokOok::Template::Document> instance.
     push @{$self -> _el_stack -> [0] -> {children}}, $self -> _buffer;
     $self -> _buffer('');
     my $info = shift @{$self -> _el_stack};
-    push @{$self -> _el_stack -> [0] -> {children}}, $info;
+    # if $info->{local} has ':', then we need to expand into children
+    if($info->{local} =~ /:/) {
+      my @bits = split(/:/, $info->{local});
+      my $root = {
+        prefix => $info->{prefix},
+        local => shift(@bits),
+        attrs => $info->{attrs},
+        children => [],
+      };
+      push @{$self -> _el_stack -> [0] -> {children}}, $root;
+      my $cinfo = $root;
+
+      while(@bits) {
+        $cinfo  = {
+          prefix => $info->{prefix},
+          local => shift(@bits),
+          attrs => $info->{attrs},
+          children => [],
+        };
+        push @{$root -> {children}}, $cinfo;
+        $root = $cinfo;
+      }
+      $cinfo -> {children} = $info->{children};
+    }
+    else {
+      push @{$self -> _el_stack -> [0] -> {children}}, $info;
+    }
   }
 }

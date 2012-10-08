@@ -17,10 +17,30 @@ class OokOok::Declare::Base::TagLibrary {
   method process_node ($ctx, $node) {
     # we want to pull out attributes and such based on needs of tag
     my $name = $node -> {local};
-    my $einfo = $self -> meta -> element( $name );
-    return if !$einfo; # TODO: perhaps throw an error if not a defined element
+    my @context = $ctx -> get_namespace_context($node -> {prefix});
+    push @context, $name;
+    my $einfo;
+    while(!$einfo && @context) {
+      $einfo = $self -> meta -> element( join(":", @context) );
+      shift @context;
+    }
 
-    return if !$einfo -> {impl}; # Nothing to do, so don't do anything
+    # if we don't find anything, then we'll push the tag name onto the
+    # stack and dive in
+    if(!$einfo || !$einfo -> {impl}) {
+      if(@{$node->{children}||[]}) {
+        $ctx = $ctx -> localize;
+        $ctx -> add_namespace_context($node -> {prefix}, $name);
+        return $ctx -> process_node( $node -> {children} );
+      }
+      else {
+        # TODO: perhaps throw an error if not a defined element
+        return '';
+      }
+    }
+      
+
+    return '' if !$einfo -> {impl}; # Nothing to do, so don't do anything
 
     my $context = $ctx -> localize;
     my $xmlns;
@@ -55,6 +75,8 @@ class OokOok::Declare::Base::TagLibrary {
     if($einfo -> {yields} && @{$node -> {children}||[]}) {
       $yield = sub { 
         my $ctx = @_ ? $_[0] : $context;
+        $ctx = $ctx -> localize;
+        $ctx -> add_namespace_context($node -> {prefix}, $name);
         $ctx -> process_node( $node -> {children} || [''] );
       };
     }

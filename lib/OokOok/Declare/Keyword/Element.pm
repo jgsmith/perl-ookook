@@ -4,6 +4,9 @@ use MooseX::Declare;
 
 # ABSTRACT: Handle tag library element declarations
 
+$OokOok::Declare::SCOPE::UNDER = '';
+@OokOok::Declare::SCOPE::UNDER_STACK = ( );
+
 class OokOok::Declare::Keyword::Element 
   with MooseX::Declare::Syntax::KeywordHandling {
 
@@ -12,15 +15,12 @@ class OokOok::Declare::Keyword::Element
   use Carp qw( croak );
 
   use constant STOP_PARSING => '__MXDECLARE_STOP_PARSING__';
+  use constant UNDER_STACK  => '@OokOok::Declare::SCOPE::UNDER_STACK';
 
   use aliased 'CatalystX::Declare::Context::StringParsing';
   use aliased 'MooseX::Method::Signatures::Meta::Method';
   use aliased 'MooseX::MethodAttributes::Role::Meta::Method', 'AttributeRole';
   use aliased 'MooseX::MethodAttributes::Role::Meta::Role',   'AttributeMetaRole';
-
-  method register_method_declaration($meta, $name, $method) {
-    $meta -> add_method( $name, $method -> body );
-  }
 
   method parse (Object $ctx, Str :$modifier?, Int :$skipped_declarator = 0) {
     my %attributes = ( Returns => 'Str' );
@@ -73,8 +73,6 @@ class OokOok::Declare::Keyword::Element
     if($attributes{Flags}{yielding}) {
       push @signature, 'CodeRef $yield';
     }
-    #push @signature, $attributes{Signature} || ();
-    #my $signature = join(", ", @signature);
 
     # register the element with the metaclass
     my %el_info = (
@@ -120,9 +118,8 @@ class OokOok::Declare::Keyword::Element
     $ctx -> inject_code_parts_here($code);
     $ctx -> inc_offset(length $code);
 
-    if($ctx -> peek_next_char eq '{') {
+    if($ctx -> peek_next_char eq '{') { # '}'
       $ctx -> inject_if_block( $ctx -> scope_injector_call . $method -> injectable_code );
-      #$ctx -> inject_if_block( $method -> injectable_code );
     }
     else {
       $ctx -> inject_code_parts_here(
@@ -147,6 +144,14 @@ class OokOok::Declare::Keyword::Element
       my $name = substr($attributes{Subname}, 1, -1);
       $body = $attrs and $attrs = {} if ref $attrs eq 'CODE';
 
+      my $under = join("_", "element", grep { defined } (@OokOok::Declare::SCOPE::UNDER_STACK, $attrs->{Chained}));
+
+      my $el_name = join(":", grep { defined } (@OokOok::Declare::SCOPE::UNDER_STACK, $attrs->{Chained}, $el_info{name}));
+
+      $name = $under . substr($name, 7);
+
+      $method -> name($name);
+
       my $real_method = $method -> reify(
         actual_body => $body,
         attributes => $compiled_attrs,
@@ -155,7 +160,7 @@ class OokOok::Declare::Keyword::Element
 
       my $prepare_meta = sub {
         my($meta) = @_;
-        $meta -> add_element( $el_info{name}, %el_info );
+        $meta -> add_element( $el_name, %el_info, impl => $name );
         $meta -> add_method( $name, $real_method );
         #$meta -> register_method_attributes($meta -> name -> can( $real_method -> name ), $compiled_attrs );
       };
@@ -194,6 +199,7 @@ class OokOok::Declare::Keyword::Element
     my $proto = $ctx -> strip_proto || '';
 
     $attrs -> {ElementName} ||= $name;
+
     $name = "'element_" . substr($name, 1);
     $attrs -> {Subname} = $name;
     $attrs -> {Signature} = $proto;
@@ -235,6 +241,27 @@ class OokOok::Declare::Keyword::Element
     return;
   }
 
+  method _handle_under_option (Object $ctx, HashRef $attrs) {
+    my $target = $self -> _strip_actionpath($ctx, interpolate => 1);
+    $ctx -> skipspace;
+
+    if($ctx->peek_next_char eq '{' and $self -> identifier eq 'under') {
+      $ctx -> inject_if_block(
+        $ctx -> scope_injector_call(sprintf 'pop %s;',UNDER_STACK) .
+        sprintf ';push %s, %s;',
+          UNDER_STACK,
+          $target,
+      );
+      return STOP_PARSING;
+    }
+
+    $attrs->{Chained} = $target;
+
+    return sub {
+      my $method = shift;
+    };
+  }
+
   method _strip_string (Object $ctx, :$interpolate?) {
     $ctx -> skipspace;
 
@@ -261,6 +288,39 @@ class OokOok::Declare::Keyword::Element
       croak "Invalid syntax for element name: $rest";
     }
   }
+
+  method _strip_actionpath (Object $ctx, :$interpolate?) {
+
+    $ctx->skipspace;
+    my $linestr = $ctx->get_linestr;
+    my $rest    = substr($linestr, $ctx->offset);
+    my $interp  = sub { $interpolate ? "'$_[0]'" : $_[0] };
+
+    # find simple barewords
+    if ($rest =~ /^ ( [_a-z] [_a-z0-9]* ) \b/ix) {
+      substr($linestr, $ctx->offset, length($1)) = '';
+      $ctx->set_linestr($linestr);
+      return $interp->($1);
+    }
+
+    # allow single quoted more complex barewords
+    elsif ($rest =~ /^ ' ( (?:[.:;,_a-z0-9]|\/)* ) ' /ix) {
+      substr($linestr, $ctx->offset, length($1) + 2) = '';
+      $ctx->set_linestr($linestr);
+      return $interp->($1);
+    }
+
+    # double quoted strings and variables
+    elsif ($interpolate and my $str = $ctx->get_string) {
+      return $str;
+    }
+
+    # not suitable as action path
+    else {
+      croak "Invalid syntax for action path: $rest";
+    }
+  }
+
  
   with 'MooseX::Declare::Syntax::KeywordHandling';
 

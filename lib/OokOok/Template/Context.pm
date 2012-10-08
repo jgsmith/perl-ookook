@@ -59,6 +59,13 @@ The constructor takes the following options:
     lazy => 1,
   );
 
+  has _namespace_context => (
+    isa => 'HashRef',
+    is => 'rw',
+    default => sub { +{ } },
+    lazy => 1,
+  );
+
   has _yield => (
     isa => 'Maybe[CodeRef]',
     is => 'rw',
@@ -241,7 +248,21 @@ Associates the given value with the key in the current context.
     else { # if(is_ArrayRef($node)) {
       return join '', map {
         $self -> process_node($_)
-      } @{$node};
+      } grep { defined } @{$node};
+    }
+  }
+
+  method add_namespace_context ( Str $ns, Str $local ) {
+    $self -> _namespace_context -> {$ns} ||= [];
+    push @{$self -> _namespace_context -> {$ns}}, split(/:/, $local);
+  }
+
+  method get_namespace_context( Str $ns ) {
+    if($self -> has_parent) {
+      return $self -> parent -> get_namespace_context($ns), @{$self -> _namespace_context -> {$ns} || []};
+    }
+    else {
+      return @{$self -> _namespace_context -> {$ns} || []};
     }
   }
 }

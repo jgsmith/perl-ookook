@@ -6,6 +6,26 @@ use OokOok::Declare;
 
 taglib OokOok::TagLibrary::Core {
 
+  under theme {
+
+    element asset (Str :$name) is yielding returns HTML {
+      "<!-- theme:asset -->" . $yield -> ()
+    }
+
+    under asset {
+
+      element link (Str :$title?) returns HTML {
+        "<!-- theme:asset:link -->"
+      }
+
+      element image (Str :$title?) returns HTML {
+        "<!-- theme:asset:image -->"
+      }
+
+    }
+
+  }
+
   documentation <<'EOD';
 Used within a snippet as a placeholder for substitution of child content, when
 the snippet is called as a double tag.
