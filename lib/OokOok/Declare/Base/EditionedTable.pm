@@ -22,8 +22,17 @@ class OokOok::Declare::Base::EditionedTable extends OokOok::Declare::Base::Table
   }
 
   method edition_for_date ($date?) {
-    my $q = $self -> editions;
-    $self -> _apply_date_constraint($q, "", $date) -> first;
+    if(!defined $date or !$date) { return $self -> current_edition; }
+
+    if(!ref $date) {
+      $date = DateTime::Format::ISO8601 -> parse_datetime($date);
+    }
+
+    $date = $self -> result_source -> schema -> storage -> datetime_parser -> format_datetime($date);
+
+    $self -> search_related( editions =>
+      { "me.published_for" => { '@>' => \"'$date'::timestamp" }, }
+    ) -> first;
   }
 
   *version_for_date = \&edition_for_date;
@@ -32,7 +41,16 @@ class OokOok::Declare::Base::EditionedTable extends OokOok::Declare::Base::Table
     defined $self -> last_closed_on;
   }
 
-  method current_edition { $self -> edition_for_date }
+  method current_edition { 
+    my $ce = $self -> editions -> search({
+        "me.published_for" => undef
+      },
+    ) -> first;
+    if(!$ce) {
+      $ce = $self -> edition_for_date(DateTime -> now);
+    }
+    $ce;
+  }
 
   *current_version = \&current_edition;
 

@@ -216,7 +216,8 @@ EOD
   }
 
   element find (Str :$url) is yielding returns HTML {
-    my $root = "file://" . $ctx -> get_resource("top_page") -> slug_path;
+    my $root = eval { "file://" . $ctx -> get_resource("top_page") -> slug_path };
+    return '' unless $root;
     $root =~ s{/+}{/}g;
     my $uri = URI->new_abs($url->[0], $root);
     my $top = $ctx -> get_resource("project") -> home_page;

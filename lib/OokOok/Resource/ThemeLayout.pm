@@ -102,6 +102,6 @@ resource OokOok::Resource::ThemeLayout {
         return $ret;
       }
     }
-    return "<p>Layout " . $self -> source_version -> name . "</p>";
+    return "<p>Layout not found.</p>";
   }
 }  

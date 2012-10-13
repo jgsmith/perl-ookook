@@ -183,6 +183,7 @@ role OokOok::Declare::Meta::Resource {
   method get_prop (Str $key) { $self -> properties -> {$key} }
 
   method _get_source_version (Object $thing, Object|Str $date?) {
+    #print STDERR "_get_source_version($thing, $date)\n";
     if($thing) {
       if(!$date) {
         if($thing -> can("current_version")) {

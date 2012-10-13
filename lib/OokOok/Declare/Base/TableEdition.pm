@@ -117,7 +117,7 @@ class OokOok::Declare::Base::TableEdition
   override update (HashRef $columns?) {
     if($self -> is_closed) {
       my $current_published_for = $self -> published_for;
-      if(defined $current_published_for->start) {
+      if(defined $current_published_for->end && $current_published_for->end->is_finite) {
         $self -> discard_changes;
         OokOok::Exception::PUT->bad_request(
           message => "Unable to modify a closed edition"

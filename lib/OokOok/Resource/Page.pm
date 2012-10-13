@@ -121,9 +121,8 @@ resource OokOok::Resource::Page {
     # current operating edition
     if($self -> c -> stash -> {date}) {
       $q = $q -> search({
-        "edition.closed_on" => { "<=" => $self -> c -> stash -> {date} }
+        "me.published_for" => { '@>' => \("'".OokOok::Util::DB::deflate_datetime($self -> c -> stash -> {date})."'::timestamp") }
       }, {
-        join => [qw/edition/]
       });
     }
   

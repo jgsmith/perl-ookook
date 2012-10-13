@@ -46,7 +46,7 @@ class OokOok::Declare::Base::TableVersion extends OokOok::Declare::Base::Table {
           );
         }
         if(defined($current_published_for)) {
-          if(defined $current_published_for -> end) {
+          if(defined $current_published_for -> end && $current_published_for -> end -> is_finite) {
             $self -> discard_changes;
             OokOok::Exception::PUT -> forbidden(
               message => "Unable to modify the publication dates of a published resource"

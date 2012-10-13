@@ -51,12 +51,12 @@ table_edition OokOok::Schema::Result::Edition {
     /]);
 
     return $next;
-  };
+  }
 
   after delete {
     # now we want to delete any pages or snippets that don't have versions
-    map { eval { $_ -> delete } } 
+    eval { $_ -> delete } for
         grep { $_ -> versions -> count == 0 }
-             $self -> project -> pages, $self -> project -> snippets;
+             $self -> project -> pages, $self -> project -> snippets, $self -> project -> assets;
   }
 }
