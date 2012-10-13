@@ -10,6 +10,7 @@ editioned_table OokOok::Schema::Result::Project {
 
   owns_many pages    => 'OokOok::Schema::Result::Page';
   owns_many snippets => 'OokOok::Schema::Result::Snippet';
+  owns_many assets   => 'OokOok::Schema::Result::Asset';
 
   owns_many library_projects => 'OokOok::Schema::Result::LibraryProject';
 

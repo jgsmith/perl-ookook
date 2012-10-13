@@ -31,7 +31,7 @@ sub init_meta {
 sub prefix {
   my($meta, $prefix) = @_;
 
-  print STDERR "Setting prefix $prefix\n";
+  #print STDERR "Setting prefix $prefix\n";
 
   $meta -> {pacakge} -> instance -> prefix($prefix);
 }

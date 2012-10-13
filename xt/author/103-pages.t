@@ -77,9 +77,15 @@ my $qpv = $page -> version_for_date();
 
 is $qpv->id, $pv->id, "We get the same page version through current_version/version_for_date";
 
+is $pv->status, 0, "Page version is 'approved'";
+
 # Now we can close the working edition. This will mark the edition
 # as frozen and create a new working edition for the project.
 $instance -> close;
+
+is scalar(keys %{ +{$instance -> get_dirty_columns} }), 0, "No dirty columns left after closing instance";
+ok !$instance -> is_changed, "Instance is marked as not changed";
+ok $instance -> is_closed, "Instance is closed";
 
 # The working edition should be differant than the one we just froze.
 my $next_instance = $project -> current_edition;
@@ -97,10 +103,18 @@ is $qp->id, $page->id, "We get the right page through the project after closing"
 
 my $current_version = $page -> current_version;
 
+is $current_version->edition->id, $instance->id, "Current version of page is with old edition";
+
+is $current_version->edition->is_closed, $instance->is_closed, "Current version of page is associated with an edition that is as closed as the closed edition";
+
+ok $current_version->edition->is_closed, "Current version is associated with closed edition";
+
 # Now we update the page.
 my $next_version = $current_version -> update({
-  title => "Test Page 2"
+  title => "Test Page 2",
 });
+
+ok !$next_version -> is_published, "Not yet published";
 
 # This should result in two page objects in the DB.
 is $page_rs->count, 2, "two pages in the DB after updating page";
@@ -119,24 +133,32 @@ is $current_version -> page->uuid, $next_version -> page->uuid, "Shared uuid";
 # that was created when we updated the old one.
 $qp = $project -> page($uuid) -> current_version;
 
+ok $qp, "We get a current version of the page";
+ok !$qp->is_published, "It's not yet published";
+
 is $qp->id, $next_version -> id, "We get the right page version through the project after updating page";
 
 # Now we can find the page appropriate for the project at the time the
 # prior working edition was frozen.
 $qp = $project -> page($uuid) -> version_for_date($instance -> closed_on);
 
+ok $qp, "We got a version of the page for " . $instance -> closed_on;
+ok $qp -> is_published, "It's published";
+
+ok $qp -> edition -> is_closed, "We got the page that is with a closed edition";
+
 # This should be the original page and not the updated one.
 is $qp->id, $current_version->id, "We get the frozen version when given a date";
 
 # Now if we try to modify $page, we should get an error since there's already
 # a page in the working edition with the same uuid.
-eval {
-  $current_version->update({
-    title => "Test Page 3"
-  });
-};
-
-ok $@, "We get an error when we try to modify an old copy of a page that already has a version in the current edition";
+#eval {
+#  $current_version->update({
+#    title => "Test Page 3"
+#  });
+#};
+#
+#ok $@, "We get an error when we try to modify an old copy of a page that already has a version in the current edition";
 
 # Since it was an error, the datbase should be unchanged.
 is $page_rs->count, 2, "two pages in the DB after updating page version";

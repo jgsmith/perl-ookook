@@ -12,8 +12,10 @@
   <!-- time: [% project.date %] -->
 </head>
 <body>
-<div id="ookook-container">
 <div id="ookook-rendering" class="hyphenate">
+  [% IF page.status != 0 %]
+    <img src="/static/images/demo.png" style="position: absolute; top: 10%; left: 40%;" />
+  [% END %]
 [%- rendering -%]
 </div>
 <div id="ookook-apparatus">
@@ -31,7 +33,6 @@
 </div>
 <div id="ookook-apparatus-handle">
   <a href="#">OokOok!</a>
-</div>
 </div>
 </div>
 <script src="/static/js/Hyphenator.js" type="text/javascript"></script>

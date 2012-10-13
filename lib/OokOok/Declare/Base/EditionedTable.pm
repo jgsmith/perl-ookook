@@ -29,20 +29,17 @@ class OokOok::Declare::Base::EditionedTable extends OokOok::Declare::Base::Table
   *version_for_date = \&edition_for_date;
 
   method has_public_edition {
-    0 < $self->editions->search(
-      { 'closed_on' => { '!=', undef } },
-    ) -> count;
+    defined $self -> last_closed_on;
   }
 
   method current_edition { $self -> edition_for_date }
 
   *current_version = \&current_edition;
 
+  # the edition that includes now should be unclosed, and thus
+  # the most recently closed/published edition
   method last_closed_on {
-    my $last = $self -> editions -> search(
-      { 'closed_on' => { '!=', undef } },
-      { order_by => { -desc => 'id' }, rows => 1 }
-    ) -> first;
+    my $last = $self -> edition_for_date(DateTime -> now);
 
     if($last) {
       return $last -> closed_on;
@@ -104,7 +101,7 @@ L<OokOok::Schema::Result::User> for more information.
         );
       }
       $q = $q -> search(
-        { $join."closed_on" => { '<=' => $date } },
+        { "me.published_for" => { '@>' => \"'$date'::timestamp" } },
       );
     }
 

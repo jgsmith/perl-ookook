@@ -69,6 +69,8 @@ resource OokOok::Resource::Snippet {
 
   method render (Object $context) {
     # first, we filter the content
+    return '' unless $self -> source_version;
+
     my $content = $self -> content;
     my $filter = $self -> filter;
 

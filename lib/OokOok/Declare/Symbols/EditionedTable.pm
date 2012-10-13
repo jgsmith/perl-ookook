@@ -16,6 +16,12 @@ use Module::Load ();
 use OokOok::Declare::Meta::EditionedTable;
 use OokOok::Declare::Base::TableEdition;
 
+use MooseX::Types::Moose qw/Object/;
+
+use OokOok::Util::DB;
+
+*prop = \&OokOok::Util::DB::prop;
+
 Moose::Exporter->setup_import_methods(
   with_meta => [
     'owns_many', 'has_editions', 'prop',
@@ -23,21 +29,6 @@ Moose::Exporter->setup_import_methods(
   as_is => [ ],
   #also => 'Moose',
 );
-
-my $inflate_datetime = sub {
-  my $date = DateTime::Format::Pg->parse_datetime(shift);
-  $date -> set_formatter('OokOok::DateTime::Parser');
-  $date;
-};
-
-my $deflate_datetime = sub {
-  my $dt = shift;
-
-  if(!ref $dt) {
-    $dt = DateTime::Format::ISO8601 -> parse_datetime($dt);
-  }
-  DateTime::Format::Pg->format_datetime($dt);
-};
 
 sub init_meta {
   shift;
@@ -64,7 +55,6 @@ sub init_meta {
   $meta -> foreign_key($nom . "_id");
 
   # set up defaults
-  #$package -> load_components("InflateColumn::DateTime");
   
   $package -> table($nom);
   $package -> add_columns( 
@@ -80,6 +70,7 @@ sub init_meta {
     },
     board_id => {
       data_type => "integer",
+      is_foreign_key => 1,
       is_nullable => 1,
     },
     is_locked => {
@@ -110,6 +101,7 @@ sub owns_many {
   else {
     $class -> add_columns( $meta -> foreign_key, {
       data_type => "integer",
+      is_foreign_key => 1,
       is_nullable => 1,
     } );
     my $nom = $meta -> {package} -> table;
@@ -132,6 +124,7 @@ sub has_editions {
   Module::Load::load($class);
   $class -> add_columns( $meta -> foreign_key, {
     data_type => "integer",
+    is_foreign_key => 1,
     is_nullable => 0,
   } );
   my $nom = $meta -> {package} -> table;
@@ -142,32 +135,6 @@ sub has_editions {
     editions => $class, $meta -> foreign_key
   );
   $class -> meta -> add_method( owner => sub { $_[0] -> $nom } );
-}
-
-sub prop {
-  my($meta,  $method, %info) = @_;
-
-  # PostgreSQL supports the json column type - we just add the inflate/deflate
-  if($info{data_type} eq 'json') {
-    $info{inflate} ||= sub { decode_json shift };
-    $info{deflate} ||= sub { encode_json shift };
-  }
-  elsif($info{data_type} eq 'datetime') {
-    $info{inflate} ||= $inflate_datetime;
-    $info{deflate} ||= $deflate_datetime;
-  }
-  elsif($info{data_type} eq 'varchar') {
-    $info{data_type} = 'text';
-  }
-
-  $meta -> {package} -> add_columns( $method, \%info );
-
-  if($info{inflate} || $info{deflate}) {
-    $meta -> {package} -> inflate_column( $method, {
-      inflate => $info{inflate},
-      deflate => $info{deflate}
-    });
-  }
 }
 
 1;

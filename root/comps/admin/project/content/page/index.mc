@@ -11,8 +11,11 @@ $.pages => sub { [] }
 %     if($page->source_version->edition->is_closed) {
         Published
 %     }
-%     else {
-        Modified
+%     elsif($page->status == 0) {
+        Approved
+%     }
+%     elsif($page->status == 100) {
+        Draft
 %     }
 %   }}
 %   $.IndexItemActions {{
@@ -28,6 +31,13 @@ $.pages => sub { [] }
            "minus-sign", 
            "Discard Changes"
       ) %>
+      <% $.IndexItemTargetedAction(
+           0,
+           "/dev/v/" . $.project_id . '/' . $page->slug_path,
+           "screenshot",
+           "Preview",
+           "_" . $page->id
+         ) %>
 %   }}
 % }}
 </%method>

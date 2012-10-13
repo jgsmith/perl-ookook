@@ -22,6 +22,12 @@ use Module::Load ();
 
 use OokOok::Declare::Meta::Table;
 
+use MooseX::Types::Moose qw/Object/;
+
+use OokOok::Util::DB;
+
+*prop = \&OokOok::Util::DB::prop;
+
 Moose::Exporter->setup_import_methods(
   with_meta => [
     'prop', 'owns_many', 'with_uuid', 'references',
@@ -29,21 +35,6 @@ Moose::Exporter->setup_import_methods(
   as_is => [ ],
   #also => 'Moose',
 );
-
-my $inflate_datetime = sub {
-  my $date = DateTime::Format::Pg->parse_datetime(shift);
-  $date -> set_formatter('OokOok::DateTime::Parser');
-  $date;
-};
-
-my $deflate_datetime = sub {
-  my $dt = shift;
-
-  if(!ref $dt) {
-    $dt = DateTime::Format::ISO8601 -> parse_datetime($dt);
-  }
-  DateTime::Format::Pg->format_datetime($dt);
-};
 
 sub init_meta {
   shift;
@@ -99,41 +90,6 @@ sub with_uuid {
   $meta -> {package} -> add_unique_constraint(['uuid']);
 }
 
-sub prop {
-  my($meta, $method, %info) = @_;
-
-  # PostgreSQL supports the json column type - we just add the inflate/deflate
-  if($info{data_type} eq 'json') {
-    $info{inflate} ||= sub { decode_json shift };
-    $info{deflate} ||= sub { encode_json shift };
-  }
-  elsif($info{data_type} eq 'datetime') {
-    $info{inflate} ||= $inflate_datetime;
-    $info{deflate} ||= $deflate_datetime;
-  }
-  elsif($info{data_type} eq 'varchar') {
-    $info{data_type} = 'text';
-  }
-
-  $meta -> {package} -> add_columns( $method, \%info );
-
-  if($info{inflate} || $info{deflate}) {
-    $meta -> {package} -> inflate_column( $method, {
-      inflate => $info{inflate},
-      deflate => $info{deflate}
-    });
-  }
-
-  if($info{unique}) {
-    if(is_ArrayRef($info{unique})) {
-      $meta -> {package} -> add_unique_constraint([@{$info{unique}}, $method]);
-    }
-    else {
-      $meta -> {package} -> add_unique_constraint([$method]);
-    }
-  }
-}
-
 sub owns_many {
   my($meta, $method, $class, %options) = @_;
 
@@ -145,6 +101,7 @@ sub owns_many {
   else {
     $class -> add_columns( $meta -> foreign_key, {
       data_type => 'integer',
+      foreign_key => 1,
       is_nullable => 1,
     } );
     $class -> belongs_to(
@@ -167,6 +124,7 @@ sub references {
   else {
     $meta -> {package} -> add_columns( $class -> meta -> foreign_key, {
       data_type => 'integer',
+      foreign_key => 1,
       is_nullable => 1,
     } );
     $meta -> {package} -> belongs_to(

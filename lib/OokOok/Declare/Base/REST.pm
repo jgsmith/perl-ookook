@@ -72,10 +72,18 @@ controller OokOok::Declare::Base::REST
 
   method collection_POST ($ctx) {
     my $manifest = $ctx -> stash -> {collection} -> _POST($ctx -> req -> data);
-    $self -> status_created($ctx,
-      location => $manifest->link,
-      entity => $manifest -> _GET(1)
-    );
+    if($manifest) {
+      $self -> status_created($ctx,
+        location => $manifest->link,
+        entity => $manifest -> _GET(1)
+      );
+    }
+    else {
+      $ctx -> response -> status(500);
+      $ctx -> log -> debug( "Unable to create resource for " . (ref $self || $self) );
+      $self -> _set_entity( $ctx, { error => 'Unable to create resource' } );
+      return 1;
+    }
   }
 
   method collection_OPTIONS ($ctx) {

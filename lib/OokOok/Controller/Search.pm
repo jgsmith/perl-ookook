@@ -21,12 +21,12 @@ controller OokOok::Controller::Search {
       #if(defined $ctx -> request -> params -> {s}) {
       #  $params{scroll_id} = $ctx -> request -> params -> {s};
       #  $params{scroll} = '5m',
-      #  $result = $ctx -> model('ES') -> scroll( %params );
+      #  $result = $ctx -> model('Search') -> scroll( %params );
       #}
       #else {
         if(defined $ctx -> request -> params -> {q}) {
           $params{query} -> {query_string} -> {query} =
-            $ctx -> model('ES') -> query_parser->filter(
+            $ctx -> model('Search') -> query_parser->filter(
               $ctx -> request -> params -> {q}
             );
           #$params{scroll} = '5m';
@@ -45,7 +45,7 @@ controller OokOok::Controller::Search {
           };
           $params{index} = "projects";
           $params{type} = [qw/page snippet/];
-          $result = $ctx -> model('ES') -> search( %params );
+          $result = $ctx -> model('Search') -> search( %params );
         }
         else {
           $result = {};

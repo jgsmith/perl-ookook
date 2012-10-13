@@ -129,7 +129,35 @@ resource OokOok::Resource::Theme
         c => $self -> c,
         is_development => $self -> is_development,
         date => $self -> date,
-        source => $s -> snippet,
+        source => $s -> theme_snippet,
+      );
+    }
+  }
+
+  method asset (Str $name) {
+    my $a = $self -> source -> theme_assets -> find({ uuid => $name });
+    if($a) {
+      return OokOok::Resource::ThemeAsset -> new(
+        c => $self -> c,
+        is_development => $self -> is_development,
+        date => $self -> date,
+        source => $a
+      );
+    }
+    my $s = $self -> c -> model('DB::ThemeAssetVersion') -> search({
+      'me.name' => $name,
+      'edition.theme_id' => $self -> source -> id,
+    }, {
+       join => [qw/edition/],
+       order_by => { -desc => 'me.theme_edition_id' },
+    }) -> first;
+
+    if($s) {
+      return OokOok::Resource::ThemeAsset -> new(
+        c => $self -> c,
+        is_development => $self -> is_development,
+        date => $self -> date,
+        source => $s -> theme_asset,
       );
     }
   }

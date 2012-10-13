@@ -15,6 +15,7 @@ OokOok requires the following non-Perl services:
 
 * PostgreSQL 9.2 or later
 * ElasticSearch
+* MongoDB (experimental support for theme assets)
 
 To install all of the Perl modules that OokOok uses, download a recent
 trial package of the distribution and run the following commands:

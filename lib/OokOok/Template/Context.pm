@@ -72,6 +72,22 @@ The constructor takes the following options:
     predicate => 'has_yield',
   );
 
+=method project_url (Str $path)
+
+Returns the proper URL given the project and dated or development version
+of the resource being viewed.
+
+=cut
+
+  method project_url (Str $path) {
+    my $project = $self -> get_resource('project');
+    return '' unless $project;
+
+    my $url = '/v/' . $project -> id . '/' . $path;
+    $url =~ s{/+}{/}g;
+    return $project -> c -> uri_for($url);
+  }
+
 =method localize ()
 
 Returns a new OokOok::Template::Context that provides a localized set of

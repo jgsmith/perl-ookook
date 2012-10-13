@@ -73,12 +73,16 @@ class OokOok::Declare::Keyword::Element
     if($attributes{Flags}{yielding}) {
       push @signature, 'CodeRef $yield';
     }
+    elsif($attributes{Flags}{structured}) {
+      push @signature, 'HashRef $children';
+    }
 
     # register the element with the metaclass
     my %el_info = (
       name => substr($attributes{ElementName}, 1, -1),
       impl => substr($attributes{Subname}, 1, -1),
       yields => $attributes{Flags}{yielding},
+      structured => $attributes{Flags}{structured},
       returns => $attributes{Returns},
     );
 

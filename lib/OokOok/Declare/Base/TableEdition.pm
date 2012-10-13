@@ -8,58 +8,85 @@ class OokOok::Declare::Base::TableEdition
       extends OokOok::Declare::Base::Table {
 
   use DateTime;
+  use DateTime::Span;
   use OokOok::Exception;
 
   before insert {
     $self -> created_on(DateTime -> now);
   }
 
-  method is_closed { defined $self -> closed_on }
+  method is_closed { defined($self -> closed_on); }
+
+  method closed_on {
+    defined($self -> published_for) ? $self -> published_for -> start : undef;
+  }
 
   # closing an edition indicates that the edition's associated data
-  # cannot be modified - it's frozen, but not published (yet)
+  # cannot be modified - it's published
   method close {
     return if $self -> is_closed;
 
+    my $now = DateTime -> now;
+
+    my $owner = $self -> owner;
+
+    # we need to mark ourselves as available for publication after we
+    # close off the previous edition, if there is one
+    my $current = $self -> owner -> edition_for_date($now);
+
+    if($current) {
+      # close off current edition
+      $current -> update({
+        published_for => DateTime::Span -> from_datetimes(
+          start => $current -> published_for -> start,
+          before => $now
+        ),
+      });
+    }
+
     my $next = $self -> copy({
-      created_on => DateTime -> now,
-      closed_on => undef
+      created_on => $now,
     });
 
     $self -> update({
-      closed_on => DateTime -> now
+      published_for => DateTime::Span -> from_datetimes(
+        start => $now,
+      ),
     });
 
     return $next;
   }
 
-  method is_published {
-    defined($self -> published) &&
-    defined($self -> published -> [0])
+  method move_statused_resources ($next, $resources) {
+    for my $resource (@$resources) {
+      $self -> $resource -> search({
+        status => { '>' => 0 }
+      }) -> update_all({
+        edition_id => $next -> id
+      });
+    }
   }
 
-  # a closed edition that has no succeeding closed edition that is published
-  # may be published. The currently published edition will be marked as no
-  # longer published
-  method publish {
-    return unless $self -> is_closed;
-
-    # now check succeeding editions
-    return if 0 < $self -> source -> select( {
-      'me.closed_on' => { '!=' => undef, '>' => $self -> closed_on },
-      'me.published_for' => { '!=' => undef },
-    } ) -> count;
-
-    my $timecut = DateTime->now -> add(seconds => 1) -> iso8601;
-    my $current = $self -> source -> select( {
-      'me.published_for' => { '@>' => $timecut },
-    } );
-    $current -> update({
-      published_for => [ $current->published_for->[0], $timecut ],
-    });
-    $self -> update({
-      published_for => [ $timecut, ],
-    });
+  method close_resources ($resources) {
+    my $now = $self -> closed_on;
+    for my $resource (@$resources) {
+      for my $item ($self -> $resource) {
+        my $ci = $item -> owner -> version_for_date($now);
+        if($ci) {
+          $ci -> update({
+            published_for => DateTime::Span -> from_datetimes(
+              start => $ci -> published_for -> start, 
+              before => $now
+            ),
+          });
+        }
+        $item -> update({
+          published_for => DateTime::Span -> from_datetimes(
+            start => $now,
+          ),
+        });
+      }
+    }
   }
 
   before delete {
@@ -76,7 +103,7 @@ class OokOok::Declare::Base::TableEdition
     if($prev) {
       $prev -> copy({
         created_on => DateTime -> now,
-        closed_on => undef
+        published_for => undef,
       });
     }
     else {
@@ -87,14 +114,32 @@ class OokOok::Declare::Base::TableEdition
     }
   }
 
-  before update {
+  override update (HashRef $columns?) {
     if($self -> is_closed) {
-      $self -> discard_changes;
-      OokOok::Exception::PUT->bad_request(
-        message => "Unable to modify a closed edition"
-      );
-    }
-  }
-}
+      my $current_published_for = $self -> published_for;
+      if(defined $current_published_for->start) {
+        $self -> discard_changes;
+        OokOok::Exception::PUT->bad_request(
+          message => "Unable to modify a closed edition"
+        );
+      }
+      $self -> set_inflated_columns($columns) if $columns;
+      my %dirty_columns = $self -> get_dirty_columns;
+      if(keys %dirty_columns > 1 || (keys %dirty_columns)[0] ne 'published_for') {
+        $self -> discard_changes;
+        OokOok::Exception::PUT->bad_request(
+          message => "Unable to modify a closed edition"
+        );
+      }
 
-__END__
+      if($self -> published_for -> start ne $current_published_for -> start) {
+        $self -> discard_changes;
+        OokOok::Exception::PUT->bad_request(
+          message => "Unable to modify a closed edition"
+        );
+      }
+    }
+    super;
+  }
+      
+}

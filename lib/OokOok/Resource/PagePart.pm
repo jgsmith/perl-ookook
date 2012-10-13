@@ -46,6 +46,8 @@ resource OokOok::Resource::PagePart {
     my $content = $self -> content;
     my $filter = $self -> filter;
 
+    return '' unless defined $content;
+
     # TODO: make the processor be a property of the project somehow
     #       especially if we can cache the project resource object
     #       for a request

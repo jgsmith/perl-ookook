@@ -46,8 +46,27 @@ resource OokOok::Resource::ThemeStyle {
     $self -> theme -> has_permission('theme.style.revert');
   }
 
+  method get_asset_url (Object $context, Str $name) {
+    # either we have it or the project has it, but we reference it through the
+    # theme's uuid -- the style provider will figure things out
+    my $asset = $self -> theme -> asset($name) or return '';
 
-  method render (Object $context?) {
-    $self -> styles;
+    my $project = $context -> get_resource('project');
+    if($project) {
+      $self -> c -> uri_for('/s/' . $project -> id . '/asset/' . $asset -> id);
+    }
+    else {
+      $self -> c -> uri_for('/ts/' . $self -> theme -> id . '/asset/' . $asset -> id);
+    }
+  }
+
+  method render (Object $context) {
+    # we need to translate any asset references...
+    # things like asset($name)
+    my $content = $self -> styles;
+    my @assets = keys %{ +{ map { $_ => 1 } $content =~ m{asset\((.*?)\)}gs } };
+    my %assets = map { $_ => "url(".$self->get_asset_url($context,$_).")" } @assets;
+    $content =~ s{asset\((.*?)\)}{$assets{$1}}ge;
+    $content;
   }
 }

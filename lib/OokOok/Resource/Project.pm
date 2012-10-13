@@ -160,6 +160,26 @@ resource OokOok::Resource::Project
     }
   }
 
+  method asset (Str $name) {
+    return; # we don't have assets yet for projects
+    my $s = $self -> c -> model('DB::AssetVersion') -> search({
+      'me.name' => $name,
+      'edition.project_id' => $self -> source -> id,
+    }, {
+      join => [qw/edition/],
+      order_by => { -desc => 'me.edition_id' },
+    }) -> first;
+
+    if($s) {
+      return OokOok::Resource::Asset -> new(
+        c => $self -> c,
+        is_development => $self -> is_development,
+        date => $self -> date,
+        source => $s -> snippet,
+      );
+    }
+  }
+
   after EXPORT ($bag) {
     $bag -> add_meta(
       closed_on => $self -> source_version -> closed_on -> iso8601

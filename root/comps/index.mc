@@ -21,6 +21,7 @@ $.posts => sub { [] }
 <section id="content" class="row">
 % for my $post (@{$.posts}) {
   <div class="box <% $post->{class} %>">
+    <h1><a href="<% $post->{link} %>"><% $post->{title} | H %></a></h1>
     <% $post->{content} %>
   </div>
 % }

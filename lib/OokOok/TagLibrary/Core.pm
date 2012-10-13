@@ -6,24 +6,227 @@ use OokOok::Declare;
 
 taglib OokOok::TagLibrary::Core {
 
-  under theme {
+  use Digest::MD5 qw(md5_hex);
 
-    element asset (Str :$name) is yielding returns HTML {
-      "<!-- theme:asset -->" . $yield -> ()
+  element random is structured returns HTML {
+    # we always return the same option for a given date/time
+    # this ensures reproducability
+    my $count = scalar(@{$children -> {option} || []});
+    return '' if $count < 1;
+
+    return $children -> {option} -> [0] -> () if $count == 1;
+
+    my $project = $ctx -> get_resource('project');
+    my $date = $project -> date || DateTime -> now;
+    my $n = hex(substr(md5_hex($date -> iso8601 . $project -> id), 0, 8));
+    print STDERR "Random: $n\nCount: $count\n";
+    $n = $n % $count;
+    $children -> {option} -> [$n] -> ();
+  }
+
+  under random {
+    element option is yielding returns HTML { $yield -> (); }
+  }
+
+  documentation <<'EOD';
+Renders a trail of breadcrumbs to the current page. The separator attribute
+specifies the HTML fragment that is inserted between each of the breadcrumbs. By
+default it is set to >. The boolean nolinks attribute can be specified to render
+breadcrumbs in plain text, without any links (useful when generating title tag).
+
+Usage
+
+    <%tag% [separator="separator_string"] [nolinks="true"]/>
+EOD
+
+  element breadcumbs (Str :$separator = ' &gt; ', Bool :$nolinks?) returns HTML {
+    my $page = $ctx -> get_resource("page");
+    my @crumbs;
+    my $title;
+
+    while($page) {
+      $title = $page -> title;
+      $title =~ s{&}{&amp;}g;
+      $title =~ s{<}{&lt;}g;
+      $title =~ s{>}{&gt;}g;
+      if($nolinks) {
+        push @crumbs, $title;
+      }
+      else {
+        push @crumbs, '<a href="' . $ctx -> project_url($page -> slug_path) . '">' . $title . '</a>';
+      }
+      $page = $page -> parent_page;
     }
 
-    under asset {
+    join($separator, reverse @crumbs);
+  }
 
-      element link (Str :$title?) returns HTML {
-        "<!-- theme:asset:link -->"
+  element navigation (Str :$urls) is structured returns HTML {
+    my @content;
+    my $here_url = $ctx -> get_resource('page') -> slug_path . '/';
+    my $normal = $children -> {normal} || [ sub { '' } ];
+    my $here = ($children->{here} || $normal) -> [0];
+    my $selected = ($children -> {selected} || $normal) -> [0];
+    my $between = ($children -> {between} || [ sub { '' } ]) -> [0];
+    $normal = $normal -> [0];
+
+    $urls = $urls -> [0];
+
+    for my $bit (split(/\s*\|\s*/, $urls)) {
+      $bit =~ m{^(.*)\s*:\s*([^:]*)$};
+      my($title, $url) = ($1, $2);
+      my $lctx = $ctx -> localize;
+      $lctx -> set_var(url => $url);
+      $lctx -> set_var(title => $title);
+
+      $url .= '/' unless substr($url, -1, 1) eq '/';
+
+      if($here_url eq $url || $here_url) {
+        push @content, $here->($lctx);
       }
-
-      element image (Str :$title?) returns HTML {
-        "<!-- theme:asset:image -->"
+      elsif($here_url ne '/' && length($url) > length($here_url) && substr($here_url, 0, length($url)) eq $url) {
+        push @content, $selected -> ($lctx);
       }
+      else {
+        push @content, $normal -> ($lctx);
+      }
+    }
+    if(@content < 2) {
+      return @content;
+    }
+    return join($between -> (), @content);
+  }
 
+  under navigation {
+    element normal   is yielding returns HTML { $yield -> (); }
+    element here     is yielding returns HTML { $yield -> (); }
+    element selected is yielding returns HTML { $yield -> (); }
+    element between  is yielding returns HTML { $yield -> (); }
+
+    under normal {
+      element url   { $ctx -> project_url( $ctx -> get_var('url') ); }
+      element title { $ctx -> get_var('title'); }
     }
 
+    under here {
+      element url   { $ctx -> project_url( $ctx -> get_var('url') ); }
+      element title { $ctx -> get_var('title'); }
+    }
+
+    under selected {
+      element url   { $ctx -> project_url( $ctx -> get_var('url') ); }
+      element title { $ctx -> get_var('title'); }
+    }
+  }
+
+  method gather_children (Object $ctx, Str :$limit?, Str :$order?) {
+    my $page = $ctx -> get_resource('page');
+    my @children = $page -> child_pages;
+    if($order) {
+      @children = map {
+        [ $_->title, $_ ]
+      } @children;
+      if(substr($order, 0, 1) eq 'a') { # ascending
+        @children = sort { $a->[0] cmp $b->[0] } @children;
+      }
+      else {
+        @children = sort { $b->[0] cmp $a->[0] } @children;
+      }
+      @children = map { $_->[1] } @children;
+    }
+    if($limit && @children > $limit) {
+      @children = @children[0..$limit-1];
+    }
+    grep { defined } @children;
+  }
+
+  documentation << 'EOD';
+Renders the total number of children.
+
+Usage
+
+    <%tag% />
+EOD
+
+  element count returns HTML { scalar($self -> gather_children($ctx)); }
+
+  under children {
+    element each (Str :$limit?, Str :$order?) is yielding returns HTML {
+      my %args;
+      $args{limit} = $limit if defined $limit;
+      $args{order} = $order if defined $order;
+
+      my @children = $self -> gather_children($ctx, %args);
+      my $content = '';
+      my $lctx = $ctx -> localize;
+      $lctx -> set_var(is_first => 1);
+      while(@children) {
+        my $child = shift @children;
+        $lctx -> set_resource(page => $child);
+        $lctx -> set_var(is_last => !@children);
+        $content .= $yield -> ($lctx);
+        $lctx = $ctx -> localize;
+        $lctx -> set_var(is_first => 0);
+      }
+      return $content;
+    }
+
+    element first (Str :$order?) is yielding returns HTML {
+      my %args;
+      $args{order} = $order if defined($order);
+
+      my $child = $self -> gather_children($ctx, limit => 1, %args);
+      return '' unless $child;
+
+      my $lctx = $ctx -> localize;
+      $lctx -> set_resource(page => $child);
+      $yield -> ($lctx);
+    }
+
+    element last (Str :$order?) is yielding returns HTML {
+      my %args;
+      $args{order} = $order if defined($order);
+
+      my @children = $self -> gather_children($ctx, %args);
+      return '' unless @children;
+
+      my $child = $children[$#children];
+      my $lctx = $ctx -> localize;
+      $lctx -> set_resource(page => $child);
+      $yield -> ($lctx);
+    }
+
+    under each {
+      element if_first as "if-first" is yielding returns HTML {
+        $ctx -> get_var('is_first') ? $yield->() : '';
+      }
+
+      element unless_first as "unless-first" is yielding returns HTML {
+        $ctx -> get_var('is_first') ? '' : $yield->();
+      }
+
+      element if_last as "if-last" is yielding returns HTML {
+        $ctx -> get_var('is_last') ? $yield->() : '';
+      }
+
+      element unless_last as "unless-last" is yielding returns HTML {
+        $ctx -> get_var('is_last') ? '' : $yield->();
+      }
+    }
+  }
+
+  element find (Str :$url) is yielding returns HTML {
+    my $root = "file://" . $ctx -> get_resource("top_page") -> slug_path;
+    $root =~ s{/+}{/}g;
+    my $uri = URI->new_abs($url->[0], $root);
+    my $top = $ctx -> get_resource("project") -> home_page;
+    my @bits = split('/', $uri->path);
+    my $page = @bits ? $top -> resolve_path( @bits ) : $top;
+
+    return '' unless $page;
+    my $lctx = $ctx -> localize;
+    $lctx -> set_resource(page => $page);
+    $yield -> ($lctx);
   }
 
   documentation <<'EOD';
@@ -113,7 +316,7 @@ EOD
   # TODO: take into account the date of the resource
   element url returns Str {
     my $page = $ctx -> get_resource('page');
-    $page ? $page -> slug_path : '';
+    $page ? $ctx -> project_url($page -> slug_path) : '';
   }
 
   documentation <<'EOD';
@@ -126,7 +329,9 @@ EOD
 
   # TODO: make sure context stores the actual page we're rendering
   element page is yielding returns HTML {
-    return '';
+    my $lctx = $ctx -> localize;
+    $lctx -> set_resource( page => $ctx -> get_resource('top_page') );
+    $yield->($lctx);
   }
 
   documentation <<'EOD';
@@ -182,8 +387,7 @@ EOD
         $text = $page -> title;
         # html escape text
       }
-      my $url = $page -> slug_path;
-      # need to handle date aspect of URLs
+      my $url = $ctx -> project_url($page -> slug_path);
       return qq{<a href="$url">$text</a>};
     }
     return '';
@@ -277,6 +481,12 @@ EOD
   element if_content (Str :$part?, Bool :$inherit?) as "if-content" is yielding returns HTML {
     $part = ${$part||[]}[0];
     $inherit = ${$inherit||[]}[0];
+    if(!defined($part) || $part eq '') {
+      if($ctx -> has_var('content')) {
+        return $yield->();
+      }
+      $part = 'body';
+    }
     if($self -> has_content_q($ctx, part => $part, inherit => $inherit)) {
       return $yield->();
     }
@@ -286,6 +496,12 @@ EOD
   element unless_content (Str :$part?, Bool :$inherit?) as "unless-content" is yielding returns HTML {
     $part = ${$part||[]}[0];
     $inherit = ${$inherit||[]}[0];
+    if(!defined($part) || $part eq '') {
+      if($ctx -> has_var('content')) {
+        return '';
+      }
+      $part = 'body';
+    }
     if(!$self -> has_content_q($ctx, part => $part, inherit => $inherit)) {
       return $yield->();
     }

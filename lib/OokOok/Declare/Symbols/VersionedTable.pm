@@ -76,6 +76,7 @@ sub init_meta {
   else {
     $version_pkg -> add_columns( $meta -> foreign_key, {
       data_type => 'integer',
+      is_foreign_key => 1,
       is_nullable => 0,
     });
     $version_pkg -> belongs_to(
@@ -98,6 +99,7 @@ sub references {
   $meta -> {package} -> add_columns(
     $method . "_id", {
       data_type => 'integer',
+      is_foreign_key => 1,
       is_nullable => 1,
     },
   );
@@ -125,6 +127,7 @@ sub owns_many {
 
     $class -> add_columns( $meta -> foreign_key, {
       data_type => 'integer',
+      is_foreign_key => 1,
       is_nullable => 1,
     } );
     $class -> belongs_to(

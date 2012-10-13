@@ -70,9 +70,14 @@ class OokOok::Declare::Base::VersionedTable
   }
 
   method current_version {
-    $self -> versions -> search({},
-      { order_by => { -desc => 'id' }, rows => 1 }
-    ) -> first
+    my $cv = $self -> versions -> search({
+        "me.published_for" => undef
+      },
+    ) -> first;
+    if(!$cv) {
+      $cv = $self -> version_for_date(DateTime -> now);
+    }
+    $cv;
   }
 
   method version_for_date ($date?) {
@@ -87,16 +92,8 @@ class OokOok::Declare::Base::VersionedTable
       );
     }
 
-    my $join = "edition"; #$self -> owner -> editions -> result_source -> from;
-
     $self -> search_related( versions =>
-      {
-        $join.".closed_on" => { '<=' => $date },
-      },
-      {
-        join => [$join],
-        order_by => { -desc => 'me.id' }
-      }
+      { "me.published_for" => { '@>' => \"'$date'::timestamp" }, }
     ) -> first;
   }
 

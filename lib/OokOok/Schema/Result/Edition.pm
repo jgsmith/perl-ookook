@@ -27,6 +27,7 @@ table_edition OokOok::Schema::Result::Edition {
 
   owns_many page_versions => "OokOok::Schema::Result::PageVersion";
   owns_many snippet_versions => "OokOok::Schema::Result::SnippetVersion";
+  owns_many asset_versions => "OokOok::Schema::Result::AssetVersion";
 
   owns_many library_project_versions => "OokOok::Schema::Result::LibraryProjectVersion";
 
@@ -36,16 +37,18 @@ table_edition OokOok::Schema::Result::Edition {
 
     # any pages or snippets that aren't published should be moved to the next
     # edition
-    $self -> page_versions -> search({
-      status => { '>' => 0 }
-    }) -> update_all({
-      edition_id => $next -> id
-    });
-    $self -> snippet_versions -> search({
-      status => { '>' => 0 }
-    }) -> update_all({
-      edition_id => $next -> id
-    });
+    $self -> move_statused_resources($next, [qw/
+      page_versions 
+      snippet_versions 
+      asset_versions
+    /]);
+
+    $self -> close_resources([qw/
+      page_versions 
+      snippet_versions 
+      asset_versions 
+      library_project_versions
+    /]);
 
     return $next;
   };

@@ -6,7 +6,7 @@ use MooseX::Declare;
 
 class OokOok::Declare::Base::TagLibrary {
 
-  use MooseX::Types::Moose qw( ArrayRef );
+  use MooseX::Types::Moose qw( ArrayRef HashRef );
 
   use feature 'switch';
 
@@ -40,9 +40,10 @@ class OokOok::Declare::Base::TagLibrary {
     }
       
 
-    return '' if !$einfo -> {impl}; # Nothing to do, so don't do anything
+    #return '' if !$einfo -> {impl}; # Nothing to do, so don't do anything
 
     my $context = $ctx -> localize;
+    $context -> add_namespace_context( $node->{prefix}, $name );
     my $xmlns;
     my $attributes = {};
     for my $ns (keys %{$einfo->{attributes}}) {
@@ -71,23 +72,38 @@ class OokOok::Declare::Base::TagLibrary {
       }
     }
 
-    my $yield;
-    if($einfo -> {yields} && @{$node -> {children}||[]}) {
-      $yield = sub { 
-        my $ctx = @_ ? $_[0] : $context;
-        $ctx = $ctx -> localize;
-        $ctx -> add_namespace_context($node -> {prefix}, $name);
-        $ctx -> process_node( $node -> {children} || [''] );
-      };
-    }
-    else {
-      $yield = sub { '' };
+    my($yield, $structured) = (sub { '' }, +{ });
+
+    if(@{$node -> {children}||[]}) {
+      if($einfo -> {yields}) {
+        $yield = sub { 
+          my $ctx = @_ ? $_[0] : $context;
+          $ctx = $ctx -> localize;
+          #$ctx -> add_namespace_context($node -> {prefix}, $name);
+          $ctx -> process_node( $node -> {children} || [''] );
+        };
+      }
+      elsif($einfo -> {structured}) {
+        for my $child (@{$node -> {children} || []}) {
+          next unless is_HashRef($child);
+          $structured -> {$child -> {local}} ||= [];
+          push @{$structured->{$child->{local}}}, sub {
+            my $ctx = @_ ? $_[0] : $context;
+            $ctx = $ctx -> localize;
+            #$ctx -> add_namespace_context($child -> {prefix}, $child->{local});
+            $ctx -> process_node( $child );
+          };
+        }
+      }
     }
 
     my $impl = $einfo -> {impl};
     my $value;
     if($einfo -> {yields}) {
       $value = $self -> $impl($context, $yield, %$attributes);
+    }
+    elsif($einfo -> {structured}) {
+      $value = $self -> $impl($context, $structured, %$attributes);
     }
     else {
       $value = $self -> $impl($context, %$attributes);

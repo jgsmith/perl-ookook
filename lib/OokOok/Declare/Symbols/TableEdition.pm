@@ -13,6 +13,12 @@ use Module::Load ();
 
 use OokOok::Declare::Meta::TableEdition;
 
+use MooseX::Types::Moose qw/Object/;
+
+use OokOok::Util::DB;
+
+*prop = \&OokOok::Util::DB::prop;
+
 Moose::Exporter->setup_import_methods(
   with_meta => [
     'prop', 'owns_many', 'references', 'references_own',
@@ -20,21 +26,6 @@ Moose::Exporter->setup_import_methods(
   as_is => [ ],
   #also => 'Moose',
 );
-
-my $inflate_datetime = sub {
-  my $date = DateTime::Format::Pg->parse_datetime(shift);
-  $date -> set_formatter('OokOok::DateTime::Parser');
-  $date;
-};
-
-my $deflate_datetime = sub {
-  my $dt = shift;
-
-  if(!ref $dt) {
-    $dt = DateTime::Format::ISO8601 -> parse_datetime($dt);
-  }
-  DateTime::Format::Pg->format_datetime($dt);
-};
 
 sub init_meta {
   shift;
@@ -61,87 +52,38 @@ sub init_meta {
   $meta -> foreign_key($nom . "_id");
 
   $package -> table($nom);
-  $package -> add_columns(
-    id => {
-      data_type => "integer",
-      is_auto_increment => 1,
-      is_nullable => 0,
-    },
-    name => {
-      data_type => 'varchar',
-      is_nullable => 0,
-      default_value => "",
-      size => 255,
-    },
-    description => {
-      data_type => 'text',
-      is_nullable => 1,
-    },
-    created_on => {
-      data_type => 'datetime',
-      is_nullable => 0,
-    },
-    published_for => {
-      data_type => 'tsrange', # timestamp range without time zone -- all UTC
-      is_nullable => 1, # null indicates unpublished
-    },
-    closed_on => {
-      data_type => 'datetime',
-      is_nullable => 1,
-    },
-  );
+
+  prop($meta, id => (
+    data_type => 'integer',
+    is_auto_increment => 1,
+    is_nullable => 0,
+  ));
 
   $package -> set_primary_key('id');
 
-  $package -> inflate_column(created_on => {
-     inflate => $inflate_datetime,
-     deflate => $deflate_datetime,
-  });
+  prop($meta, name => (
+    data_type => 'varchar',
+    is_nullable => 0,
+    default_value => "",
+    size => 255,
+  ));
 
-  $package -> inflate_column(closed_on => {
-     inflate => $inflate_datetime,
-     deflate => $deflate_datetime,
-  });
+  prop($meta, description => (
+    data_type => 'text',
+    is_nullable => 1,
+  ));
 
-  $package -> inflate_column(published_for => {
-    inflate => sub {
-      my $v = shift;
-      $v =~ m{^[\[\(](.*)\s*,\s*(.*)[\]\)]};
-      [ map { $_ -> $inflate_datetime } ($1, $2) ]; 
-    },
-    deflate => sub {
-      my $v = shift;
-      "[" . join(", ", map { $_ -> $deflate_datetime } @$v) . ")"
-    },
-  });
+  prop($meta, created_on => (
+    data_type => 'datetime',
+    is_nullable => 0,
+  ));
+
+  prop($meta, published_for => (
+    data_type => 'tsrange', # timestamp range without time zone -- all UTC
+    is_nullable => 1, # null indicates unpublished
+  ));
 
   $meta;
-}
-
-sub prop {
-  my($meta, $method, %info) = @_;
-
-  # PostgreSQL supports the json column type - we just add the inflate/deflate
-  if($info{data_type} eq 'json') {
-    $info{inflate} ||= sub { decode_json shift };
-    $info{deflate} ||= sub { encode_json shift };
-  }
-  elsif($info{data_type} eq 'datetime') {
-    $info{inflate} ||= $inflate_datetime;
-    $info{deflate} ||= $deflate_datetime;
-  }
-  elsif($info{data_type} eq 'varchar') {
-    $info{data_type} = 'text';
-  }
-
-  $meta -> {package} -> add_columns( $method, \%info );
-
-  if($info{inflate} || $info{deflate}) {
-    $meta -> {package} -> inflate_column( $method, {
-      inflate => $info{inflate},
-      deflate => $info{deflate}
-    });
-  }
 }
 
 sub owns_many {
@@ -154,6 +96,7 @@ sub owns_many {
   $class -> add_columns( $meta -> foreign_key, {
     data_type => 'integer',
     is_nullable => 1,
+    is_foreign_key => 1,
   } );
   $class -> belongs_to(
     edition => $meta -> {package}, $meta -> foreign_key
@@ -167,21 +110,16 @@ sub owns_many {
 sub references {
   my($meta, $prop_base, $class, %options) = @_;
 
-  $meta -> {package} -> add_columns(
-    $prop_base . "_id", {
-      data_type => 'integer',
-      is_nullable => 1,
-    },
-    $prop_base . "_date", {
-      data_type => 'datetime',
-      is_nullable => 1,
-    }
+  prop($meta, $prop_base . "_id",
+    data_type => 'integer',
+    is_foreign_key => 1,
+    is_nullable => 1,
   );
 
-  $meta -> {package} -> inflate_column($prop_base . "_date" => {
-     inflate => $inflate_datetime,
-     deflate => $deflate_datetime,
-  });
+  prop($meta, $prop_base . "_date",
+    data_type => 'datetime',
+    is_nullable => 1,
+  );
 
   $meta -> {package} -> belongs_to($prop_base, $class, $prop_base . "_id", \%options);
 }
@@ -190,6 +128,7 @@ sub references_own {
   my($meta, $method, $class, %options) = @_;
   $meta -> {package} -> add_columns(
     $method . "_id", {
+      is_foreign_key => 1,
       data_type => 'integer',
       is_nullable => 1,
     },

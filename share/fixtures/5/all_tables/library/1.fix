@@ -1,0 +1,10 @@
+$HASH1 = {
+           board_id   => undef,
+           id         => 1,
+           is_locked  => 0,
+           new_project_prefix
+                      => 'r',
+           new_theme_prefix
+                      => 'r',
+           uuid       => 'ypUv1ZbV4RGsjb63Mj8b'
+         };

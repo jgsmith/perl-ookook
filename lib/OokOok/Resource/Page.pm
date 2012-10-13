@@ -121,7 +121,7 @@ resource OokOok::Resource::Page {
     # current operating edition
     if($self -> c -> stash -> {date}) {
       $q = $q -> search({
-        "edition.closed_on" => { "<=", $self -> c -> stash -> {date} }
+        "edition.closed_on" => { "<=" => $self -> c -> stash -> {date} }
       }, {
         join => [qw/edition/]
       });
@@ -137,7 +137,18 @@ resource OokOok::Resource::Page {
         source => $version -> page
       );
     }
-  }  
+  }
+
+  method resolve_path (@slugs) {
+    my $slug = shift @slugs;
+    return $self if defined($slug) && $slug eq '';
+    if(defined $slug) {
+      my $c = $self -> get_child_page($slug);
+      return $c unless @slugs;
+      return $c -> resolve_path( @slugs ) if $c;
+    }
+  }
+
 
   method page_part (Str $name) {
     my $pp = $self -> source_version -> page_parts -> find({ name => $name });
@@ -214,6 +225,7 @@ resource OokOok::Resource::Page {
     if($layout) {
       $context = $context -> localize;
       $context -> set_resource(page => $self);
+      $context -> set_resource(top_page => $self);
       return $layout -> render($context);
     }
     else {

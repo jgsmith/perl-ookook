@@ -28,17 +28,22 @@ controller OokOok::Controller::Root {
       my $page = $ctx -> request -> params->{page} || 1;
       my @posts;
       my $editions = $ctx -> model('DB::Edition') -> search({
-          'me.closed_on' => { '!=' => undef },
+          'me.published_for' => { '!=' => undef },
         }, {
           page => $page,
-          order_by => { -desc => 'me.closed_on' },
+          order_by => { -desc => 'me.published_for' },
         }
       );
 
+      my $last_project_uuid = "";
       for my $edition ($editions -> all) {
+        next if $edition -> project -> uuid eq $last_project_uuid;
+        $last_project_uuid = $edition -> project -> uuid;
         push @posts, {
           class => 'span' . ($page > 2 ? 2 : (8 - 2*$page)),
-          content => '<h1>' . $edition -> name . '</h1>' . '<p>' . $edition -> description . '</p>',
+          title => $edition -> name,
+          link => $ctx->uri_for('/') . $edition -> closed_on . '/v/' . $edition -> project -> uuid . '/',
+          content => '<p>' . $edition -> description . '</p>',
         };
       }
 

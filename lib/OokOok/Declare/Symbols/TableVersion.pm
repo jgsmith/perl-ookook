@@ -13,6 +13,12 @@ use Module::Load ();
 use OokOok::Declare::Meta::TableVersion;
 use OokOok::Declare::Base::TableVersion;
 
+use MooseX::Types::Moose qw/Object/;
+
+use OokOok::Util::DB;
+
+*prop = \&OokOok::Util::DB::prop;
+
 Moose::Exporter->setup_import_methods(
   with_meta => [
     'prop', 'owns_many', 'is_publishable', 'references', 'references_own',
@@ -20,21 +26,6 @@ Moose::Exporter->setup_import_methods(
   as_is => [ ],
   #also => 'Moose',
 );
-
-my $inflate_datetime = sub {
-  my $date = DateTime::Format::Pg->parse_datetime(shift);
-  $date -> set_formatter('OokOok::DateTime::Parser');
-  $date;
-};
-
-my $deflate_datetime = sub {
-  my $dt = shift;
-
-  if(!ref $dt) {
-    $dt = DateTime::Format::ISO8601 -> parse_datetime($dt);
-  }
-  DateTime::Format::Pg->format_datetime($dt);
-};
 
 sub init_meta {
   shift;
@@ -60,33 +51,20 @@ sub init_meta {
 
   $meta -> foreign_key($nom . "_id");
 
-  #$package -> load_components("InflateColumn::DateTime");
   $package -> table($nom);
-  $package -> add_columns(
-    id => {
-      data_type => "integer",
-      is_auto_increment => 1,
-      is_nullable => 0,
-    },
-#    published_for => {
-#      data_type => "tsrange",
-#      is_nullable => 0,
-#    },
-  );
+
+  prop($meta, id => (
+    data_type => 'integer',
+    is_auto_increment => 1,
+    is_nullable => 0,
+  ));
 
   $package -> set_primary_key('id');
 
-#  $package -> inflate_column(published_for => {
-#    inflate => sub {
-#      my $v = shift;
-#      $v =~ m{^[\[\(](.*)\s*,\s*(.*)[\]\)]};
-#      [ map { $_ -> $inflate_datetime } ($1, $2) ];
-#    },
-#    deflate => sub {
-#      my $v = shift;
-#      "[" . join(", ", map { $_ -> $deflate_datetime } @$v) . ")"
-#    },
-#  });
+  prop($meta, published_for => (
+    data_type => 'tsrange',
+    is_nullable => 1,
+  ));
 
   $meta;
 }
@@ -103,32 +81,6 @@ sub is_publishable {
   );
 }
 
-sub prop {
-  my($meta,  $method, %info) = @_;
-
-  # PostgreSQL supports the json column type - we just add the inflate/deflate
-  if($info{data_type} eq 'json') {
-    $info{inflate} ||= sub { decode_json shift };
-    $info{deflate} ||= sub { encode_json shift };
-  }
-  elsif($info{data_type} eq 'datetime') {
-    $info{inflate} ||= $inflate_datetime;
-    $info{deflate} ||= $deflate_datetime;
-  }
-  elsif($info{data_type} eq 'varchar') {
-    $info{data_type} = 'text';
-  }
-
-  $meta -> {package} -> add_columns( $method, \%info );
-
-  if($info{inflate} || $info{deflate}) {
-    $meta -> {package} -> inflate_column( $method, {
-      inflate => $info{inflate},
-      deflate => $info{deflate}
-    });
-  }
-}
-
 sub owns_many {
   my($meta, $method, $class, %options) = @_;
 
@@ -142,6 +94,7 @@ sub owns_many {
 
     $class -> add_columns( $meta -> foreign_key, {
       data_type => 'integer',
+      is_foreign_key => 1,
       is_nullable => 1,
     } );
     $class -> belongs_to(
@@ -171,6 +124,7 @@ and
  $CLASS -> add_columns(
    foo_id => {
      data_type => 'integer',
+      is_foreign_key => 1,
      is_nullable => 1,
    },
    foo_date => {
@@ -194,24 +148,20 @@ sub references {
   my($meta, $prop_base, $class, %options) = @_;
 
   my $prop_date = $prop_base . "_date";
+  my $prop_id   = $prop_base . "_id";
 
-  $meta -> {package} -> add_columns(
-    $prop_base . "_id", {
-      data_type => 'integer',
-      is_nullable => 1,
-    },
-    $prop_date, {
-      data_type => 'datetime',
-      is_nullable => 1,
-    }
+  prop($meta, $prop_id,
+    data_type => 'integer',
+    is_foreign_key => 1,
+    is_nullable => 1,
   );
 
-  $meta -> {package} -> inflate_column($prop_date, {
-    inflate => $inflate_datetime,
-    deflate => $deflate_datetime,
-  });
+  prop($meta, $prop_date,
+    data_type => 'datetime',
+    is_nullable => 1,
+  );
 
-  $meta -> {package} -> belongs_to($prop_base, $class, $prop_base . "_id", \%options);
+  $meta -> {package} -> belongs_to($prop_base, $class, $prop_id, \%options);
 
   $meta -> {package} -> add_method( $prop_base . "_version", sub {
     $_[0] -> $prop_base -> version_for_date( $_[0] -> $prop_date );
@@ -231,6 +181,7 @@ and
  $CLASS -> add_columns(
    foo_id => {
      data_type => 'integer',
+     is_foreign_key => 1,
      is_nullable => 1,
    }
  );
@@ -241,11 +192,11 @@ and
 
 sub references_own {
   my($meta, $method, $class, %options) = @_;
-  $meta -> {package} -> add_columns(
-    $method . "_id", {
-      data_type => 'integer',
-      is_nullable => 1,
-    },
+
+  prop($meta, $method . "_id",
+    data_type => 'integer',
+    is_foreign_key => 1,
+    is_nullable => 1,
   );
   $meta -> {package} -> belongs_to($method, $class, $method . "_id", \%options);
 }

@@ -6,13 +6,20 @@ use MooseX::Declare;
 
 class OokOok::Declare::Base::TableVersion extends OokOok::Declare::Base::Table {
 
+  method is_published {
+    defined($self -> published_for) && 
+    defined($self -> published_for -> start)
+  }
+
   override update (HashRef $columns?) {
+    my $current_published_for = $self -> published_for;
+
     $self -> set_inflated_columns($columns) if $columns;
 
     my %dirty_columns = $self -> get_dirty_columns;
 
     if($dirty_columns{$self -> edition -> result_source -> from . "_id"}) {
-      if($self -> status <= 0) {
+      if($self -> can("status") && $self -> status <= 0) {
         $self -> discard_changes();
         OokOok::Exception::PUT -> forbidden(
           message => "Unable to update an object's edition"
@@ -31,6 +38,29 @@ class OokOok::Declare::Base::TableVersion extends OokOok::Declare::Base::Table {
     }
 
     if($self -> edition -> is_closed) {
+      if(1 == keys %dirty_columns && exists($dirty_columns{published_for})) {
+        if($self -> can("status") && $self -> status > 0) {
+          $self -> discard_changes();
+          OokOok::Exception::PUT -> forbidden(
+            message => "Unable to modify the publication dates of an unapproved resource"
+          );
+        }
+        if(defined($current_published_for)) {
+          if(defined $current_published_for -> end) {
+            $self -> discard_changes;
+            OokOok::Exception::PUT -> forbidden(
+              message => "Unable to modify the publication dates of a published resource"
+            );
+          }
+          if($current_published_for -> start ne $dirty_columns{published_for}->start) {
+            $self -> discard_changes;
+            OokOok::Exception::PUT -> forbidden(
+              message => "Unable to modify the publication dates of a published resource"
+            );
+          }
+        }
+        return super;  
+      }
       my $new = $self -> duplicate_to_current_edition;
       $self -> discard_changes();
       return $new -> update(\%dirty_columns);
@@ -52,22 +82,29 @@ class OokOok::Declare::Base::TableVersion extends OokOok::Declare::Base::Table {
       );
     }
 
-    my $others = $self -> result_source -> resultset -> search({ 
+    my $most_recent = $self -> result_source -> resultset -> search({ 
       $edition_id_key => $current_edition -> id, 
-      $owner_id_key => $self -> owner -> id 
-    })->count;
+      $owner_id_key => $self -> owner -> id
+    })->first;
 
-    if($others) {
+    if($most_recent) {
+      return $most_recent;
       $self -> discard_changes;
       OokOok::Exception::PUT -> bad_request(
         message => "Another copy already exists in the working edition. Unable to duplicate object for changes."
       );
     }
 
-    return $self -> copy({
+    my $overrides = {
       $edition_id_key => $current_edition -> id,
-      status => 100, # 100 - Draft, <= 0 - Published
-    });
+      published_for => undef,
+    };
+
+    if($self -> can('status')) {
+      $overrides->{status} = 100; # 100 - Draft, <= 0 - Published
+    }
+
+    return $self -> copy($overrides);
   }
 
   before delete {

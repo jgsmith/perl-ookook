@@ -20,14 +20,19 @@ resource OokOok::Resource::ThemeAsset {
     required => 1,
   );
 
-  prop filename => (
-    is => 'ro',
-    source => sub { $_[0] -> source_version -> filename },
-  );
+  #prop filename => (
+  #  is => 'ro',
+  #  source => sub { $_[0] -> source_version -> filename },
+  #);
 
   prop type => (
     is => 'ro',
     source => sub { $_[0] -> source_version -> type },
+  );
+
+  prop mime_type => (
+    is => 'ro',
+    source => sub { $_[0] -> source_version -> mime_type },
   );
 
   prop size => (
@@ -61,11 +66,13 @@ resource OokOok::Resource::ThemeAsset {
     my $id;
     if($self -> source_version -> file_id) {
       $id = $self -> c -> model('MongoDB') -> update_file(
-        $self -> source_version -> file_id, $upload -> fh, $info
+        theme_asset => $self -> source_version -> file_id, $upload -> fh, $info
       );
     }
     else {
-      $id = $self -> c -> model('MongoDB') -> store_file($upload->fh, $info);
+      $id = $self -> c -> model('MongoDB') -> store_file(
+        theme_asset => $upload->fh, $info
+      );
       $info -> {file_id} = $id;
     }
     if(!$info->{file_id}) {

@@ -111,6 +111,11 @@ play_controller OokOok::Controller::Style {
         $ctx -> detach(qw/Controller::Root default/);
       }
 
+      # now see if the project has an asset by the same name... if so,
+      # substitute
+      my $passet = $ctx -> stash -> {project} -> asset( $asset -> name );
+
+      $asset = $passet if $passet;
 
       $ctx -> stash -> {resource} = $asset;
     }
@@ -122,7 +127,13 @@ play_controller OokOok::Controller::Style {
 
   method style_GET ($ctx) {
     # TODO: cache compiled stylesheets
-    $ctx -> stash -> {rendering} = $ctx -> stash -> {resource} -> render;
+    my $context = OokOok::Template::Context -> new(
+      c => $ctx
+    );
+    if($ctx -> stash -> {project}) {
+      $context -> set_resource(project => $ctx -> stash -> {project});
+    }
+    $ctx -> stash -> {rendering} = $ctx -> stash -> {resource} -> render($context);
     $ctx -> stash -> {template} = 'style/style.tt2';
     $ctx -> forward( $ctx -> view('HTML') );
   }
@@ -138,7 +149,7 @@ play_controller OokOok::Controller::Style {
   method asset_GET ($ctx) {
     my $asset = $ctx -> stash -> {resource};
     my $gridfs_file = $ctx -> model('MongoDB') -> get_file(
-      $asset -> file_id
+      theme_asset => $asset -> source_version -> file_id
     );
     if(!$gridfs_file) {
       $ctx -> detach(qw/Controller::Root default/);

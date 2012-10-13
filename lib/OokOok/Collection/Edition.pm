@@ -98,13 +98,13 @@ collection OokOok::Collection::Edition {
     };
 
     if(@changes) {
-      my $res = $self -> c -> model('ES') -> bulk_index(
+      my $res = $self -> c -> model('Search') -> index(
         docs => [ @changes ],
         index => 'projects',
-        consistency => 'quorum',
-        replication => 'async',
-        on_conflict => 'IGNORE',
-        on_error => 'IGNORE',
+        #consistency => 'quorum',
+        #replication => 'async',
+        #on_conflict => 'IGNORE',
+        #on_error => 'IGNORE',
       );
     }
 
