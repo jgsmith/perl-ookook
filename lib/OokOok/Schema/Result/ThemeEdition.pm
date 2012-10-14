@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Schema::Result::ThemeEdition;
 
+# ABSTRACT: top-level edition resource for a theme
+
 table_edition OokOok::Schema::Result::ThemeEdition {
 
   owns_many style_versions => 'OokOok::Schema::Result::ThemeStyleVersion';

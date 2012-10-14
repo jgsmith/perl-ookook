@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Schema::Result::ThemeSnippetVersion
 
+# ABSTRACT: a version of a theme snippet
+
 table_version OokOok::Schema::Result::ThemeSnippetVersion {
 
   is_publishable;

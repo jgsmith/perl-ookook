@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Schema::Result::ThemeLayoutVersion
 
+# ABSTRACT: a version of a theme layout
+
 table_version OokOok::Schema::Result::ThemeLayoutVersion {
 
   is_publishable;

@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Schema::Result::Theme
 
+# ABSTRACT: the top-level resource for a theme
+
 editioned_table OokOok::Schema::Result::Theme {
 
   has_editions;

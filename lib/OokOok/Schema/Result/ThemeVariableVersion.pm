@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Schema::Result::ThemeVariableVersion
 
+# ABSTRACT: a version of a theme variable / setting
+
 table_version OokOok::Schema::Result::ThemeVariableVersion {
 
   is_publishable;
