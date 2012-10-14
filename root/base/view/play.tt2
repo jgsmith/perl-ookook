@@ -35,7 +35,8 @@
   <a href="#">OokOok!</a>
 </div>
 </div>
-<script src="/static/js/Hyphenator.js" type="text/javascript"></script>
+<script src="/static/js/combined-player.js" type="text/javascript"></script>
+<!-- script src="/static/js/Hyphenator.js" type="text/javascript"></script -->
 <script type="text/javascript">
 Hyphenator.config({
   persistentconfig: true,
@@ -46,8 +47,8 @@ Hyphenator.config({
 });
 Hyphenator.run();
 </script>
-<script src="/static/js/jquery-1.8.2.min.js" type="text/javascript"></script>
-<script src="/static/js/player.js" type="text/javascript"></script>
+<!-- script src="/static/js/jquery-1.8.2.min.js" type="text/javascript"></script>
+<script src="/static/js/player.js" type="text/javascript"></script -->
 <script>
 // replace 'en' with the language of the project page
 function googleTranslateElementInit() {

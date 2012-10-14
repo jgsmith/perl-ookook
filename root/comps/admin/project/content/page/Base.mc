@@ -55,7 +55,7 @@ $.form_data => sub { +{} }
             </div>
           </div>
           <div class="control-group">
-            <textarea class="large span10" name="part[<% $count %>][content]"><% $part->{content} %></textarea>
+            <textarea class="large span10" name="part[<% $count %>][content]"><% $part->{content} | H %></textarea>
           </div>
         </div> 
 %     $count ++;

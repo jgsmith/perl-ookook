@@ -2,16 +2,20 @@
 <html lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=2.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OokOok</title>
-    <script src="<% $c->uri_for('/static/js/jquery.js') %>"></script>
-    <script src="<% $c->uri_for('/static/js/bootstrap.min.js') %>"></script>
-    <link href="<% $c->uri_for('/static/css/bootstrap.min.css') %>" rel="stylesheet">
+    <script src="<% $c->uri_for('/static/js/combined-admin.js') %>"></script>
+    <!-- script src="<% $c->uri_for('/static/js/jquery.js') %>"></script>
+    <script src="<% $c->uri_for('/static/js/bootstrap.min.js') %>"></script -->
+    <link href="<% $c->uri_for('/static/css/combined.css') %>" rel="stylesheet">
+    <!-- link href="<% $c->uri_for('/static/css/bootstrap.min.css') %>" rel="stylesheet">
     <link href="<% $c->uri_for('/static/css/bootstrap-responsive.css') %>" rel="stylesheet">
-    <link href="<% $c->uri_for('/static/css/overrides.css') %>" rel="stylesheet">
+    <link href="<% $c->uri_for('/static/css/overrides.css') %>" rel="stylesheet" -->
     <style>
-      body {
-        padding-top: 60px;
+      @media (min-width: 980px) {
+        body {
+          padding-top: 60px;
+        }
       }
     </style>
   </head>

@@ -7,6 +7,7 @@ use OokOok::Declare;
 taglib OokOok::TagLibrary::Core {
 
   use Digest::MD5 qw(md5_hex);
+  use File::Spec::Unix ();
 
   element random is structured returns HTML {
     # we always return the same option for a given date/time
@@ -36,7 +37,7 @@ breadcrumbs in plain text, without any links (useful when generating title tag).
 
 Usage
 
-    <%tag% [separator="separator_string"] [nolinks="true"]/>
+    <%tag% [%ns%:separator="separator_string"] [%ns%:nolinks="true"]/>
 EOD
 
   element breadcumbs (Str :$separator = ' &gt; ', Bool :$nolinks?) returns HTML {
@@ -153,8 +154,8 @@ EOD
   under children {
     element each (Str :$limit?, Str :$order?) is yielding returns HTML {
       my %args;
-      $args{limit} = $limit if defined $limit;
-      $args{order} = $order if defined $order;
+      $args{limit} = $limit -> [0] if defined $limit;
+      $args{order} = $order -> [0] if defined $order;
 
       my @children = $self -> gather_children($ctx, %args);
       my $content = '';
@@ -173,7 +174,7 @@ EOD
 
     element first (Str :$order?) is yielding returns HTML {
       my %args;
-      $args{order} = $order if defined($order);
+      $args{order} = $order -> [0] if defined($order);
 
       my $child = $self -> gather_children($ctx, limit => 1, %args);
       return '' unless $child;
@@ -185,7 +186,7 @@ EOD
 
     element last (Str :$order?) is yielding returns HTML {
       my %args;
-      $args{order} = $order if defined($order);
+      $args{order} = $order -> [0] if defined($order);
 
       my @children = $self -> gather_children($ctx, %args);
       return '' unless @children;
@@ -216,15 +217,25 @@ EOD
   }
 
   element find (Str :$url) is yielding returns HTML {
-    my $root = eval { "file://" . $ctx -> get_resource("top_page") -> slug_path };
-    return '' unless $root;
-    $root =~ s{/+}{/}g;
-    my $uri = URI->new_abs($url->[0], $root);
+
+    my $uri = $url -> [0];
+    my $root = "/";
+    if(substr($uri, 0, 1) ne "/") {
+      return '' unless $ctx -> get_resource("top_page");
+      $root = $ctx -> get_resource("top_page") -> slug_path;
+      if(substr($root, 0, 1) ne "/") {
+        $root = "/$root";
+      }
+    }
+
+    $uri = File::Spec::Unix->rel2abs($uri, $root);
     my $top = $ctx -> get_resource("project") -> home_page;
-    my @bits = split('/', $uri->path);
+    my @bits = grep { $_ ne '' } split('/', $uri);
+
     my $page = @bits ? $top -> resolve_path( @bits ) : $top;
 
     return '' unless $page;
+
     my $lctx = $ctx -> localize;
     $lctx -> set_resource(page => $page);
     $yield -> ($lctx);
