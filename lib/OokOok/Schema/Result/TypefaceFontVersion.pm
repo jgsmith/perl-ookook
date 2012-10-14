@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Schema::Result::TypefaceFontVersion
 
+# ABSTRACT: a version of a typeface font
+
 table_version OokOok::Schema::Result::TypefaceFontVersion {
 
   is_publishable;

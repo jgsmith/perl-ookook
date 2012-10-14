@@ -2,6 +2,8 @@ use OokOok::Declare;
 
 # PODNAME: OokOok::Schema::Result::TypefaceFontFile
 
+# ABSTRACT: a file implementating a typeface font
+
 Table OokOok::Schema::Result::TypefaceFontFile {
 
   prop filename => (
