@@ -9,8 +9,8 @@ controller OokOok::Controller::Admin::OAuth {
 
   under '/' {
     final action index (Str $provider) as 'admin/oauth' {
-      $ctx -> log -> debug("method: ".$ctx -> request -> method);
-      $ctx -> log -> debug("allow GET: ".$ctx -> session -> {allow_GET_for_oauth});
+      #$ctx -> log -> debug("method: ".$ctx -> request -> method);
+      #$ctx -> log -> debug("allow GET: ".$ctx -> session -> {allow_GET_for_oauth});
       if($ctx -> request -> method eq 'POST' ||
          $ctx -> session -> {allow_GET_for_oauth}) {
         delete $ctx -> session -> {allow_GET_for_oauth};

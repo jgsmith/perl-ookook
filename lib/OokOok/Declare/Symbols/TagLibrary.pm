@@ -1,5 +1,7 @@
 package OokOok::Declare::Symbols::TagLibrary;
 
+# ABSTRACT: Declarative elements for defining tag libraries
+
 use Moose ();
 use Moose::Exporter;
 use Moose::Util::MetaRole;

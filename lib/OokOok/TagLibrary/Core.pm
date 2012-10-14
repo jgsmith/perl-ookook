@@ -9,6 +9,18 @@ taglib OokOok::TagLibrary::Core {
   use Digest::MD5 qw(md5_hex);
   use File::Spec::Unix ();
 
+  documentation <<'EOD';
+Randomly renders one of the options specified by the option tags.
+
+Usage
+
+    <%tag%>
+      <%ns%:option>...</%ns%:option>
+      <%ns%:option>...</%ns%:option>
+      ...
+    </%tag%>
+EOD
+
   element random is structured returns HTML {
     # we always return the same option for a given date/time
     # this ensures reproducability
@@ -26,6 +38,10 @@ taglib OokOok::TagLibrary::Core {
   }
 
   under random {
+    documentation <<'EOD';
+See `<%ns%:random/>`
+EOD
+
     element option is yielding returns HTML { $yield -> (); }
   }
 
@@ -61,6 +77,27 @@ EOD
 
     join($separator, reverse @crumbs);
   }
+
+  documentation <<'EOD';
+Renders a list of links specified in the urls attribute according to three
+states:
+
+* normal specifies the normal state for the link
+* here specifies the state of the link when the url matches the current page’s URL
+* selected specifies the state of the link when the current page matches is a child of the specified url
+
+The `between` tag specifies what should be inserted in between each of 
+the links.
+
+Usage
+
+    <%ns%:navigation %ns%:urls="Title: url | Title: url | ...">
+      <%ns%:normal><a href="<%ns%:url />"><%ns%:title /></a></%ns%:normal>
+      <%ns%:here><strong><%ns%:title /></strong></%ns%:here>
+      <%ns%:selected><strong><a href="<%ns%:url />"><%ns%:title /></a></strong></%ns%:selected>
+      <%ns%:between> | </%ns%:between>
+    </%ns%:navigation>
+EOD
 
   element navigation (Str :$urls) is structured returns HTML {
     my @content;
@@ -120,7 +157,7 @@ EOD
     }
   }
 
-  method gather_children (Object $ctx, Str :$limit?, Str :$order?) {
+  method gather_children (Object $ctx, Int :$offset = 0, Int :$limit?, Str :$order?) {
     my $page = $ctx -> get_resource('page');
     my @children = $page -> child_pages;
     if($order) {
@@ -135,10 +172,17 @@ EOD
       }
       @children = map { $_->[1] } @children;
     }
-    if($limit && @children > $limit) {
-      @children = @children[0..$limit-1];
+    @children = grep { defined } @children;
+
+    $offset = 0 if $offset < 0;
+    return if $offset > $#children;
+    if($limit && $offset + $limit < @children) {
+      @children = splice @children, $offset, $limit;
     }
-    grep { defined } @children;
+    else {
+      @children = splice @children, $offset;
+    }
+    @children;
   }
 
   documentation << 'EOD';
@@ -151,9 +195,39 @@ EOD
 
   element count returns HTML { scalar($self -> gather_children($ctx)); }
 
+  documentation <<'EOD';
+Page attribute tags inside of this tag refer to the current child. 
+This is occasionally useful if you are inside of another tag (like 
+`<%ns%:find />`) and need to refer back to the current child.
+
+Usage
+
+    <%ns%:children:each>
+      <%ns%:child>...</%ns%:child>
+    </%ns%:children:each>
+EOD
+
+  element child is yielding returns HTML {
+    my $lctx = $ctx -> localize;
+    $lctx -> set_resource(page => ($ctx -> get_resource('child_page') || $ctx -> get_resource('page')));
+    $yield -> ($lctx);
+  }
+
   under children {
-    element each (Str :$limit?, Str :$order?) is yielding returns HTML {
-      my %args;
+    documentation <<'EOD';
+Cycles through each of the children. Inside this tag all page attribute tags
+are mapped to the current child page.
+
+Usage
+
+    <%ns%:children:each [%ns%:offset="number"] [%ns%:limit="number"] [%ns%:order="asc|desc"]>
+      ...
+    </%ns%:children:each>
+EOD
+
+    element each (Int :$offset?, Int :$limit?, Str :$order?) is yielding returns HTML {
+      my %args = ( offset => 0 );
+      $args{offset} = $offset -> [0] if defined $offset;
       $args{limit} = $limit -> [0] if defined $limit;
       $args{order} = $order -> [0] if defined $order;
 
@@ -164,6 +238,7 @@ EOD
       while(@children) {
         my $child = shift @children;
         $lctx -> set_resource(page => $child);
+        $lctx -> set_resource(child_page => $child);
         $lctx -> set_var(is_last => !@children);
         $content .= $yield -> ($lctx);
         $lctx = $ctx -> localize;
@@ -171,6 +246,15 @@ EOD
       }
       return $content;
     }
+
+    documentation <<'EOD';
+Returns the first child. Inside this tag all page attribute tags are mapped to
+the first child. Takes the same ordering options as <%ns%:children:each>.
+
+Usage
+
+    <%ns%:children:first>...</%ns%:children:first>
+EOD
 
     element first (Str :$order?) is yielding returns HTML {
       my %args;
@@ -181,8 +265,18 @@ EOD
 
       my $lctx = $ctx -> localize;
       $lctx -> set_resource(page => $child);
+      $lctx -> set_resource(child_page => $child);
       $yield -> ($lctx);
     }
+
+    documentation <<'EOD';
+Returns the last child. Inside this tag all page attribute tags are mapped to
+the last child. Takes the same ordering options as <%ns%:children:each>.
+
+Usage
+
+    <%ns%:children:last>...</%ns%:children:last>
+EOD
 
     element last (Str :$order?) is yielding returns HTML {
       my %args;
@@ -194,6 +288,7 @@ EOD
       my $child = $children[$#children];
       my $lctx = $ctx -> localize;
       $lctx -> set_resource(page => $child);
+      $lctx -> set_resource(child_page => $child);
       $yield -> ($lctx);
     }
 

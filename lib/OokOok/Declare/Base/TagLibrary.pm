@@ -1,4 +1,5 @@
 use MooseX::Declare;
+use feature 'switch';
 
 # PODNAME: OokOok::Declare::Base::TagLibrary
 
@@ -54,20 +55,23 @@ class OokOok::Declare::Base::TagLibrary {
       $xmlns = $context -> get_prefix($xmlns);
       for my $a (keys %{$einfo->{attributes}->{$ns}||{}}) {
         my $value = $node -> {attrs} -> {$xmlns} -> {$a};
-        if($einfo->{attributes}->{$ns}->{$a}->{type} eq 'Str') {
-          if(defined $value) {
-            $attributes->{$a} = $value;
-          }
-        }
-        elsif($einfo->{attributes}->{$ns}->{$a}->{type} eq 'Bool') {
-          if(defined($value)) {
-            $attributes->{$a} = [ map {
-              m{^\s*(yes|true|on|1)\s*$} ? 1 : 0
-            } @{$value} ];
+        if(defined $value) {
+          given( $einfo->{attributes}->{$ns}->{$a}->{type} ) {
+            when('Str') {
+              $attributes->{$a} = $value;
+            }
+            when('Bool') {
+              $attributes->{$a} = [ map {
+                m{^\s*(yes|true|on|1)\s*$} ? 1 : 0
+              } @{$value} ];
+            }
+            when('Int') {
+              $attributes->{$a} = [ map { 0+$_ } @{$value} ];
+            }
           }
         }
         if($einfo->{attributes}->{$ns}->{$a} -> {required}) {
-          die "$a undefined by required" unless defined $attributes->{$a};
+          die "$a undefined but required" unless defined $attributes->{$a};
         }
       }
     }
