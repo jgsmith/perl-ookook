@@ -20,24 +20,8 @@ model OokOok::Model::Search {
   );
 
   method _build_es {
-    ElasticSearch -> new( $CLASS -> config -> {connect_info}||{} );
+    ElasticSearch -> new( %{$CLASS -> config -> {connect_info}||{}} );
   }
-
-  #method COMPONENT ($self: $app, @rest) {
-  #  my $class = ref $self || $self;
-  #  my $arg = {};
-  #  if( scalar @rest ) {
-  #    if( ref($rest[0]) eq 'HASH' ) {
-  #      $arg = $rest[0];
-  #    }
-  #    else {
-  #      $arg = { @rest };
-  #    }
-  #  }
-  #  $self = $class -> next::method($app, $arg);
-  #
-  #  return ElasticSearch->new($class->config->{connect_info}||{});
-  #}
 
   method index (ArrayRef :$docs, :$index, :$lang = 'en') {
     $self -> _es -> bulk_index(
