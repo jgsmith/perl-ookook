@@ -123,7 +123,7 @@ play_controller OokOok::Controller::View {
       $body .= q{<img src="/static/images/demo.png" style="position: absolute; top: 100; left: 100;" />};
     }
 
-    if($ctx -> stash -> {is_development}) {
+    if($ctx -> stash -> {is_development} || $ctx -> stash -> {project} -> is_development) {
       $body .= $self -> calculate_body($ctx, $page);
     }
     else {
