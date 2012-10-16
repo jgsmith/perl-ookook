@@ -4,15 +4,9 @@ $.posts => sub { [] }
 <div class="hero-unit" style="text-align: center;">
   <h1>OokOok!</h1>
   <form action="<% $c->uri_for("/search") %>">
-    <div class="row">
-      <div class="offset3 span6">
-        <input type="text" name="q" class="span6" />
-      </div>
-      <div class="offset4 span4">
-        <button type="submit" class="btn btn-primary">Search</button>
-        <button type="submit" class="btn" name="l" value="1">I'm feeling lucky</button>
-      </div>
-    </div>
+    <input type="text" name="q" class="span6" /><br />
+    <button type="submit" class="btn btn-primary">Search</button>
+    <button type="submit" class="btn" name="l" value="1">I'm feeling lucky</button>
   </form>
 </div>
 

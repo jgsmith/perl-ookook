@@ -20,7 +20,7 @@ model OokOok::Model::Search {
   );
 
   method _build_es {
-    ElasticSearch -> new( %{$CLASS -> config -> {connect_info}||{}} );
+    ElasticSearch -> new( %{OokOok -> config -> {'Model::Search'} -> {connect_info}||{}} );
   }
 
   method index (ArrayRef :$docs, :$index, :$lang = 'en') {

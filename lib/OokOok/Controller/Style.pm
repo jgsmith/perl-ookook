@@ -125,17 +125,37 @@ play_controller OokOok::Controller::Style {
     final action style as '' isa REST;
   }
 
-  method style_GET ($ctx) {
-    # TODO: cache compiled stylesheets
+  method calculate_style ($ctx) {
     my $context = OokOok::Template::Context -> new(
       c => $ctx
     );
     if($ctx -> stash -> {project}) {
       $context -> set_resource(project => $ctx -> stash -> {project});
     }
-    $ctx -> stash -> {rendering} = $ctx -> stash -> {resource} -> render($context);
-    $ctx -> stash -> {template} = 'style/style.tt2';
-    $ctx -> forward( $ctx -> view('HTML') );
+    $ctx -> stash -> {resource} -> render($context);
+  }
+    
+
+  method style_GET ($ctx) {
+    # TODO: cache compiled stylesheets
+    my $body;
+    if($ctx -> stash -> {is_development} || !$ctx -> stash -> {project}) {
+      $body = $self -> calculate_style($ctx);
+    }
+    else {
+      my $key;
+      if($ctx -> stash -> {project}) {
+        $key = $ctx -> stash -> {project} -> date . $ctx -> stash -> {project} -> id;
+      }
+        
+      $key .= $ctx -> stash -> {resource} -> id;
+      $body = $ctx -> model('Cache') -> compute(
+        $key, sub { $self -> calculate_style($ctx) }
+      );
+    }
+    $ctx -> response -> status(200);
+    $ctx -> response -> content_type("text/plain");
+    $ctx -> response -> body($body);
   }
 
   method tstyle_GET ($ctx) {
