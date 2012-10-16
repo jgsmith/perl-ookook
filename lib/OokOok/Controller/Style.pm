@@ -145,7 +145,8 @@ play_controller OokOok::Controller::Style {
     else {
       my $key;
       if($ctx -> stash -> {project}) {
-        $key = $ctx -> stash -> {project} -> date . $ctx -> stash -> {project} -> id;
+        my $project = $ctx -> stash -> {project};
+        $key = $project -> theme_date . $project -> id . $project -> theme -> id;
       }
         
       $key .= $ctx -> stash -> {resource} -> id;

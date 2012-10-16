@@ -6,6 +6,8 @@ use OokOok::Declare;
 
 play_controller OokOok::Controller::View {
 
+  use HTML::Entities qw(encode_entities);
+
   $CLASS -> config(
     map => {
       'text/html' => [ 'View', 'HTML' ],
@@ -63,41 +65,79 @@ play_controller OokOok::Controller::View {
     }
   }
 
-  method play_GET ($ctx, @path) {
-    my $page = $ctx -> stash -> {page};
-
-    # TODO: intervene with cache of rendered page content
+  method calculate_body ($ctx, $page) {
     my $context = OokOok::Template::Context -> new(
       c => $ctx
     );
 
     $context -> set_resource(page => $page);
+    $context -> set_resource(top_page => $page);
     $context -> set_resource(project => $ctx -> stash -> {project});
-    $ctx -> stash -> {rendering} = $page -> render($context);
+    $page -> render($context);
+  }
+
+  method play_GET ($ctx, @path) {
+    my $page = $ctx -> stash -> {page};
+    my $project = $ctx -> stash -> {project};
+
+    my $body = q{<html lang="en">
+<head>
+};
+
+    $body .= "<title>" . encode_entities($project -> name . " - " . $page -> title) . "</title>";
 
     my $project_uuid = $page -> project -> source -> uuid;
-    $ctx -> stash -> {stylesheets} = [ map {
-      $ctx -> uri_for( "/s/$project_uuid/style/$_" )
-    } grep {
-      defined
-    } $page -> stylesheets ];
+
+    my $canonical_url;
+    my $root = "/";
+    my $root_uri = $ctx -> uri_for("/");
+    my $date = $page -> source_version -> edition -> closed_on;
 
     if($page -> date) {
-      my $date = $page -> source_version -> edition -> closed_on;
-      my $root = "/";
-      if($ctx -> stash -> {date}) {
-        #$root .= "../";
-      }
       local $URI::ABS_REMOTE_LEADING_DOTS = 1;
-      my $root_uri = $ctx -> uri_for("/");
-      my $url = URI->new($root
+      $canonical_url = URI->new($root
               . $date -> ymd('') . $date -> hms('') 
               .  "/v/$project_uuid/" . ($page -> slug_path || ''))
           -> abs($root_uri) -> as_string;
-      $ctx -> stash -> {canonical_url} = $url;
 
+      $body .= qq{<link rel="canonical" href="$canonical_url" />}
+    }
+
+    $body .= join("\n", map {
+      qq{<link href="$_" rel="stylesheet/less" type="text/css">}
+    }  map {
+      $ctx -> uri_for( "/s/$project_uuid/style/$_" )
+    } keys %{ +{
+      map { ($_ => 1) } 
+      grep { defined } 
+      $page -> stylesheets
+    } });
+
+    $body .= q{<link href="/static/css/player.less" type="text/css" rel="stylesheet/less">
+<script src="/static/js/less-1.3.0.min.js" type="text/javascript"></script>};
+    $body .= "\n<!-- time: ".$project->date." -->\n";
+
+    $body .= q{<body><div id="ookook-rendering" class="hyphenate">};
+
+    if($page -> status > 0) {
+      $body .= q{<img src="/static/images/demo.png" style="position: absolute; top: 100; left: 100;" />};
+    }
+
+    if($ctx -> stash -> {is_development}) {
+      $body .= $self -> calculate_body($ctx, $page);
+    }
+    else {
+      my $key = $project -> date . $project -> id . $page -> id;
+      $body .= $ctx -> model('Cache') -> compute(
+        $key, sub { $self -> calculate_body($ctx, $page) }
+      );
+    }
+
+    $body .= q{</div><div id="ookook-apparatus"><div id="ookook-apparatus-body" style="display: none;" class="hyphenate">};
+
+    if($page -> date) {
       # now get other relevant dates for this page
-      $ctx -> stash -> {canonical_versions} = [
+      my @versions =
         map { +{
                  link => URI->new(
                            $root . $_ -> date 
@@ -119,11 +159,56 @@ play_controller OokOok::Controller::View {
             } 
         grep { defined $_ -> edition -> closed_on }
         $page -> source -> versions
-      ];
+      ;
+
+      for my $v (@versions) {
+        $v->{a} = qq{<a href="$v->{link}" title="$v->{full_date}">$v->{date}</a>};
+      }
+
+      if(@versions) {
+        $body .= "<h1>Versions</h1>" . join("<br/>",
+          map { 
+            if($_->{link} eq $canonical_url) {
+              "<strong>" . $_->{a} . "</strong>"
+            } else {
+              $_->{a}
+            }
+          } @versions
+        );
+      }
     }
 
-    $ctx -> stash -> {template} = 'view/play.tt2';
-    $ctx -> forward( $ctx -> view('HTML') );
+    $body .= q{</div><div id="ookook-apparatus-handle"><a href="#">OokOok!</a></div></div>};
+
+    $body .= <<EOHTML;
+<script src="/static/js/combined-player.js" type="text/javascript"></script>
+<!-- script src="/static/js/Hyphenator.js" type="text/javascript"></script -->
+<script type="text/javascript">
+Hyphenator.config({
+  persistentconfig: true,
+  storagetype: 'local',
+  useCSS3hyphenation: true,
+  displaytogglebox : false,
+  minwordlength : 4
+});
+Hyphenator.run();
+</script>
+<!-- script src="/static/js/jquery-1.8.2.min.js" type="text/javascript"></script>
+<script src="/static/js/player.js" type="text/javascript"></script -->
+<script>
+// replace 'en' with the language of the project page
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en'
+  });
+}
+</script><script src="http://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body></html>
+EOHTML
+
+    $ctx -> response -> status(200);
+    $ctx -> response -> content_type("text/html");
+    $ctx -> response -> body($body);
   }
 
     my @dt_methods = qw(
