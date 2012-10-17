@@ -21,5 +21,5 @@ controller OokOok::Declare::Base::Player
     }
   }
 
-  final action end (@args) isa RenderView;
+  #final action end (@args) isa RenderView;
 }

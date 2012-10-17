@@ -137,26 +137,38 @@ play_controller OokOok::Controller::Style {
     
 
   method style_GET ($ctx) {
-    # TODO: cache compiled stylesheets
     my $body;
+    my $load_cache;
+    my $key;
+    my $cache = $ctx -> model('Cache');
     if($ctx -> stash -> {is_development} || !$ctx -> stash -> {project}) {
       $body = $self -> calculate_style($ctx);
     }
     else {
-      my $key;
       if($ctx -> stash -> {project}) {
         my $project = $ctx -> stash -> {project};
         $key = $project -> theme_date . $project -> id . $project -> theme -> id;
       }
         
       $key .= $ctx -> stash -> {resource} -> id;
-      $body = $ctx -> model('Cache') -> compute(
-        $key, sub { $self -> calculate_style($ctx) }
-      );
+      $body = $cache -> get($key);
+      if(!defined($body)) {
+        $body = $self -> calculate_style($ctx);
+        $load_cache = 1;
+      }
+      #$body = $ctx -> model('Cache') -> compute(
+      #  $key, sub { $self -> calculate_style($ctx) }
+      #);
     }
     $ctx -> response -> status(200);
     $ctx -> response -> content_type("text/plain");
-    $ctx -> response -> body($body);
+    $ctx -> response -> content_length(length($body));
+    $ctx -> response -> write($body);
+    $ctx -> response -> body('');
+    if($load_cache) {
+      $cache -> set($key, $body);
+    }
+    return 1;
   }
 
   method tstyle_GET ($ctx) {
@@ -179,6 +191,7 @@ play_controller OokOok::Controller::Style {
     $ctx -> response -> content_type( $asset -> mime_type );
     $ctx -> response -> content_length( $asset -> size );
     $ctx -> response -> body( $gridfs_file -> slurp ); # safest for now
+    return 1;
   }
 
   method tasset_GET ($ctx) {

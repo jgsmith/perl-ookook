@@ -123,14 +123,24 @@ play_controller OokOok::Controller::View {
       $body .= q{<img src="/static/images/demo.png" style="position: absolute; top: 100; left: 100;" />};
     }
 
+    my $cache_body;
+    my $calculated_body;
+    my $key;
+    my $cache;
+
     if($ctx -> stash -> {is_development} || $ctx -> stash -> {project} -> is_development) {
       $body .= $self -> calculate_body($ctx, $page);
     }
     else {
-      my $key = $project -> date . $project -> id . $page -> id;
-      $body .= $ctx -> model('Cache') -> compute(
-        $key, sub { $self -> calculate_body($ctx, $page) }
-      );
+      $cache = $ctx -> model('Cache');
+      $key = $project -> date . $project -> id . $page -> id;
+      my $b = $cache -> get($key);
+      if(!defined($b)) {
+        $cache_body = 1;
+        $calculated_body = $self -> calculate_body($ctx, $page);
+        $b = $calculated_body;
+      }
+      $body .= $b;
     }
 
     $body .= q{</div><div id="ookook-apparatus"><div id="ookook-apparatus-body" style="display: none;" class="hyphenate">};
@@ -208,7 +218,14 @@ EOHTML
 
     $ctx -> response -> status(200);
     $ctx -> response -> content_type("text/html");
-    $ctx -> response -> body($body);
+    $ctx -> response -> content_length(length($body));
+    $ctx -> response -> write($body);
+    $ctx -> response -> body('');
+    if($cache_body) {
+      $cache -> set($key, $calculated_body);
+    }
+
+    return 1;
   }
 
     my @dt_methods = qw(

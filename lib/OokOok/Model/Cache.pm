@@ -13,7 +13,7 @@ model OokOok::Model::Cache {
     isa => 'Object',
     builder => '_build_cache',
     handles => [qw/
-      compute
+      compute get set
     /],
   );
 

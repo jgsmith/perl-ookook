@@ -34,8 +34,56 @@ by a L<OokOok::Template::Document> instance.
       children => []
     };
 
-    my $prefix_regex = '(' . join('|', @{$self -> prefixes}) . '):';
+    my $prefix_regex = '(?:' . join('|', @{$self -> prefixes}) . '):';
     $prefix_regex = qr{$prefix_regex};
+
+    my @bits = split(m{<(/?$prefix_regex)}s, $text);
+    my $t = shift @bits;
+    $self -> characters($t) if defined $t;
+
+    while(@bits) {
+      my $prefix = shift @bits;
+      my $ending;
+      if(substr($prefix, 0, 1) eq '/') {
+        $ending = 1;
+        $prefix = substr($prefix, 1, -1);
+      }
+      else {
+        $prefix = substr($prefix, 0, -1);
+      }
+      my $local;
+      my $t = shift @bits;
+      $t =~ m{^([-A-Za-z0-9:_]+)}gc;
+      if($1) {
+        $local = $1;
+        if($ending) {
+          if(!($t =~ m{\G\s*>}gc)) {
+             # error parsing
+          }
+          $self -> end_element( $prefix, $local );
+        }
+        else {
+          $self -> start_element( $prefix, $local );
+          while($t =~ m{\G\s+($prefix_regex)([-A-Za-z0-9_]+)\s*=\s*(['"])}gc) {
+            my($aprefix, $attr, $quot) = ($1, $2, $3);
+            $t =~ m{\G([^$quot]*)$quot}gc;
+            my($ent) = $1;
+            $aprefix = substr($aprefix, 0, -1);
+            $self -> attribute( $aprefix, $attr, $ent );
+          }
+          if($t =~ m{\G\s*/>}gc) {
+            $self -> end_element( $prefix, $local );
+          }
+          elsif(!($t =~ m{\G\s*>}gc)) {
+            # error parsing
+          }
+          # now put the rest of this bit in as characters
+          $self -> characters( substr($t, pos($t)) );
+        }
+      }
+    }
+
+=head1
 
     while(length($text) && $text =~ m{</?$prefix_regex}s) {
       if($text =~ m{\A(.*?)</?$prefix_regex}s) {
@@ -73,7 +121,12 @@ by a L<OokOok::Template::Document> instance.
         }
       }
     }
-    push @{$self -> _el_stack -> [0] -> {children}}, $text if length($text);
+
+=cut
+
+    push @{$self -> _el_stack -> [0] -> {children}}, $self -> _buffer
+      if $self -> _buffer ne '';
+
     return $self -> _el_stack -> [0] -> {children};
   }
 
