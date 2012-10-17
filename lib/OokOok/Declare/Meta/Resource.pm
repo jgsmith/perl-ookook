@@ -175,7 +175,11 @@ role OokOok::Declare::Meta::Resource {
       $self -> properties -> {$key} = \%config;
     }
     my $method = $config{source} || sub { $_[0] -> source -> $key };
-    $self -> add_method( $key => $method );
+    $self -> add_attribute( $key => (
+      is => 'ro',
+      default => $method,
+      lazy => 1,
+    ) );
   }
   
   method get_prop_list { keys %{$_[0] -> properties} }
