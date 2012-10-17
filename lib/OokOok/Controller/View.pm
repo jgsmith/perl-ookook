@@ -8,7 +8,7 @@ play_controller OokOok::Controller::View {
 
   use HTML::Entities qw(encode_entities);
 
-  $CLASS -> config(
+  __PACKAGE__ -> config(
     map => {
       'text/html' => [ 'View', 'HTML' ],
     },

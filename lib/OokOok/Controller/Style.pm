@@ -6,7 +6,7 @@ use OokOok::Declare;
 
 play_controller OokOok::Controller::Style {
 
-  $CLASS -> config(
+  __PACKAGE__ -> config(
     map => {
       'text/css' => [ 'View', 'CSS' ],
     },

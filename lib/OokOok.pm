@@ -37,7 +37,7 @@ application OokOok
   use CatalystX::RoleApplicator;
   use DateTime;
 
-  $CLASS -> apply_request_class_roles(qw[
+  __PACKAGE__ -> apply_request_class_roles(qw[
     Catalyst::TraitFor::Request::REST::ForBrowsers
   ]);
 
@@ -63,7 +63,7 @@ For example:
 
 =cut
 
-  $CLASS->config(
+  __PACKAGE__->config(
     name => 'OokOok',
     # Disable deprecated behavior needed by old applications
     disable_component_resolution_regex_fallback => 1,
@@ -71,7 +71,7 @@ For example:
     encoding => 'UTF-8',
     default_view => 'Mason',
     'Plugin::ConfigLoader' => {
-      file => $CLASS -> path_to( 'conf' ),
+      file => __PACKAGE__ -> path_to( 'conf' ),
     },
   );
 
@@ -162,8 +162,8 @@ BEGIN {
                          require => 1,
                          max_depth => 4);
 
-  $CLASS -> _formatters;
-  #print STDERR "Formatters: \n  ", join("\n  ", $CLASS -> _formatters), "\n";
+  __PACKAGE__ -> _formatters;
+  #print STDERR "Formatters: \n  ", join("\n  ", __PACKAGE__ -> _formatters), "\n";
 }
 
 1;

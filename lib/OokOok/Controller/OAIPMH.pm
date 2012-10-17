@@ -23,7 +23,7 @@ controller OokOok::Controller::OAIPMH {
     identifier
   );
 
-  $CLASS -> config(
+  __PACKAGE__ -> config(
     namespace => 'oai-pmh',
     domain => "ookook.org",
   );

@@ -5,7 +5,7 @@ use OokOok::Declare;
 # ABSTRACT: Controller for the Library REST interface
 
 rest_controller OokOok::Controller::Library {
-  $CLASS -> config(
+  __PACKAGE__ -> config(
     default => 'text/html'
   );
 }

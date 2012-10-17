@@ -60,7 +60,7 @@ Table OokOok::Schema::Result::User {
   owns_many board_applicants => 'OokOok::Schema::Result::BoardApplicant';
   owns_many emails           => 'OokOok::Schema::Result::Email';
 
-  $CLASS -> many_to_many( board_ranks => 'board_members', 'board_rank' );
+  __PACKAGE__ -> many_to_many( board_ranks => 'board_members', 'board_rank' );
 
   method board_membership (Object $board) {
     $self -> board_members -> find({

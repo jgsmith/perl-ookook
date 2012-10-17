@@ -6,7 +6,7 @@ use OokOok::Declare;
 
 rest_controller OokOok::Controller::Snippet {
 
-  $CLASS -> config(
+  __PACKAGE__ -> config(
     map => {
     },
     default => 'text/html',

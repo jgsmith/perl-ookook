@@ -12,7 +12,7 @@ controller OokOok::Controller::Root {
   use OokOok::Collection::Library;
   use OokOok::Collection::Database;
 
-  $CLASS -> config(
+  __PACKAGE__ -> config(
     namespace => '',
     map => {
       'text/html' => [ 'View', 'Mason' ],

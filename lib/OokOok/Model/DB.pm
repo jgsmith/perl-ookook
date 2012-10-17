@@ -8,7 +8,7 @@ model OokOok::Model::DB
   extends Catalyst::Model::DBIC::Schema
 {
 
-  $CLASS->config(
+  __PACKAGE__->config(
     schema_class => 'OokOok::Schema',
     
     connect_info => {

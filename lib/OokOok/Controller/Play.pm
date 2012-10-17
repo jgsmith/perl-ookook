@@ -6,7 +6,7 @@ use OokOok::Declare;
 
 play_controller OokOok::Controller::Play {
 
-  $CLASS -> config(
+  __PACKAGE__ -> config(
     map => {
       'text/html' => [ 'View', 'HTML' ],
     },

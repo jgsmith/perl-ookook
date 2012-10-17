@@ -6,7 +6,7 @@ use OokOok::Declare;
 
 versioned_table OokOok::Schema::Result::Page {
 
-  $CLASS -> has_many( 
+  __PACKAGE__ -> has_many( 
     children => "OokOok::Schema::Result::PageVersion", 
     parent_page_id => {
       cascade_copy => 0,

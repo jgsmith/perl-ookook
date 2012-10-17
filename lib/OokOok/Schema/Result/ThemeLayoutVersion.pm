@@ -13,7 +13,7 @@ table_version OokOok::Schema::Result::ThemeLayoutVersion {
     is_nullable => 1,
   );
 
-  $CLASS -> belongs_to( 
+  __PACKAGE__ -> belongs_to( 
     parent_layout => 'OokOok::Schema::Result::ThemeLayout', 'parent_layout_id'
   );
 
@@ -22,7 +22,7 @@ table_version OokOok::Schema::Result::ThemeLayoutVersion {
     is_nullable => 1,
   );
 
-  $CLASS -> belongs_to( 
+  __PACKAGE__ -> belongs_to( 
     theme_style => 'OokOok::Schema::Result::ThemeStyle', 'theme_style_id'
   );
 

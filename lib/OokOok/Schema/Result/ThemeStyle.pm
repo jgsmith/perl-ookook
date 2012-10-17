@@ -6,7 +6,7 @@ use OokOok::Declare;
 
 versioned_table OokOok::Schema::Result::ThemeStyle {
 
-  $CLASS -> has_many( 
+  __PACKAGE__ -> has_many( 
     theme_layout_versions => 'OokOok::Schema::Result::ThemeLayoutVersion', 
    'theme_style_id'
   );

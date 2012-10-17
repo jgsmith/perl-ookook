@@ -26,11 +26,11 @@ Table OokOok::Schema::Result::BoardRank {
     is_nullable => 1,
   );
 
-  $CLASS -> belongs_to(
+  __PACKAGE__ -> belongs_to(
     parent_rank => 'OokOok::Schema::Result::BoardRank', 'parent_rank_id'
   );
 
-  $CLASS -> has_many(
+  __PACKAGE__ -> has_many(
     children => 'OokOok::Schema::Result::BoardRank', 'parent_rank_id'
   );
 

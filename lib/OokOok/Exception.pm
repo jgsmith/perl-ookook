@@ -58,7 +58,7 @@ class OokOok::Exception::OAIPMH extends Throwable::Error is mutable {
   );
 
   for my $method (keys %messages) {
-    $CLASS -> meta -> add_method( $method => sub {
+    __PACKAGE__ -> meta -> add_method( $method => sub {
       my($self, %args) = @_;
       $self -> throw(
         message => $messages{$method},

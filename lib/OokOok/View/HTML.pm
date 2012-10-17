@@ -7,7 +7,7 @@ use CatalystX::Declare;
 view OokOok::View::HTML is mutable
   extends Catalyst::View::TT {
 
-  $CLASS->config(
+  __PACKAGE__->config(
     TEMPLATE_EXTENSION => '.tt2',
     render_die => 1,
     ABSOLUTE => 1,

@@ -12,7 +12,7 @@ rest_controller OokOok::Controller::Project {
 
   use JSON;
 
-  $CLASS -> config(
+  __PACKAGE__ -> config(
     map => {
     },
     default => 'text/html',

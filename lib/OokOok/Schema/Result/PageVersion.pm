@@ -26,7 +26,7 @@ table_version OokOok::Schema::Result::PageVersion {
     is_nullable => 1,
   );
 
-  $CLASS -> belongs_to( 
+  __PACKAGE__ -> belongs_to( 
     'parent_page' => 'OokOok::Schema::Result::Page', 'parent_page_id'
   );
 
