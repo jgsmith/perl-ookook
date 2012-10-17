@@ -34,8 +34,10 @@ by a L<OokOok::Template::Document> instance.
       children => []
     };
 
-    my $prefix_regex = '(?:' . join('|', @{$self -> prefixes}) . '):';
+    my $prefix_regex = '(' . join('|', @{$self -> prefixes}) . '):';
     $prefix_regex = qr{$prefix_regex};
+
+=head1
 
     my @bits = split(m{<(/?$prefix_regex)}s, $text);
     my $t = shift @bits;
@@ -54,8 +56,7 @@ by a L<OokOok::Template::Document> instance.
       my $local;
       my $t = shift @bits;
       $t =~ m{^([-A-Za-z0-9:_]+)}gc;
-      if($1) {
-        $local = $1;
+      if($local = $1) {
         if($ending) {
           if(!($t =~ m{\G\s*>}gc)) {
              # error parsing
@@ -83,7 +84,7 @@ by a L<OokOok::Template::Document> instance.
       }
     }
 
-=head1
+=cut
 
     while(length($text) && $text =~ m{</?$prefix_regex}s) {
       if($text =~ m{\A(.*?)</?$prefix_regex}s) {
@@ -122,7 +123,7 @@ by a L<OokOok::Template::Document> instance.
       }
     }
 
-=cut
+    $self -> characters($text) if length($text);
 
     push @{$self -> _el_stack -> [0] -> {children}}, $self -> _buffer
       if $self -> _buffer ne '';

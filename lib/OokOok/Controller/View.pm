@@ -57,7 +57,7 @@ play_controller OokOok::Controller::View {
       # we expect as many entries in the stashed path as are in the @path
       # for now, we shouldn't have anything left in @path -- we don't have
       # pages yet that can react to extra path info
-      if(!$page || @path) {
+      if(!$page || @path || !defined($page -> source_version)) {
         $ctx -> detach(qw/Controller::Root default/);
       }
 

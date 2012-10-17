@@ -96,44 +96,89 @@ resource OokOok::Resource::Page {
     # (or most recent edition) pointing to the id of this page
     return unless defined wantarray;
 
-    my %seen;
-    my @children = 
-      grep {
-        $_ -> source_version -> parent_page -> id == $self -> source -> id
-        && !$seen{$_ -> source -> id}++
-      }
-      map {
-        $self -> new( 
-          source => $_ -> owner, date => $self -> date, c => $self -> c 
-        )
-      } $self -> source -> children;
-    return @children;
+    my $q;
+    my $date;
+
+    if($self -> is_development) {
+      $date = $self -> source -> result_source -> schema -> storage -> datetime_parser -> format_datetime(DateTime->now);
+      $q = $self -> source -> children -> search( [{
+        "me.published_for" => { '@>' => \"'$date'::timestamp" },
+      }, {
+        "me.published_for" => undef
+      }], {
+        order_by => { -desc => 'me.id' }
+      });
+    }
+    elsif($self -> date) {
+      $date = $self -> source -> result_source -> schema -> storage -> datetime_parser -> format_datetime($self -> date);
+      $q = $self -> source -> children -> search( {
+        "me.published_for" => { '@>' => \"'$date'::timestamp" },
+      } );
+    }
+
+    if(wantarray) {
+      map { $self -> new(
+        source => $_ -> owner, date => $self -> date, c => $self -> c,
+        source_version => $_
+      ) } $q -> all;
+    }
+    else {
+      $q -> count;
+    }
+
+    #my %seen;
+    #my $own_source_id = $self -> source -> id;
+    #my @children = 
+    #  map { $_ -> [1] }
+    #  grep {
+    #    !$seen{$_ -> [0]} &&
+    #    $_ -> [1] -> source_version -> parent_page -> id == $own_source_id
+    #    && !$seen{$_ -> [0]}++
+    #  }
+    #  map {
+    #    [ $_ -> id,
+    #      $self -> new( 
+    #        source => $_ -> owner, date => $self -> date, c => $self -> c 
+    #      )
+    #    ]
+    #  } $self -> source -> children;
+    #return @children;
   }  
   
   method get_child_page (Str $slug) {
-    my $q = $self -> source -> children -> search( {
+    my $date;
+    my $q;
+
+
+    $q = $self -> source -> children -> search( {
       "me.slug" => $slug,
-    }, {
-      order_by => { -desc => 'me.edition_id' }
     } );
-  
-    # if we are dev, we want the most recent - otherwise, no later than the
-    # current operating edition
+
     if($self -> c -> stash -> {date}) {
+      $date = $self -> source -> result_source -> schema -> storage -> datetime_parser -> format_datetime($self -> c -> stash -> {date});
       $q = $q -> search({
-        "me.published_for" => { '@>' => \("'".OokOok::Util::DB::deflate_datetime($self -> c -> stash -> {date})."'::timestamp") }
+        "me.published_for" => { '@>' => \"'$date'::timestamp" },
+      });
+    }
+    else {
+      $date = $self -> source -> result_source -> schema -> storage -> datetime_parser -> format_datetime(DateTime -> now);
+      $q = $q -> search([{
+        "me.published_for" => { '@>' => \"'$date'::timestamp" },
       }, {
+        "me.published_for" => undef
+      }], {
+       order_by => { -desc => 'me.id' }
       });
     }
   
-    # the one we want is the first one since it's the most recent one with the
-    # slug and pointing to us - and in the scope of the edition we're looking
-    # at
     my $version = $q -> first;
     if($version) {
       $self -> new(
         c => $self -> c,
-        source => $version -> page
+        source => $version -> page,
+        #source_version => $version,
+        date => $self -> date,
+        is_development => $self -> is_development,
       );
     }
   }
