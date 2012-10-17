@@ -1,11 +1,10 @@
-use MooseX::Declare;
+package OokOok::Template::Context;
 
-# PODNAME: OokOok::Template::Context
+use Moose;
 
 # ABSTRACT: Context container for rendering content
 
-class OokOok::Template::Context {
-  use MooseX::Types::Moose qw/CodeRef ArrayRef Str HashRef/;
+use MooseX::Types::Moose qw/CodeRef ArrayRef Str HashRef/;
 
 =method new (%options)
 
@@ -22,13 +21,13 @@ The constructor takes the following options:
 =cut
 
   has parent => (
-    isa => 'Maybe[OokOok::Template::Context]',
+    #isa => 'Maybe[OokOok::Template::Context]',
     is => 'ro',
     predicate => 'has_parent',
   );
 
   has document => (
-    isa => 'Maybe[OokOok::Template::Document]',
+    #isa => 'Maybe[OokOok::Template::Document]',
     is => 'ro',
     predicate => 'has_document',
   );
@@ -79,14 +78,15 @@ of the resource being viewed.
 
 =cut
 
-  method project_url (Str $path) {
-    my $project = $self -> get_resource('project');
-    return '' unless $project;
+sub project_url {
+  my($self, $path) = @_;
+  my $project = $self -> get_resource('project');
+  return '' unless $project;
 
-    my $url = '/v/' . $project -> id . '/' . $path;
-    $url =~ s{/+}{/}g;
-    return $project -> c -> uri_for($url);
-  }
+  my $url = '/v/' . $project -> id . '/' . $path;
+  $url =~ s{/+}{/}g;
+  return $project -> c -> uri_for($url);
+}
 
 =method localize ()
 
@@ -96,13 +96,15 @@ becomes the parent of the returned context.
 
 =cut
 
-  method localize {
-    OokOok::Template::Context -> new( 
-      parent => $self,
-      document => $self -> document,
-      is_mockup => $self -> is_mockup,
-    );
-  }
+sub localize {
+  my($self) = @_;
+
+  OokOok::Template::Context -> new( 
+    parent => $self,
+    document => $self -> document,
+    is_mockup => $self -> is_mockup,
+  );
+}
 
 =method delocalize ()
 
@@ -113,10 +115,12 @@ This is useful if you need to climb up the stack of localizations.
 
 =cut
 
-  method delocalize {
-    if($self -> has_parent) { return $self -> parent; }
-    else                    { return $self;           }
-  }
+sub delocalize {
+  my($self) = @_;
+
+  if($self -> has_parent) { return $self -> parent; }
+  else                    { return $self;           }
+}
 
 =method get_resource (Str $key)
 
@@ -126,14 +130,16 @@ context's parent context if it has one.
 
 =cut
 
-  method get_resource (Str $key) {
-    if(!exists($self -> resources -> {$key}) && $self -> parent) {
-      $self -> parent -> get_resource($key);
-    }
-    else {
-      $self -> resources -> {$key};
-    }
+sub get_resource {
+  my($self, $key) = @_;
+
+  if(!exists($self -> resources -> {$key}) && $self -> parent) {
+    $self -> resources -> {$key} = $self -> parent -> get_resource($key);
   }
+  else {
+    $self -> resources -> {$key};
+  }
+}
 
 =method set_resource (Str $key, Object $value)
 
@@ -141,9 +147,11 @@ Associates the given resource object with the key in the current context.
 
 =cut
 
-  method set_resource (Str $key, Object $value) {
-    $self -> resources -> {$key} = $value;
-  }
+sub set_resource {
+  my($self, $key, $value) = @_;
+
+  $self -> resources -> {$key} = $value;
+}
 
 =method set_var (Str $key, Any $val)
 
@@ -151,134 +159,130 @@ Associates the given value with the key in the current context.
 
 =cut
 
-  method set_var ($key, $val) {
-    $self -> vars -> {$key} = $val;
-  }
+sub set_var {
+  my($self, $key, $val) = @_;
+  $self -> vars -> {$key} = $val;
+}
 
 =method get_var (Str $key)
 
 =cut
 
-  method get_var (Str $key) {
-    if(!exists($self -> vars -> {$key})) {
-      if($self -> has_parent) {
-        return $self -> parent -> get_var($key);
-      }
+sub get_var {
+  my($self, $key) = @_;
+  if(!exists($self -> vars -> {$key})) {
+    if($self -> has_parent) {
+      return $self -> vars -> {$key} = $self -> parent -> get_var($key);
     }
-    my $val = $self -> vars -> {$key};
-    if(is_CodeRef($val)) {
-      return $val->();
-    }
-    return $val;
   }
+
+  my $val = $self -> vars -> {$key};
+  return $val->() if is_CodeRef($val);
+  return $val;
+}
 
 =method has_var (Str $key)
 
 =cut
 
-  method has_var ($key) {
-    return 1 if exists($self -> vars -> {$key});
+sub has_var {
+  my($self, $key) = @_;
+  return 1 if exists($self -> vars -> {$key});
 
-    return 0 unless $self -> parent;
+  return 0 unless $self -> parent;
 
-    return $self -> parent -> has_var($key);
-  }
+  return $self -> parent -> has_var($key);
+}
 
 =method set_yield (CodeRef $code)
 
 =cut
 
-  method set_yield (CodeRef $code) {
-    $self -> _yield($code);
-  }
+sub set_yield { $_[0] -> _yield($_[1]); }
 
 =method yield_nothing ()
 
 =cut
 
   # this is used to partition off the yield stack
-  method yield_nothing { $self -> _yield(sub{ '' }) }
+sub yield_nothing { $_[0] -> _yield(sub{ '' }) }
 
 =method yield (Object $ctx?)
 
 =cut
 
-  method yield(Object $ctx?) {
-    if($self -> has_yield) {
-      return $self -> _yield -> ($ctx || $self);
-    }
-    elsif($self -> has_parent) {
-      if($ctx) {
-        return $self -> parent -> yield($ctx);
-      }
-      else {
-        return $self -> parent -> yield;
-      }
-    }
-  }
+sub yield {
+  my($self, $ctx) = @_;
+
+  return $self -> _yield -> ($ctx || $self) if $self -> has_yield;
+
+  return $self -> parent -> yield($ctx) if $self -> has_parent;
+}
 
 =method get_namespace (Str $prefix)
 
 =cut
 
-  method get_namespace (Str $prefix) {
-    if(!exists($self -> namespaces -> {$prefix})) {
-      if($self -> has_parent) {
-        return $self -> parent -> get_namespace($prefix);
-      }
+sub get_namespace {
+  my($self, $prefix) = @_;
+  if(!exists($self -> namespaces -> {$prefix})) {
+    if($self -> has_parent) {
+      return $self -> namespaces -> {$prefix} = $self -> parent -> get_namespace($prefix);
     }
-    return $self -> namespaces -> {$prefix};
   }
+  return $self -> namespaces -> {$prefix};
+}
 
 =method get_prefix (Str $ns)
 
 =cut
 
-  method get_prefix (Str $ns) {
-    for my $p (keys %{$self -> namespaces}) {
-      return $p if $self -> namespaces -> {$p} eq $ns;
-    }
-    return $self -> parent -> get_prefix($ns)
-      if $self -> has_parent;
+sub get_prefix {
+  my($self, $ns) = @_;
+  for my $p (keys %{$self -> namespaces}) {
+    return $p if $self -> namespaces -> {$p} eq $ns;
   }
+  return $self -> parent -> get_prefix($ns) if $self -> has_parent;
+}
 
 =method process_node (Str|HashRef|ArrayRef $node)
 
 =cut
 
-  method process_node (Str|HashRef|ArrayRef $node) {
-    if(is_Str($node)) {
-      return $node;
-    }
-    elsif(is_HashRef($node)) {
-      my $local = $node->{local};
-      my $ns = $self -> get_namespace($node->{prefix});
-      if($ns) {
-        my $taglib = $self -> document -> taglibs -> {$ns};
-        if($taglib) {
-          return $taglib -> process_node($self, $node);
-        }
-      }
-      return ''; # unrecognized tag/namespace
-    }
-    else { # if(is_ArrayRef($node)) {
-      return join '', map {
-        $self -> process_node($_)
-      } grep { defined } @{$node};
-    }
-  }
+sub process_node {
+  my($self, $node) = @_;
+  return '' unless defined $node;
+  return $node unless ref $node;
 
-  method add_namespace_context ( Str $ns, Str $local ) {
-    $self -> _namespace_context -> {$ns} ||= [];
-    push @{$self -> _namespace_context -> {$ns}}, split(/:/, $local);
-  }
+  if(is_HashRef($node)) {
+    my $local = $node->{local};
+    my $ns = $self -> get_namespace($node->{prefix});
+    return '' unless $ns;
 
-  method get_namespace_context( Str $ns ) {
-    if($self -> has_parent) {
-      return $self -> parent -> get_namespace_context($ns), @{$self -> _namespace_context -> {$ns} || []};
-    }
-    else {
-      return @{$self -> _namespace_context -> {$ns} || []};
-    }
+    my $taglib = $self -> document -> taglibs -> {$ns};
+    return $taglib -> process_node($self, $node) if $taglib;
+  }
+  else { # if(is_ArrayRef($node)) {
+    return join '', map {
+      $self -> process_node($_)
+    } grep { defined } @{$node};
   }
 }
+
+sub add_namespace_context {
+  my( $self, $ns, $local ) = @_;
+  $self -> _namespace_context -> {$ns} ||= [];
+  push @{$self -> _namespace_context -> {$ns}}, split(/:/, $local);
+}
+
+sub get_namespace_context {
+  my($self, $ns) = @_;
+  if($self -> has_parent) {
+    return $self -> parent -> get_namespace_context($ns), @{$self -> _namespace_context -> {$ns} || []};
+  }
+  else {
+    return @{$self -> _namespace_context -> {$ns} || []};
+  }
+}
+
+1;
