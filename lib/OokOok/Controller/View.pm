@@ -7,6 +7,7 @@ use OokOok::Declare;
 play_controller OokOok::Controller::View {
 
   use HTML::Entities qw(encode_entities);
+  use Encode qw(encode_utf8);
 
   __PACKAGE__ -> config(
     map => {
@@ -80,11 +81,16 @@ play_controller OokOok::Controller::View {
     my $page = $ctx -> stash -> {page};
     my $project = $ctx -> stash -> {project};
 
-    my $body = q{<html lang="en">
-<head>
-};
+    my $writer = sub {
+      $ctx -> response -> write(encode_utf8($_[0]));
+    };
 
-    $body .= "<title>" . encode_entities($project -> name . " - " . $page -> title) . "</title>";
+    $ctx -> response -> status(200);
+    $ctx -> response -> content_type("text/html; charset=utf-8");
+
+    $writer->(qq{<html lang="en">\n<head>});
+
+    $writer->("<title>" . encode_entities($project -> name . " - " . $page -> title) . "</title>");
 
     my $project_uuid = $page -> project -> source -> uuid;
 
@@ -100,10 +106,10 @@ play_controller OokOok::Controller::View {
               .  "/v/$project_uuid/" . ($page -> slug_path || ''))
           -> abs($root_uri) -> as_string;
 
-      $body .= qq{<link rel="canonical" href="$canonical_url" />}
+      $writer->(qq{<link rel="canonical" href="$canonical_url" />});
     }
 
-    $body .= join("\n", map {
+    $writer->(join("\n", map {
       qq{<link href="$_" rel="stylesheet/less" type="text/css">}
     }  map {
       $ctx -> uri_for( "/s/$project_uuid/style/$_" )
@@ -111,16 +117,16 @@ play_controller OokOok::Controller::View {
       map { ($_ => 1) } 
       grep { defined } 
       $page -> stylesheets
-    } });
+    } }));
 
-    $body .= q{<link href="/static/css/player.less" type="text/css" rel="stylesheet/less">
-<script src="/static/js/less-1.3.0.min.js" type="text/javascript"></script>};
-    $body .= "\n<!-- time: ".$project->date." -->\n";
+    $writer->(q{<link href="/static/css/player.less" type="text/css" rel="stylesheet/less">
+<script src="/static/js/less-1.3.0.min.js" type="text/javascript"></script>});
+    $writer->("\n<!-- time: ".$project->date." -->\n");
 
-    $body .= q{<body><div id="ookook-rendering" class="hyphenate">};
+    $writer->(q{</head><body><div id="ookook-rendering" class="hyphenate">});
 
     if($page -> status > 0) {
-      $body .= q{<img src="/static/images/demo.png" style="position: absolute; top: 100; left: 100;" />};
+      $writer->(q{<img src="/static/images/demo.png" style="position: absolute; top: 100; left: 100;" />});
     }
 
     my $cache_body;
@@ -129,7 +135,7 @@ play_controller OokOok::Controller::View {
     my $cache;
 
     if($ctx -> stash -> {is_development} || $ctx -> stash -> {project} -> is_development) {
-      $body .= $self -> calculate_body($ctx, $page);
+      $writer->($self -> calculate_body($ctx, $page));
     }
     else {
       $cache = $ctx -> model('Cache');
@@ -140,10 +146,10 @@ play_controller OokOok::Controller::View {
         $calculated_body = $self -> calculate_body($ctx, $page);
         $b = $calculated_body;
       }
-      $body .= $b;
+      $writer->($b);
     }
 
-    $body .= q{</div><div id="ookook-apparatus"><div id="ookook-apparatus-body" style="display: none;" class="hyphenate">};
+    $writer->(q{</div><div id="ookook-apparatus"><div id="ookook-apparatus-body" style="display: none;" class="hyphenate">});
 
     if($page -> date) {
       # now get other relevant dates for this page
@@ -176,7 +182,7 @@ play_controller OokOok::Controller::View {
       }
 
       if(@versions) {
-        $body .= "<h1>Versions</h1>" . join("<br/>",
+        $writer->("<h1>Versions</h1>" . join("<br/>",
           map { 
             if($_->{link} eq $canonical_url) {
               "<strong>" . $_->{a} . "</strong>"
@@ -184,13 +190,13 @@ play_controller OokOok::Controller::View {
               $_->{a}
             }
           } @versions
-        );
+        ));
       }
     }
 
-    $body .= q{</div><div id="ookook-apparatus-handle"><a href="#">OokOok!</a></div></div>};
+    $writer->(q{</div><div id="ookook-apparatus-handle"><a href="#">OokOok!</a></div></div>});
 
-    $body .= <<EOHTML;
+    $writer->(<<EOHTML);
 <script src="/static/js/combined-player.js" type="text/javascript"></script>
 <!-- script src="/static/js/Hyphenator.js" type="text/javascript"></script -->
 <script type="text/javascript">
@@ -216,10 +222,9 @@ function googleTranslateElementInit() {
 </body></html>
 EOHTML
 
-    $ctx -> response -> status(200);
-    $ctx -> response -> content_type("text/html");
-    $ctx -> response -> content_length(length($body));
-    $ctx -> response -> write($body);
+    #$body = encode_utf8($body);
+    #$ctx -> response -> content_length(length($body));
+    #$ctx -> response -> write($body);
     $ctx -> response -> body('');
     if($cache_body) {
       $cache -> set($key, $calculated_body);

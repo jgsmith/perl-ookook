@@ -19,10 +19,11 @@ class OokOok::Declare::Base::TagLibrary {
     # we want to pull out attributes and such based on needs of tag
     my $name = $node -> {local};
     my @context = $ctx -> get_namespace_context($node -> {prefix});
+    my $elements = $self -> meta -> elements;
     push @context, $name;
     my $einfo;
     while(!$einfo && @context) {
-      $einfo = $self -> meta -> element( join(":", @context) );
+      $einfo = $elements -> {join(":", @context)};
       shift @context;
     }
 
@@ -40,9 +41,6 @@ class OokOok::Declare::Base::TagLibrary {
       }
     }
       
-
-    #return '' if !$einfo -> {impl}; # Nothing to do, so don't do anything
-
     my $context = $ctx -> localize;
     $context -> add_namespace_context( $node->{prefix}, $name );
     my $xmlns;
