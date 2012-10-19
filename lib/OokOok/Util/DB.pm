@@ -34,7 +34,7 @@ sub deflate_datetime {
 
 sub inflate_tsrange {
   return unless defined $_[0];
-  $_[0] =~ m{^[\[\(]"?([^"]*)"?\s*,\s*"?([^"]*)"?[\]\)]};
+  $_[0] =~ m{^'?[\[\(]"?([^"]*)"?\s*,\s*"?([^"]*)"?[\]\)]};
   my $dts = [ map { $_ ? inflate_datetime($_) : undef } ($1, $2) ];
   my %info;
   if(defined($dts -> [0])) {

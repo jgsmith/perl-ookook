@@ -9,6 +9,7 @@ admin_controller OokOok::Controller::Admin::Project {
 
   use OokOok::Collection::Theme;
   use OokOok::Resource::Theme;
+  use Encode qw(encode_utf8);
 
   action base under '/' as 'admin/project';
 
@@ -102,6 +103,23 @@ admin_controller OokOok::Controller::Admin::Project {
       $ctx -> response -> redirect(
         $ctx -> uri_for("/admin/project/$uuid/page")
       );
+    }
+
+    # gets us tag and filter help
+    final action project_help (Str $topic) as 'help' {
+      if($topic eq 'tags') {
+        # we need to cycle through the libraries associated with the project
+        # and call their -> meta -> documentation($prefix) method
+        my @docs = map { $_ -> documentation } 
+                   $ctx -> stash -> {project} -> libraries;
+        $ctx -> response -> content_type('text/html; charset=utf-8');
+        $ctx -> response -> body(encode_utf8("<html><head></head><body>" .
+          OokOok::Formatter::Markdown -> new -> format( join("\n\n", @docs) ) .
+          "</body></html>"
+        ));
+      }
+      else { # we expect a filter name
+      }
     }
 
     final action project_settings as 'settings' {
@@ -398,8 +416,8 @@ admin_controller OokOok::Controller::Admin::Project {
 
     final action project_page_discard as 'discard' {
       if($ctx -> request -> method eq 'POST') {
-        my $page = $ctx -> stash -> {page};
-        if($self -> DELETE($ctx, $page)) {
+        #my $page = $ctx -> stash -> {page};
+        if($self -> DELETE($ctx, resource => 'page')) {
           my $project = $ctx -> stash -> {project};
           $ctx -> response -> redirect(
             $ctx -> uri_for("/admin/project/" . $project->id . "/page")

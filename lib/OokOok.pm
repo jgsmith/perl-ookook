@@ -142,10 +142,24 @@ Returns the list of formatter classes available.
 =cut
 
   our @FORMATTERS;
+  our @TAGLIBRARIES;
 
   method formatters (Object|ClassName $self:) {
     return @FORMATTERS if @FORMATTERS;
     @FORMATTERS = $self -> _formatters;
+  }
+
+  method taglibraries (Object|ClassName $self:) {
+    return @TAGLIBRARIES if @TAGLIBRARIES;
+    @TAGLIBRARIES = $self -> _taglibs;
+    for my $taglib (@TAGLIBRARIES) {
+      if($self -> config -> {TagLibs} -> {module} -> {$taglib} -> {namespace}){
+        $taglib -> meta -> taglib_namespace(
+          $self -> config -> {TagLibs} -> {module} -> {$taglib} -> {namespace}
+        );
+      }
+    }
+    @TAGLIBRARIES;
   }
 
 }
@@ -163,6 +177,7 @@ BEGIN {
                          max_depth => 4);
 
   __PACKAGE__ -> _formatters;
+  __PACKAGE__ -> _taglibs;
   #print STDERR "Formatters: \n  ", join("\n  ", __PACKAGE__ -> _formatters), "\n";
 }
 

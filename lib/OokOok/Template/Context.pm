@@ -42,7 +42,7 @@ The constructor takes the following options:
     isa => 'HashRef',
     is => 'ro',
     default => sub { +{ } },
-    lazy => 1,
+    #lazy => 1,
   );
 
   has is_mockup => (
@@ -55,14 +55,14 @@ The constructor takes the following options:
     isa => 'HashRef',
     is => 'ro',
     default => sub { +{ } },
-    lazy => 1,
+    #lazy => 1,
   );
 
   has _namespace_context => (
     isa => 'HashRef',
     is => 'rw',
     default => sub { +{ } },
-    lazy => 1,
+    #lazy => 1,
   );
 
   has _yield => (

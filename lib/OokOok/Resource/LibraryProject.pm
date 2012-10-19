@@ -31,5 +31,9 @@ resource OokOok::Resource::LibraryProject {
     source_version => sub { $_[0] -> source -> project },
   );
 
+  method documentation {
+    $self -> library -> documentation($self -> prefix);
+  }
+
   method can_PUT { 0 }
 }

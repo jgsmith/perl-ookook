@@ -38,13 +38,14 @@ class OokOok::Declare::Base::TableVersion extends OokOok::Declare::Base::Table {
     }
 
     if($self -> edition -> is_closed) {
-      if(1 == keys %dirty_columns && exists($dirty_columns{published_for})) {
+      if(1 == keys %dirty_columns && exists($dirty_columns{published_for}) && defined($dirty_columns{published_for})) {
         if($self -> can("status") && $self -> status > 0) {
           $self -> discard_changes();
           OokOok::Exception::PUT -> forbidden(
             message => "Unable to modify the publication dates of an unapproved resource"
           );
         }
+        my $pf = OokOok::Util::DB::inflate_tsrange(${$dirty_columns{published_for}});   
         if(defined($current_published_for)) {
           if(defined $current_published_for -> end && $current_published_for -> end -> is_finite) {
             $self -> discard_changes;
@@ -52,7 +53,13 @@ class OokOok::Declare::Base::TableVersion extends OokOok::Declare::Base::Table {
               message => "Unable to modify the publication dates of a published resource"
             );
           }
-          if($current_published_for -> start ne $dirty_columns{published_for}->start) {
+          if($current_published_for -> start ne $pf->start) {
+            $self -> discard_changes;
+            OokOok::Exception::PUT -> forbidden(
+              message => "Unable to modify the publication dates of a published resource"
+            );
+          }
+          if($pf -> end -> is_finite && $pf -> end < $pf -> start) {
             $self -> discard_changes;
             OokOok::Exception::PUT -> forbidden(
               message => "Unable to modify the publication dates of a published resource"

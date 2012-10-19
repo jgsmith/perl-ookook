@@ -99,27 +99,37 @@ resource OokOok::Resource::Page {
     my $q;
     my $date;
 
+    $q = $self -> source -> result_source -> resultset -> search( {
+      #'versions.page_id' => "me.id",
+      "versions.parent_page_id" => $self -> source -> id,
+    }, {
+      join => 'versions',
+      distinct => 1,
+    } );
+
     if($self -> is_development) {
       $date = $self -> source -> result_source -> schema -> storage -> datetime_parser -> format_datetime(DateTime->now);
-      $q = $self -> source -> children -> search( [{
-        "me.published_for" => { '@>' => \"'$date'::timestamp" },
+      # select * from page where
+      #  page_version.page_id = me.id
+      #  and (page_version.published_for @> ... or page_version.published_for IS NULL)
+      
+      #$q = $self -> source -> children -> search( [{
+      $q = $q -> search( [{
+        "versions.published_for" => { '@>' => \"'$date'::timestamp" },
       }, {
-        "me.published_for" => undef
-      }], {
-        order_by => { -desc => 'me.id' }
-      });
+        "versions.published_for" => undef
+      }] );
     }
     elsif($self -> date) {
       $date = $self -> source -> result_source -> schema -> storage -> datetime_parser -> format_datetime($self -> date);
-      $q = $self -> source -> children -> search( {
-        "me.published_for" => { '@>' => \"'$date'::timestamp" },
+      $q = $q -> search( {
+        "versions.published_for" => { '@>' => \"'$date'::timestamp" },
       } );
     }
 
     if(wantarray) {
       map { $self -> new(
-        source => $_ -> owner, date => $self -> date, c => $self -> c,
-        source_version => $_
+        source => $_, date => $self -> date, c => $self -> c,
       ) } $q -> all;
     }
     else {

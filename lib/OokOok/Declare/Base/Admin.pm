@@ -42,14 +42,14 @@ controller OokOok::Declare::Base::Admin {
           $ctx -> stash -> {error_msg} = $e -> message;
           $ctx -> stash -> {missing} = $e -> missing;
           $ctx -> stash -> {invalid} = $e -> invalid;
-          $ctx -> log -> debug("PUT error: " . $e -> message);
+          $ctx -> log -> debug("$method error: " . $e -> message);
           $ctx -> log -> debug("missing: " . join(", ", @{$e -> missing}));
           $ctx -> log -> debug("invalid: " . join(", ", @{$e -> invalid}));
           return;
         }
         if($e -> isa('OokOok::Exception')) {
           $ctx -> stash -> {error_msg} = $e -> message;
-          $ctx -> log -> debug("PUT error: " . $e -> message);
+          $ctx -> log -> debug("$method error: " . $e -> message);
           return;
         }
       }
@@ -77,7 +77,7 @@ controller OokOok::Declare::Base::Admin {
       if(!$params -> {_continue}) {
         my $url = $ctx -> request -> uri;
         my $path = $url -> path;
-        $path =~ s{[-A-Za-z0-9_]{20}/edit}{};
+        $path =~ s{[-A-Za-z0-9_]{20}/[^/]+$}{};
         $url -> path($path);
         $ctx -> response -> redirect( $path );
         $ctx -> detach;
@@ -123,6 +123,7 @@ controller OokOok::Declare::Base::Admin {
     if(is_Str($resource)) {
       $resource = $ctx -> stash -> {$resource};
     }
-    $self -> doMethod($ctx, "_DELETE", $resource);
+    $self -> doMethod($ctx, "_DELETE", $resource, {});
+    return 1;
   }
 }
