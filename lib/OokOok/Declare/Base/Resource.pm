@@ -22,7 +22,8 @@ class OokOok::Declare::Base::Resource {
     isa => 'Bool',
     lazy => 1,
     default => sub {
-      $_[0] -> c -> stash -> {development}
+      defined($_[0] -> c -> stash -> {mode}) &&
+              $_[0] -> c -> stash -> {mode} eq 'development'
     },
   );
 

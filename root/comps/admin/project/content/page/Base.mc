@@ -3,9 +3,17 @@ $.page
 $.form_data => sub { +{} }
 </%args>
 
+<%shared>
+$.project_id => sub { shift -> project -> id }
+</%shared>
+
 <%method form($title, $button)>
+<script src="<% $c -> uri_for("/static/js/ace/ace.js") %>" type="text/javascript" charset="utf-8"></script>
 % my $count;
-<form method="POST" class="well form-horizontal">
+<script>
+  var editors = {};
+</script>
+<form method="POST" class="well form-horizontal" id="page-edit-form">
   <fieldset>
     <legend><% $title %></legend>
     <div class="row-fluid">
@@ -18,13 +26,13 @@ $.form_data => sub { +{} }
         <input type="text" name="slug" class="span12" placeholder="Slug..." id="page_slug" value="<% $.form_data->{slug} | H %>">
       </div>
     </div>
-    <div class="row-fluid">
+    <div class="row-fluid" style="margin-bottom: 0; padding-bottom: 0;">
       <div id="tab_toolbar" style="float: right;">
         <a class="btn" data-toggle="modal" href="#newPagePartModal" title="Add Part">
           <i class="icon icon-plus"></i>
         </a>
       </div>
-      <ul class="nav nav-tabs" id="page-parts-tabs">
+      <ul class="nav nav-tabs" id="page-parts-tabs" style="margin-bottom: 0; padding-bottom: 0;">
 %       $count = 1;
 %       for my $part (@{$.form_data->{part}}) {
 %         next unless defined $part;
@@ -38,7 +46,7 @@ $.form_data => sub { +{} }
 %       }
       </ul>
     </div>
-    <div class="tab-content" id="pages">
+    <div class="tab-content" id="pages" style="background-color: #fff; border: 1px solid #ccc; padding: 3px; margin-top: 0; border-top: none; margin-bottom: 3px; padding-bottom: 0px;">
 %     $count = 1;
 %     for my $part (@{$.form_data->{part}}) {
 %       next unless defined $part;
@@ -47,7 +55,7 @@ $.form_data => sub { +{} }
           <div class="control-group">
             <label class="control-label">Filter:</label>
             <div class="controls">
-              <select name="part[<% $count %>][filter]">
+              <select id="filter-<% $count %>" name="part[<% $count %>][filter]">
 %               for my $opt (map { s{^.*::}{}; $_ } $c->formatters) {
                   <option value="<% $opt %>" <% $.ifEqual($opt, $part->{filter}, ' selected') %>><% $opt %></option>
 %               }
@@ -55,9 +63,33 @@ $.form_data => sub { +{} }
             </div>
           </div>
           <div class="control-group">
-            <textarea class="large span10" name="part[<% $count %>][content]"><% $part->{content} | H %></textarea>
+            <pre id="textarea-<% $count %>" class="large span12" name="part[<% $count %>][content]" style="position: relative !important; height: 30em;"><% $part->{content} | H %></pre>
           </div>
         </div> 
+        <script>
+          $(function() {
+            var editor = ace.edit("textarea-<% $count %>");
+            editor.session.setMode("ace/mode/textile");
+            editor.setTheme("ace/theme/dreamweaver");
+            editor.renderer.setShowGutter(false);
+            editor.renderer.setShowPrintMargin(false);
+            editor.setShowInvisibles(true);
+            var modes = {
+              "Textile": "textile",
+              "Markdown": "markdown",
+              "HTML": "html",
+              "Pod": "perl",
+              "BBCode": "text"
+            };
+            $("#filter-<% $count %>").change(function() {
+              var m = modes[$(this).val()];
+              editor.session.setMode("ace/mode/" + m);
+            });
+            var m = modes[$("#filter-<% $count %>").val()];
+            editor.session.setMode("ace/mode/" + m);
+            editors["part[<% $count %>][content]"] = editor;
+          });
+        </script>
 %     $count ++;
 %     }
     </div>
@@ -155,12 +187,12 @@ $.form_data => sub { +{} }
       var tmpl = '<div class="tab-pane" id="page_part_$count">' +
                  '<input type="hidden" name="part[$count][name]" value="$name" />' +  
             '<div class="control-group"><label class="control-label">Filter:</label> <div class="controls">' +
-            '<select name="part[$count][filter]">' +
+            '<select id="filter-$count" name="part[$count][filter]">' +
 %         for my $opt (map { s{^.*::}{}; $_ } OokOok->formatters) {
             '<option value="<% $opt %>"><% $opt %></option>' +
 %         }
         '</select></div></div>' +
-        '<div class="control-group"><textarea name="part[$count][content]" class="span10 large"></textarea></div>' +   
+        '<div class="control-group"><pre id="textarea-$count" name="part[$count][content]" class="span12 large" style="position: relative !important; height: 30em;"></pre></div>' +   
         '</div>';
       if(name === undefined || name == null) { return; }
       name = name.replace(/\s+/g, ' ').replace(/^\s+/,'').replace(/\s+$/,'');
@@ -186,6 +218,37 @@ $.form_data => sub { +{} }
         $(this).css("opacity", 0.5);
       });
       $(tab).find("a").tab('show');
+      var editor = ace.edit("textarea-" + page_part_count);
+      editor.session.setMode("ace/mode/textile");
+      editor.setTheme("ace/theme/dreamweaver");
+      editor.renderer.setShowGutter(false);
+      editor.renderer.setShowPrintMargin(false);
+      editor.setShowInvisibles(true);
+      var modes = {
+        "Textile": "textile",
+        "Markdown": "markdown",
+        "HTML": "html",
+        "Pod": "perl",
+        "BBCode": "text"
+      };
+      $("#filter-" + page_part_count).change(function() {
+        var m = modes[$(this).val()];
+        editor.session.setMode("ace/mode/" + m);
+      });
+      editor.session.setMode("ace/mode/textile");
+      editors["part[" + page_part_count + "][content]"] = editor;
+    });
+
+    $("#page-edit-form").submit(function() {
+      // we need to convert all of the ace editing areas into hidden variables
+      var formEl = $("#page-edit-form");
+      
+      $.each(editors, function(name, editor) {
+        var el = $("<input type='hidden' name='" + name + "'/>");
+        el.val(editor.getValue());
+        formEl.append(el);
+      });
+      return true;
     });
   });
 </script>

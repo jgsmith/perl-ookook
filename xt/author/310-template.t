@@ -16,7 +16,7 @@ use DateTime;
 
 my $c = OokOok->new;
 
-$c -> stash -> {development} = 1;
+$c -> stash -> {mode} = 'development';
 $c -> stash -> {date} = DateTime->now;
 
 my $processor = OokOok::Template::Processor -> new(

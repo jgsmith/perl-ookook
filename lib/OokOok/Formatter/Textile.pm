@@ -32,6 +32,8 @@ class OokOok::Formatter::Textile {
 
   method extension { 'textile' }
 
+  method editor_mode { 'textile' }
+
 =method format (Str $text)
 
 Formats the given text using Textile, returning HTML.

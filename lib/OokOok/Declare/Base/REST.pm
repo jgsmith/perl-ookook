@@ -21,11 +21,11 @@ controller OokOok::Declare::Base::REST
 
   # namespace should be set in the inheriting controller
   action base_config as '' under base {
-    if($ctx -> stash -> {development} || $ctx -> stash -> {date}) {
+    if($ctx -> stash -> {mode} ne 'current' || $ctx -> stash -> {date}) {
       $ctx -> detach(qw/Controller::Root default/);
     }
 
-    $ctx -> stash -> {development} = 1;
+    $ctx -> stash -> {mode} = 'development';
     my $collection_class = $self -> config -> {'collection_class'};
     if(!$collection_class) {
       $collection_class = ref $self || $self;

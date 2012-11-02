@@ -10,6 +10,7 @@ BEGIN {
 
 use OokOok::ForTesting::REST;
 use OokOok::Controller::View;
+use OokOok::Controller::Style;
 
 my $json;
 
@@ -23,6 +24,26 @@ $json = POST_ok("/theme", {
 
 my $theme_uuid = $json -> {id};
 ok $theme_uuid, "We have a theme uuid";
+
+$json = POST_ok("/theme/$theme_uuid/theme-style", {
+  name => 'Style',
+  styles => '/* test style */',
+}, "Create a style");
+
+my $style_uuid = $json -> {id};
+ok $style_uuid, "We have a style uuid";
+
+$json = POST_ok("/theme/$theme_uuid/theme-layout", {
+  name => 'Test Layout',
+  theme_style => $style_uuid,
+  layout => '<r:content />',
+}, "Create a layout");
+
+my $layout_uuid = $json -> {id};
+ok $layout_uuid, "We have a layout uuid";
+
+POST_ok("/theme/$theme_uuid/edition", {}, "Create theme edition");
+
 my $theme_date = DateTime->now->iso8601;
 
 #
@@ -56,6 +77,7 @@ for my $nom (qw/Foo Bar Baz/) {
   $json = POST_ok("/project/$uuid/page", {
     title => "$nom Title",
     description => "Description of " . lc($nom) . " page",
+    layout => $layout_uuid,
   }, "create $nom page");
 
   my $page_uuid = $json->{id};
@@ -110,7 +132,7 @@ PUT_ok("/project/$uuid", {
 
 $json = GET_ok("/project/$uuid", "Get update project");
 
-diag JSON::to_json( $json );
+#diag JSON::to_json( $json );
 
 ok( !request('/v')->is_success, 'Request should not succeed' );
 
@@ -145,5 +167,7 @@ ok( request("/$after_date/v/$uuid/")->is_success, "Date is after freeze");
 #
 
 ok( request("/dev/v/$uuid/about") -> is_success, "About page is still there");
+
+ok( request("/dev/s/$uuid/style/$style_uuid") -> is_success, "Stylesheet is there");
 
 done_testing();

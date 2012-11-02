@@ -28,6 +28,8 @@ class OokOok::Formatter::Pod {
 
   method extension { 'pod' }
 
+  method editor_mode { 'perl' }
+
 =method format (Str $text)
 
 Formats the provided text as Pod, returning HTML.

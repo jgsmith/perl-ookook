@@ -21,7 +21,8 @@ class OokOok::Declare::Base::Collection {
     is => 'rw',
     isa => 'Bool',
     default => sub {
-      !!$_[0] -> c -> stash -> {development};
+      defined($_[0] -> c -> stash -> {mode}) &&
+              $_[0] -> c -> stash -> {mode} eq 'development';
     },
   );
 

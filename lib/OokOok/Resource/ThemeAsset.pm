@@ -53,7 +53,7 @@ resource OokOok::Resource::ThemeAsset {
   method can_PUT { $self -> theme -> can_PUT }
 
   # this associates the raw content with the resource object
-  method PUT_raw (Catalyst::Request::Upload $upload) {
+  method PUT_raw ($upload) {
     $self -> c -> log -> debug("in PUT_raw");
     my $img_info = image_info($upload->fh);
     my $info = {

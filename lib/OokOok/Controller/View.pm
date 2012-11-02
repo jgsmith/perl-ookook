@@ -4,10 +4,13 @@ use OokOok::Declare;
 
 # ABSTRACT: provides processed view of project pages
 
+use feature 'switch';
+
 play_controller OokOok::Controller::View {
 
   use HTML::Entities qw(encode_entities);
   use Encode qw(encode_utf8);
+  use OokOok::Util::Serialization qw(to_link_format);
 
   __PACKAGE__ -> config(
     map => {
@@ -25,45 +28,89 @@ play_controller OokOok::Controller::View {
   }
 
   under play_base {
-    final action play (@path) as '' isa REST {
-      my $date = $ctx -> stash -> {date};
-
-      # if the current dev/date doesn't map to an edition, then
-      # we can't very well find the right page
-      if(!$ctx -> stash -> {project} -> source_version) {
-        $ctx -> detach(qw/Controller::Root default/);
+    final action play (@path) as '' {
+      given($ctx -> stash -> {mode}) {
+        when('timegate') { $self -> play_timegate($ctx, @path) }
+        when('timemap')  { $self -> play_timemap($ctx, @path) }
+        default          { $self -> play_view($ctx, @path) }
       }
-
-      # closed editions are considered published (i.e., publicly readable)
-      # the edition resource
-      if(!$ctx -> stash -> {project} -> can_PLAY) {
-        $ctx -> detach(qw/Controller::Root default/);
-      }
-
-      # now we walk the sitemap to find the right page
-      my $page = $ctx -> stash -> {project} -> home_page;
-      my($slug, $last_page);
-
-      while($page && @path) {
-        $slug = shift @path;
-        $last_page = $page;
-        $page = $page -> get_child_page($slug);
-        if(!$page) { 
-          unshift @path, $slug; 
-          $page = $last_page; 
-          last;
-        }
-      }
-
-      # we expect as many entries in the stashed path as are in the @path
-      # for now, we shouldn't have anything left in @path -- we don't have
-      # pages yet that can react to extra path info
-      if(!$page || @path || !defined($page -> source_version)) {
-        $ctx -> detach(qw/Controller::Root default/);
-      }
-
-      $ctx -> stash -> {page} = $page;
     }
+  }
+
+  method gather_times($ctx, @path) {
+    my $project = $ctx -> stash -> {project} -> source;
+    my @times = $project -> home_pages;
+
+    while(@path) {
+      @times = map {
+        $project -> child_page_versions(shift(@path), @$_);
+      } @times;
+    }
+
+    @times;
+  }
+
+  method play_timegate($ctx, @path) {
+    my $project = $ctx -> stash -> {project};
+    my $project_uuid = $project -> id;
+    my @links = ({
+      link => $ctx -> uri_for('/') . 'timegate/v/' . $project_uuid . '/' . join("/", @path),
+      rel => 'timegate self',
+    }, {
+      link => $ctx -> uri_for('/') . 'timemap/v/' . $project_uuid . '/' . join("/", @path),
+      rel => 'timemap',
+    }, {
+      link => $ctx -> request -> uri,
+      rel => 'original',
+    });
+
+    $ctx -> response -> body(to_link_format(@links));
+    $ctx -> response -> content_type("application/link-format");
+    $ctx -> response -> status(200);
+  }
+
+  method play_timemap($ctx, @path) {
+    my $project = $ctx -> stash -> {project};
+    my $project_uuid = $project -> id;
+    my @links = ({
+      link => $ctx -> uri_for('/') . 'timemap/v/' . $project_uuid . '/' . join("/", @path),
+      rel => 'timemap self',
+    }, {
+      link => $ctx -> uri_for('/') . 'timegate/v/' . $project_uuid . '/' . join("/", @path),
+      rel => 'timegate',
+    }, {
+      link => $ctx -> request -> uri,
+      rel => 'original',
+    });
+
+    my @times = $self -> gather_times($ctx, @path); #$project -> source -> home_pages;
+
+    @times =
+      sort {
+        $a -> [2] cmp $b -> [2]
+      } map {
+        [ @$_, $_->[1] -> start -> ymd('') . $_->[1] -> start -> hms('') ]
+      } @times
+    ;
+
+    # now we can walk @path
+
+    my $url = '/v/'.$project_uuid.'/'.join('/', @path);
+    my $root_url = $ctx -> uri_for('/');
+    push @links, map { +{
+      link => $root_url . $_->[2] . $url,
+      rel => 'memento',
+      datetime => $_->[1]->start->strftime("%a, %d %b %Y %H:%M:%S %z"),
+    } } @times;
+
+    if(@links > 3) {
+      $links[3]->{rel} .= " first";
+      $links[$#links]->{rel} .= " last";
+    }
+
+    $ctx -> response -> body(to_link_format(@links));
+    $ctx -> response -> content_type("application/link-format");
+    $ctx -> response -> status(200);
   }
 
   method calculate_body ($ctx, $page) {
@@ -77,12 +124,55 @@ play_controller OokOok::Controller::View {
     $page -> render($context);
   }
 
-  method play_GET ($ctx, @path) {
-    my $page = $ctx -> stash -> {page};
+  method play_view($ctx, @path) {
+    my $date = $ctx -> stash -> {date};
     my $project = $ctx -> stash -> {project};
 
+    # if the current dev/date doesn't map to an edition, then
+    # we can't very well find the right page
+    if(!$ctx -> stash -> {project} -> source_version) {
+      $ctx -> detach(qw/Controller::Root default/);
+    }
+
+    # closed editions are considered published (i.e., publicly readable)
+    # the edition resource
+    if(!$ctx -> stash -> {project} -> can_PLAY) {
+      $ctx -> detach(qw/Controller::Root default/);
+    }
+
+    # now we walk the sitemap to find the right page
+    my $page = $ctx -> stash -> {project} -> home_page;
+    my($slug, $last_page);
+
+    while($page && @path) {
+      $slug = shift @path;
+      $last_page = $page;
+      $page = $page -> get_child_page($slug);
+      if(!$page) { 
+        unshift @path, $slug; 
+        $page = $last_page; 
+        last;
+      }
+    }
+
+    # we expect as many entries in the stashed path as are in the @path
+    # for now, we shouldn't have anything left in @path -- we don't have
+    # pages yet that can react to extra path info
+    if(!$page || @path || !defined($page -> source_version)) {
+      $ctx -> detach(qw/Controller::Root default/);
+    }
+
+    $ctx -> stash -> {page} = $page;
+
+    my $acc = '';
     my $writer = sub {
-      $ctx -> response -> write(encode_utf8($_[0]));
+      #$ctx -> response -> write(encode_utf8($_[0]));
+      $acc .= $_[0];
+    };
+
+    my $committer = sub {
+      $ctx -> response -> write(encode_utf8($acc));
+      $acc = '';
     };
 
     $ctx -> response -> status(200);
@@ -97,7 +187,8 @@ play_controller OokOok::Controller::View {
     my $canonical_url;
     my $root = "/";
     my $root_uri = $ctx -> uri_for("/");
-    my $date = $page -> source_version -> edition -> closed_on;
+    #my $date = $page -> source_version -> edition -> closed_on;
+    $date = $page -> source_version -> edition -> closed_on;
 
     if($page -> date) {
       local $URI::ABS_REMOTE_LEADING_DOTS = 1;
@@ -134,7 +225,9 @@ play_controller OokOok::Controller::View {
     my $key;
     my $cache;
 
-    if($ctx -> stash -> {is_development} || $ctx -> stash -> {project} -> is_development) {
+    $committer -> ();
+
+    if($ctx -> stash -> {mode} eq 'development' || $ctx -> stash -> {project} -> is_development) {
       $writer->($self -> calculate_body($ctx, $page));
     }
     else {
@@ -150,6 +243,8 @@ play_controller OokOok::Controller::View {
     }
 
     $writer->(q{</div><div id="ookook-apparatus"><div id="ookook-apparatus-body" style="display: none;" class="hyphenate">});
+
+    $committer -> ();
 
     if($page -> date) {
       # now get other relevant dates for this page
@@ -222,9 +317,8 @@ function googleTranslateElementInit() {
 </body></html>
 EOHTML
 
-    #$body = encode_utf8($body);
-    #$ctx -> response -> content_length(length($body));
-    #$ctx -> response -> write($body);
+    $committer -> ();
+
     $ctx -> response -> body('');
     if($cache_body) {
       $cache -> set($key, $calculated_body);
@@ -233,16 +327,14 @@ EOHTML
     return 1;
   }
 
-    my @dt_methods = qw(
-      years a_year_ago
-      months a_month_ago
-      weeks a_week_ago
-      days yesterday
-      hours an_hour_ago
-      minutes a_minute_ago
-    );
-
-    @dt_methods = map { $_ =~ s/_/ /g; $_ } @dt_methods;
+  my @dt_methods = map { s/_/ /g; $_ } @{[qw(
+    years   a_year_ago
+    months  a_month_ago
+    weeks   a_week_ago
+    days    yesterday
+    hours   an_hour_ago
+    minutes a_minute_ago
+  )]};
 
   method _relativeDate ($date) {
     my $dur = ($date - DateTime -> now) -> inverse;

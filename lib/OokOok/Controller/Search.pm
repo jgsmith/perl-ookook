@@ -25,30 +25,35 @@ controller OokOok::Controller::Search {
       #}
       #else {
         if(defined $ctx -> request -> params -> {q}) {
-          $params{query} -> {query_string} -> {query} =
-            $ctx -> model('Search') -> query_parser->filter(
-              $ctx -> request -> params -> {q}
-            );
-          #$params{scroll} = '5m';
-          $params{fields} = [qw/__project/];
-          #$params{query}->{query_string}->{fuzziness} = 0.5;
-          $params{highlight} = {
-            fragment_size => 150,
-            order => 'score',
-            encoder => 'html',
-            number_of_fragments => 3,
-            require_query_match => 1,
-            fields => {
-              body => { },
-            },
-            tags_schema => 'styled',
-          };
-          $params{index} = "projects";
-          $params{type} = [qw/page snippet/];
-          $result = $ctx -> model('Search') -> search( %params );
-        }
-        else {
-          $result = {};
+          if($ctx -> request -> params -> {q} =~ m{^\s*$}) {
+            $result = {};
+          }
+          else {
+            $params{query} -> {query_string} -> {query} =
+              $ctx -> model('Search') -> query_parser->filter(
+                $ctx -> request -> params -> {q}
+              );
+            #$params{scroll} = '5m';
+            $params{fields} = [qw/__project/];
+            #$params{query}->{query_string}->{fuzziness} = 0.5;
+            $params{highlight} = {
+              fragment_size => 150,
+              order => 'score',
+              encoder => 'html',
+              number_of_fragments => 3,
+              require_query_match => 1,
+              fields => {
+                body => { },
+              },
+              tags_schema => 'styled',
+            };
+            $params{index} = "projects";
+            $params{type} = [qw/page snippet/];
+            $result = $ctx -> model('Search') -> search( %params );
+          }
+          #else {
+          #  $result = {};
+          #}
         }
       #}
       my %collections = (

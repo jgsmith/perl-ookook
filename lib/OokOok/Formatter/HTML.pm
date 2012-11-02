@@ -14,6 +14,8 @@ class OokOok::Formatter::HTML {
 
   method extension { 'html' }
 
+  method editor_mode { 'html' }
+
 =method format (Str $text)
 
 Returns the text as-is since this is a no-op formatter.

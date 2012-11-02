@@ -49,7 +49,7 @@ $.invalid => sub { [] }
 % # pages
 
 <%filter IndexTable($notCondensed)>
-<table class="table table-bordered table-striped<% !$notCondensed ? ' table-condensed' : '' %>" 
+<table class="table table-bordered table-striped<% !$notCondensed ? ' table-condensed' : '' %>" id="index-table" 
        style="width: 100%">
   <% $yield->() %>
 </table>
@@ -74,7 +74,7 @@ $.invalid => sub { [] }
 </%method>
 
 <%method IndexHeadActions ($title)>
-<th class="actions" style="padding-left: 15px; min-width: 18em;"><% $title %></th>
+<th class="actions" style="padding-left: 15px; min-width: 28em;"><% $title %></th>
 </%method>
 
 <%filter IndexBody>
@@ -83,8 +83,8 @@ $.invalid => sub { [] }
 </tbody>
 </%filter>
 
-<%filter IndexItem ($classes)>
-<tr class="<% $classes %>"><% $yield->() %></tr>
+<%filter IndexItem ($classes, $id)>
+<tr class="<% $classes %>" <% $id ? "id='$id'" : "" %>><% $yield->() %></tr>
 </%filter>
 
 <%filter IndexItemName ($img, $link)>

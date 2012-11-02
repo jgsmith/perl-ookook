@@ -111,16 +111,42 @@ path is left unchanged.
     return unless @path_chunks;
 
     my $first = shift @path_chunks;
-    if($first eq 'dev') {
-      $ctx -> stash -> {development} = 1;
-    }
-    elsif(length($first) == 14 && $first =~ m{^\d+$}) {
-      $ctx -> stash -> {date} = OokOok::DateTime::Parser -> parse_datetime($first);
-      $ctx -> stash -> {date} -> set_formatter('OokOok::DateTime::Parser');
-    }
-    else {
-      unshift @path_chunks, $first;
-      $first = '';
+    given($first) {
+      when('dev') {
+        $ctx -> stash -> {mode} = 'development';
+        # Update request base to include whatever
+        # was stripped from the request path:
+        my $base = $ctx->request->base;
+        $base->path($base->path . $first);
+      }
+      when('timegate') {
+        $ctx -> stash -> {mode} = 'timegate';
+        # if HEAD/GET, then we want to look for Accept-Datetime header
+        
+      }
+      when('timemap') {
+        $ctx -> stash -> {mode} = 'timemap';
+        # if HEAD/GET, then we want to look for Accept-Datetime header?
+      }
+      default {
+        if(length($first) == 14 && $first =~ m{^\d+$}) {
+          $ctx -> stash -> {mode} = 'dated';
+          $ctx -> stash -> {date} = OokOok::DateTime::Parser -> parse_datetime($first);
+          $ctx -> stash -> {date} -> set_formatter('OokOok::DateTime::Parser');
+          $ctx -> response -> header( 'Momento-Datetime' => $ctx -> stash -> {date} -> strftime("%a, %d %b %Y %H:%M:%S %z") );
+        }
+        else {
+          $ctx -> stash -> {mode} = 'current';
+          #$ctx -> stash -> {date} = DateTime -> now;
+          #$ctx -> stash -> {date} -> set_formatter('OokOok::DateTime::Parser');
+          unshift @path_chunks, $first;
+          $first = '';
+        }
+        # Update request base to include whatever
+        # was stripped from the request path:
+        my $base = $ctx->request->base;
+        $base->path($base->path . $first);
+      }
     }
   
     # Create a request path from the remaining chunks:
@@ -129,10 +155,6 @@ path is left unchanged.
     # Stuff modified request path back into request:
     $ctx->request->path($path);
   
-    # Update request base to include whatever
-    # was stripped from the request path:
-    my $base = $ctx->request->base;
-    $base->path($base->path . $first);
   }
 
 =method formatters ()

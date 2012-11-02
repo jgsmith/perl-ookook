@@ -3,9 +3,10 @@ $.pages => sub { [] }
 </%args>
 
 <%method renderPage($page, $indent)>
-% $.IndexItem("level_" . $indent . " page") {{
+% my $parent = $page -> parent_page ? "child-of-node-" . $page->parent_page->id : "";
+% $.IndexItem("$parent", "node-" . $page->id) {{
 %   $.IndexItemName("page", "/admin/project/" . $.project_id . "/page/" . $page->id . "/edit") {{
-      <% "&mdash;&nbsp;" x $indent %><% $page->title | H %>
+      <% $page->title | H %>
 %   }}
 %   $.IndexItemStatus {{
 %     if($page->source_version->edition->is_closed) {
@@ -52,6 +53,7 @@ $.pages => sub { [] }
 % }
 </%method>
 
+% # <table id="index-table" class="table table-striped">
 % $.IndexTable {{
 %   $.IndexHead {{
       <% $.IndexHeadName("Page") %>
@@ -62,3 +64,12 @@ $.pages => sub { [] }
       <% $.renderPages($.project->home_page) %>
 %   }}
 % }}
+<script>
+  $(function() {
+    $("#index-table").treeTable({
+      persist: true,
+      persistStoreName: "ookook-project-pages-<% $.project_id %>",
+      initialState: "expanded"
+    });
+  });
+</script>

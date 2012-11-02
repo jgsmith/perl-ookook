@@ -122,7 +122,7 @@ controller OokOok::Controller::OAIPMH {
     );
       
     my $verb = $ctx -> request -> params -> {verb};
-    my $method = decamelize($verb);
+    my $method = "_handle_" . decamelize($verb) . "_verb";
 
     my $el = $dom -> createElement( $verb );
     $root -> appendChild($el);
@@ -154,7 +154,7 @@ controller OokOok::Controller::OAIPMH {
     $ctx -> response -> status( 200 );
   }
 
-  method identify ($ctx, $rootEl) {
+  method _handle_identify_verb ($ctx, $rootEl) {
     my $uri = $ctx -> request -> uri;
 
     xml( $rootEl,
@@ -176,7 +176,7 @@ controller OokOok::Controller::OAIPMH {
     );
   }
 
-  method _get_record ($ctx, $rootEl, $resource, $metadataPrefix) {
+  method get_record ($ctx, $rootEl, $resource, $metadataPrefix) {
     # now we do proper feeding of metadata into $rootEl
     my $recEl = $rootEl -> createElement( "record" );
     $rootEl -> appendChild( $recEl );
@@ -195,7 +195,7 @@ controller OokOok::Controller::OAIPMH {
     $resource -> GET_oai_pmh($headerEl, $metadataEl, $metadataPrefix);
   }
 
-  method _get_header ($ctx, $rootEl, $resource, $metadataPrefix) {
+  method get_header ($ctx, $rootEl, $resource, $metadataPrefix) {
     # now we do proper feeding of metadata into $rootEl
     my $recEl = $rootEl -> createElement( "record" );
     $rootEl -> appendChild( $recEl );
@@ -211,16 +211,16 @@ controller OokOok::Controller::OAIPMH {
     $resource -> GET_oai_pmh($headerEl);
   }
 
-  method get_record ($ctx, $rootEl) {
+  method _handle_get_record_verb ($ctx, $rootEl) {
     my $identifier = $ctx -> request -> params -> {identifier};
     my $resource = $self -> resource_for_oai($ctx, $identifier);
 
     my $metadataPrefix = $self -> request -> params -> {metadataPrefix};
 
-    $self -> _get_record($ctx, $rootEl, $resource, $metadataPrefix);
+    $self -> get_record($ctx, $rootEl, $resource, $metadataPrefix);
   }
 
-  method list_identifiers ($ctx, $rootEl) {
+  method _handle_list_identifiers_verb ($ctx, $rootEl) {
     my($set, $from, $until, $metadataPrefix, $offset, $total, $count);
 
     # TODO: make $count tunable/configurable
@@ -268,12 +268,12 @@ controller OokOok::Controller::OAIPMH {
     }
   }
 
-  method list_metadata_formats ($ctx, $rootEl) {
+  method _handle_list_metadata_formats_verb ($ctx, $rootEl) {
     my $identifier = $ctx -> request -> params -> {identifier};
     my $resource = $self -> resource_for_oai( $identifier );
   }
 
-  method list_records ($ctx, $rootEl) {
+  method _handle_list_records_verb ($ctx, $rootEl) {
     my($set, $from, $until, $metadataPrefix, $offset, $total, $count);
 
     # TODO: make $count tunable/configurable

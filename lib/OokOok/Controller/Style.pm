@@ -1,5 +1,7 @@
 use OokOok::Declare;
 
+use feature 'switch';
+
 # PODNAME: OokOok::Controller::Style
 
 # ABSTRACT: Style Provider for Project Viewing
@@ -85,13 +87,36 @@ play_controller OokOok::Controller::Style {
         $ctx -> detach(qw/Controller::Root default/);
       }
 
-      my $theme = $ctx -> stash -> {project} -> theme;
-      my $style = $theme -> style($uuid);
+      my($theme, $style);
+
+      given($ctx -> stash -> {mode}) {
+        when('timegate') {
+          $style = $ctx -> model('ThemeStyle') -> find({ uuid => $uuid });
+          if($style) {
+            $style = OokOok::Resource::ThemeStyle -> new(
+              c => $ctx,
+              source => $style,
+            );
+          }
+        }
+        when('timemap')  {
+          $style = $ctx -> model('ThemeStyle') -> find({ uuid => $uuid });
+          if($style) {
+            $style = OokOok::Resource::ThemeStyle -> new(
+              c => $ctx,
+              source => $style,
+            );
+          }
+        }
+        default          {
+          $theme = $ctx -> stash -> {project} -> theme;
+          $style = $theme -> style($uuid);
+        }
+      }
 
       if(!$style) {
         $ctx -> detach(qw/Controller::Root default/);
       }
-
 
       $ctx -> stash -> {resource} = $style;
     }
@@ -122,7 +147,77 @@ play_controller OokOok::Controller::Style {
   }
 
   under style_base {
-    final action style as '' isa REST;
+    final action style as '' {
+      given($ctx -> stash -> {mode}) {
+        when('timegate') { $self -> style_timegate($ctx) }
+        when('timemap')  { $self -> style_timemap($ctx) }
+        default          { $self -> style_view($ctx) }
+      }
+    }
+  }
+
+  # we need to know when the project uses this style, and when the
+  # project theme variables changed
+  # we need to know when the theme date was updated in the project
+  # and then if such a date change resulted in a different version
+  # of the style -- but the effective date change for memento purposes
+  # is when the project edition was published
+  method gather_style_times ($ctx, $project, $style) {
+    ();
+  }
+
+  method style_timegate($ctx) {
+    my $project = $ctx -> stash -> {project};
+    my $style = $ctx -> stash -> {resource};
+    my $project_uuid = $project -> id;
+    my $style_uuid = $style -> id;
+
+    my @links = ({
+      link => $ctx -> uri_for('/') . 'timegate/s/' . $project_uuid . '/style/' . $style_uuid,
+      rel => 'timegate self'
+    }, {
+      link => $ctx -> uri_for('/') . 'timemap/s/' . $project_uuid . '/style/' . $style_uuid,
+      rel => 'timemap'
+    }, {
+      link => $ctx -> request -> uri,
+      rel => 'original',
+    });
+
+    $ctx -> response -> body(to_link_format(@links));
+    $ctx -> response -> content_type("application/link-format");
+    $ctx -> response -> status(200);
+  }
+
+  method style_timemap($ctx) {
+    my $project = $ctx -> stash -> {project};
+    my $style = $ctx -> stash -> {resource};
+    my $project_uuid = $project -> id;
+    my $style_uuid = $style -> id;
+    
+    my @links = ({
+      link => $ctx -> uri_for('/') . 'timegate/s/' . $project_uuid . '/style/' . $style_uuid,
+      rel => 'timegate'
+    }, {
+      link => $ctx -> uri_for('/') . 'timemap/s/' . $project_uuid . '/style/' . $style_uuid,
+      rel => 'timemap self'
+    }, {
+      link => $ctx -> request -> uri,
+      rel => 'original',
+    });
+
+    my @times = $self -> gather_style_times($ctx, $project, $style);
+
+    @times =
+      sort {
+        $a -> [2] cmp $b -> [2]
+      } map {
+        [ @$_, $_->[1] -> start -> ymd('') . $_->[1] -> start -> hms('') ]
+      } @times
+    ;
+
+    $ctx -> response -> body(to_link_format(@links));
+    $ctx -> response -> content_type("application/link-format");
+    $ctx -> response -> status(200);
   }
 
   method calculate_style ($ctx) {
@@ -135,13 +230,12 @@ play_controller OokOok::Controller::Style {
     $ctx -> stash -> {resource} -> render($context);
   }
     
-
-  method style_GET ($ctx) {
+  method style_view ($ctx) {
     my $body;
     my $load_cache;
     my $key;
     my $cache = $ctx -> model('Cache');
-    if($ctx -> stash -> {is_development} || !$ctx -> stash -> {project}) {
+    if($ctx -> stash -> {mode} eq 'development' || !$ctx -> stash -> {project}) {
       $body = $self -> calculate_style($ctx);
     }
     else {
@@ -172,7 +266,7 @@ play_controller OokOok::Controller::Style {
   }
 
   method tstyle_GET ($ctx) {
-    $self -> style_GET($ctx);
+    $self -> style_view($ctx);
   }
 
   under asset_base {

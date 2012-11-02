@@ -10,7 +10,7 @@ use JSON;
 use Test::More;
 
 our @ISA = qw(Exporter);
-our @EXPORT = qw(GET_ok GET_not_ok PUT_ok POST_ok DELETE_ok request);
+our @EXPORT = qw(GET_ok GET_not_ok PUT_ok POST_ok DELETE_ok request get request);
 
 sub GET_ok {
   my($url, $desc) = @_;

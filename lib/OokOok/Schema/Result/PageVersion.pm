@@ -53,6 +53,24 @@ table_version OokOok::Schema::Result::PageVersion {
 
   method assets { map { $_ -> asset } $self -> attachments; }
 
+  method child_page_versions ($slug, $dateRange) {
+    my $q = $self -> result_source -> resultset -> search({
+      'me.published_for' => { '&&' => \"page_version.published_for" },
+      'me.slug' => $slug,
+      "me.parent_page_id" => $self -> page -> id,
+    }, {
+      join => ['page_version'],
+      select => [
+        'me.id',
+        \'me.published_for * page_version.published_for',
+      ],
+      as => qw(/id published_for/),
+    });
+      
+    print STDERR $q -> as_query -> [0], "\n\n";
+    ();
+  }
+
   method render (Object $c) {
     my $edition = $c -> stash -> {edition} || $self -> edition;
     my $layout = $edition -> layout($self -> layout);

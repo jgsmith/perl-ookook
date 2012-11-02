@@ -63,7 +63,7 @@ is $json->{id}, $uuid, "Right uuid returned";
 #
 
 $json = GET_ok("/project", "JSON listing of projects");
-diag JSON::encode_json($json);
+#diag JSON::encode_json($json);
 
 ok $json->{_embedded}, "Projects key exists in returned JSON";
 is scalar(@{$json->{_embedded}}), 1, "One project";

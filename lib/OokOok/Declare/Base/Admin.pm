@@ -18,7 +18,10 @@ controller OokOok::Declare::Base::Admin {
       $ctx -> detach;
     }
 
-    $ctx -> stash -> {development} = 1;
+    if($ctx -> stash -> {mode}) { # not found
+    }
+
+    $ctx -> stash -> {mode} = 'development';
   }
 
   final action end (@args) is private isa RenderView;

@@ -28,6 +28,8 @@ class OokOok::Formatter::Markdown {
 
   method extension { 'md' }
 
+  method editor_mode { 'markdown' }
+
 =method format (Str $text)
 
 Formats the provided text as Markdown, returning HTML.
